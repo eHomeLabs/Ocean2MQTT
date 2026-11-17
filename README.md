@@ -23,6 +23,17 @@ Clés prises en charge : clés ESP3 en USB ou série (USB300, USB500, TCM310 / E
 
 Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLabs/NodOcean-for-HA), validé sur produits réels.
 
+### Organisation du dépôt
+
+| Dossier | Contenu |
+| --- | --- |
+| `src/ocean2mqtt/core/` | Cœur radio : clé ESP3, profils EEP, appairage, Remote Commissioning (sans Home Assistant ni MQTT) |
+| `src/ocean2mqtt/library/` | Chargement et contrôle des fiches produits |
+| `produits/<marque>/` | Une fiche YAML + une photo par produit (`schema.json` décrit le format) |
+| `tests/` | Tests, avec une clé USB300 simulée |
+
+Contrôler les fiches : `python -m ocean2mqtt.library` · lancer les tests : `pytest`.
+
 ## English
 
 Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a web interface, and all your EnOcean devices published to MQTT, whatever their brand.

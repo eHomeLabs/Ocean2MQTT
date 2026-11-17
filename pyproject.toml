@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ocean2mqtt"
+version = "0.0.1"
+description = "Passerelle EnOcean <-> MQTT multi-marques, façon Zigbee2MQTT"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "eHomeLabs" }]
+keywords = ["enocean", "mqtt", "home-assistant", "domotique", "gateway"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "Topic :: Home Automation",
+]
+dependencies = [
+  "pyserial-asyncio-fast>=0.16",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "jsonschema>=4.22",
+  "ruff>=0.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/eHomeLabs/Ocean2MQTT"
+Issues = "https://github.com/eHomeLabs/Ocean2MQTT/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ocean2mqtt"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"produits" = "ocean2mqtt/produits"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
