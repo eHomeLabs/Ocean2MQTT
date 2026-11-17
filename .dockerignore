@@ -1,0 +1,8 @@
+.git
+**/__pycache__
+**/node_modules
+src/ocean2mqtt/frontend
+data
+dist
+.pytest_cache
+.ruff_cache

@@ -1,0 +1,24 @@
+# Exemple : copiez ce fichier en docker-compose.yml et adaptez le port de la clé.
+services:
+  ocean2mqtt:
+    image: ghcr.io/ehomelabs/ocean2mqtt:latest
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    devices:
+      # Préférez le chemin stable de la clé : ls -l /dev/serial/by-id/
+      - /dev/serial/by-id/usb-EnOcean_GmbH_EnOcean_USB_300_DC_XXXXXXXX-if00-port0:/dev/ttyUSB0
+    ports:
+      - "8080:8080"
+    environment:
+      - OCEAN2MQTT_MQTT_HOST=mosquitto
+      - TZ=Europe/Paris
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    command: mosquitto -c /mosquitto-no-auth.conf

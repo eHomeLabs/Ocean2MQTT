@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ocean2mqtt"
-version = "0.0.1"
+version = "0.1.0a1"
 description = "Passerelle EnOcean <-> MQTT multi-marques, façon Zigbee2MQTT"
 readme = "README.md"
 license = "MIT"
@@ -20,7 +20,12 @@ classifiers = [
 dependencies = [
   "pyserial-asyncio-fast>=0.16",
   "PyYAML>=6.0",
+  "paho-mqtt>=2.0",
+  "aiohttp>=3.9",
 ]
+
+[project.scripts]
+ocean2mqtt = "ocean2mqtt.__main__:main"
 
 [project.optional-dependencies]
 dev = [
@@ -28,11 +33,16 @@ dev = [
   "pytest-asyncio>=0.24",
   "jsonschema>=4.22",
   "ruff>=0.6",
+  "amqtt>=0.11",
 ]
 
 [project.urls]
 Homepage = "https://github.com/eHomeLabs/Ocean2MQTT"
 Issues = "https://github.com/eHomeLabs/Ocean2MQTT/issues"
+
+[tool.hatch.build]
+# Interface web construite (npm run build), ignorée par git mais livrée dans le paquet
+artifacts = ["src/ocean2mqtt/frontend/**"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ocean2mqtt"]
