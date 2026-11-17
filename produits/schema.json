@@ -32,7 +32,7 @@
       "additionalProperties": false,
       "required": ["mode", "etapes"],
       "properties": {
-        "mode": {"enum": ["ute_bidir", "ute_uni", "1bs", "4bs", "rps"]},
+        "mode": {"enum": ["ute_bidir", "ute_uni", "1bs", "4bs", "4bs_bidir", "rps"]},
         "etapes": {
           "type": "object",
           "required": ["fr"],
@@ -52,7 +52,7 @@
       "items": {
         "enum": [
           "led", "power_on_state", "local_control", "taught_in", "power_failure",
-          "auto_off", "delay_off", "switch_type", "roller_shutter",
+          "auto_off", "delay_off", "switch_type", "roller_shutter", "setpoint",
           "temperature_offset", "humidity_offset", "timeout", "buttons"
         ]
       }

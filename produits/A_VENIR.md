@@ -4,7 +4,6 @@ Produits prévus pour la v1 dont la fiche n'est pas encore possible.
 
 | Marque | Référence | Produit | EEP | Ce qui manque |
 | --- | --- | --- | --- | --- |
-| Ubiwizz | MICITRV004 | Vanne thermostatique EnOcean (sans pile, effet Seebeck) | A5-20-01 | Profil bidirectionnel : la passerelle doit répondre à chaque télégramme de la vanne (consigne). Prévu en phase 2. |
 | Ubiwizz | à préciser | Télécommande 1 canal EnOcean | à préciser | Référence et EEP (page produit non lisible automatiquement). |
 
 ## Ajouter un produit
