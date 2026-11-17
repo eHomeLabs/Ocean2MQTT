@@ -1,0 +1,25 @@
+ref: MICITRV004
+marque: Ubiwizz
+nom:
+  fr: Tête thermostatique sans pile
+  en: Battery-free thermostatic valve head
+type: chauffage
+eep: A5-20-01
+appairage:
+  mode: 4bs_bidir
+  etapes:
+    fr:
+    - 'Montez la tête sur le radiateur. Si elle est neuve, chargez-la d''abord (voir sa notice).'
+    - 'Mettez la tête en mode apprentissage (voir sa notice) : elle envoie une demande d''appairage.'
+    - Ocean2MQTT répond automatiquement ; la tête se cale ensuite sur la consigne envoyée.
+    en:
+    - Fit the head on the radiator. If it is new, charge it first (see its manual).
+    - 'Put the head in learn mode (see its manual): it sends a pairing request.'
+    - Ocean2MQTT answers automatically; the head then follows the setpoint it receives.
+reglages:
+- setpoint
+- timeout
+support: communaute
+notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=408
+notes: Autonome (effet Seebeck). Profil bidirectionnel - la consigne (°C) est renvoyée à chaque réveil de
+  la vanne. Procédure d'apprentissage et intervalle de réveil à confirmer sur produit réel.
