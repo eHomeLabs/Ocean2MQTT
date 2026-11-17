@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="512" height="512" role="img" aria-label="Ocean2MQTT">
+  <rect width="160" height="160" rx="36" fill="#0B2E4A"/>
+  <g transform="translate(20 20) scale(1.875)">
+    <defs><clipPath id="o2m-icon-clip"><circle cx="30" cy="34" r="18.5"/></clipPath></defs>
+    <circle cx="30" cy="34" r="21" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+    <path clip-path="url(#o2m-icon-clip)" d="M4 37 q6.5 -7 13 0 t13 0 t13 0 t13 0" fill="none" stroke="#2DD4BF" stroke-width="5" stroke-linecap="round"/>
+    <path clip-path="url(#o2m-icon-clip)" d="M4 46 q6.5 -6 13 0 t13 0 t13 0 t13 0" fill="none" stroke="#2DD4BF" stroke-opacity="0.45" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="44.85" cy="19.15" r="4.5" fill="#2DD4BF" stroke="#0B2E4A" stroke-width="2.5"/>
+    <path d="M46.66 12.39 A7 7 0 0 1 51.61 17.34" fill="none" stroke="#2DD4BF" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M48.21 6.59 A13 13 0 0 1 57.41 15.79" fill="none" stroke="#2DD4BF" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+</svg>
