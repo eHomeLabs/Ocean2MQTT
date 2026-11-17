@@ -48,5 +48,23 @@ def test_f610_window_handle() -> None:
 def test_decoder_registry() -> None:
     assert eep.find_decoder("D2-01-0C") is eep.decode_d201
     assert eep.find_decoder("A5-09-05") is eep.decode_a50905
-    assert eep.find_decoder("A5-20-01") is None  # vanne thermostatique : phase 2
+    assert eep.find_decoder("A5-20-01") is eep.decode_a52001
+    assert eep.find_decoder("A5-99-01") is None
     assert eep.supported("soft_remote")
+
+
+def test_a52001_valve() -> None:
+    # 40 % ouverte, fenêtre ouverte détectée, 128 -> 20,1 °C
+    state = eep.decode_a52001(t(0xA5, "28 02 80 08"))
+    assert state == {
+        "valve_position": 40,
+        "temperature": 20.1,
+        "window_open": True,
+        "battery_low": False,
+        "valve_error": False,
+    }
+    # Consigne 21 °C -> 134, SPS, données
+    assert eep.a52001_setpoint(21) == bytes([134, 0, 0x04, 0x08])
+    assert eep.a52001_setpoint(20, room_temperature=20)[1:3] == bytes([127, 0x05])
+    teach = t(0xA5, "80 08 49 80")
+    assert eep.teach_in_4bs_response(teach) == bytes([0x80, 0x08, 0x49, 0xF0])
