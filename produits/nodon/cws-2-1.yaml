@@ -1,0 +1,28 @@
+ref: CWS-2-1
+marque: NodOn
+nom:
+  fr: Interrupteur mural EnOcean (sans pile)
+  en: EnOcean Wall Switch (battery-free)
+  de: EnOcean Wandschalter (batterielos)
+type: interrupteur
+eep: F6-02-01
+fabricant_id: 70
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - Appuyez franchement sur une touche de l'interrupteur.
+    - Toutes les touches seront ensuite disponibles dans Ocean2MQTT.
+    en:
+    - Firmly press any key of the switch.
+    - All keys will then be available in Ocean2MQTT.
+    de:
+    - Drücken Sie kräftig eine Taste des Schalters.
+    - Alle Tasten sind danach in Ocean2MQTT verfügbar.
+reglages:
+- buttons
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052269
+photo: cws-2-1.png
+variantes:
+- CWS-2-1-01

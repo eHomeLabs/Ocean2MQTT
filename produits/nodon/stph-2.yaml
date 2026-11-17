@@ -1,0 +1,30 @@
+ref: STPH-2
+marque: NodOn
+nom:
+  fr: Capteur de température et d'humidité EnOcean
+  en: EnOcean Temperature and Humidity Sensor
+  de: EnOcean Temperatur- und Feuchtesensor
+type: capteur
+eep: A5-04-01
+fabricant_id: 70
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Faites un appui sur le bouton d'appairage situé à l'arrière du capteur.
+    - Si le capteur est neuf, exposez-le quelques minutes à la lumière pour charger sa cellule solaire.
+    en:
+    - Press the pairing button at the back of the sensor once.
+    - If the sensor is new, expose it to light for a few minutes to charge its solar cell.
+    de:
+    - Drücken Sie einmal die Anlerntaste auf der Rückseite des Sensors.
+    - Ist der Sensor neu, legen Sie ihn einige Minuten ins Licht, um die Solarzelle zu laden.
+reglages:
+- temperature_offset
+- humidity_offset
+- timeout
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000053858
+photo: stph-2.png
+variantes:
+- STPH-2-1-05

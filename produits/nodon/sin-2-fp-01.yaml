@@ -1,0 +1,37 @@
+ref: SIN-2-FP-01
+marque: NodOn
+nom:
+  fr: Module Chauffage Fil Pilote EnOcean
+  en: EnOcean Pilot Wire Heating Module
+  de: EnOcean Heizungsmodul Fil Pilote
+type: chauffage
+eep: D2-01-0C
+fabricant_id: 70
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Le module doit être sous tension.
+    - 'Appuyez 3 fois rapidement (en moins de 2 s) sur le bouton du module : la LED scintille en rouge
+      (30 s).'
+    - 'Le module envoie alors sa demande d''appairage : Ocean2MQTT répond automatiquement, la LED clignote
+      2 fois en vert.'
+    en:
+    - The module must be powered.
+    - 'Press the module button 3 times quickly (within 2 s): the LED flickers red (30 s).'
+    - 'The module then sends its pairing request: Ocean2MQTT answers automatically and the LED blinks
+      green twice.'
+    de:
+    - Das Modul muss mit Strom versorgt sein.
+    - 'Drücken Sie 3-mal schnell (innerhalb von 2 s) die Taste des Moduls: Die LED flackert rot (30 s).'
+    - 'Das Modul sendet dann seine Anlernanfrage: Ocean2MQTT antwortet automatisch, die LED blinkt 2-mal
+      grün.'
+mesure: true
+reglages:
+- led
+- power_on_state
+- local_control
+recom: true
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052161
+photo: sin-2-fp-01.png

@@ -1,0 +1,27 @@
+ref: CRC-2
+marque: NodOn
+nom:
+  fr: Soft Remote EnOcean
+  en: EnOcean Soft Remote
+  de: EnOcean Soft Remote
+type: interrupteur
+eep: F6-02-01
+decodeur: soft_remote
+fabricant_id: 70
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - Appuyez sur un bouton de la télécommande.
+    - Les 4 boutons seront ensuite disponibles dans Ocean2MQTT.
+    en:
+    - Press any button of the remote.
+    - All 4 buttons will then be available in Ocean2MQTT.
+    de:
+    - Drücken Sie eine Taste der Fernbedienung.
+    - Alle 4 Tasten sind danach in Ocean2MQTT verfügbar.
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052270
+photo: crc-2.png
+variantes:
+- CRC-2-6-0X

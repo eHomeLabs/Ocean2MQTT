@@ -1,0 +1,40 @@
+ref: ASP-2
+marque: NodOn
+nom:
+  fr: Prise intelligente EnOcean sans mesure
+  en: EnOcean Smart Plug without metering
+  de: EnOcean Zwischenstecker ohne Messung
+type: prise
+eep: D2-01-0A
+fabricant_id: 70
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Branchez la prise.
+    - 'Maintenez le bouton 2 secondes jusqu''à ce que la LED passe au rouge, puis relâchez : la prise
+      envoie une demande d''appairage toutes les 3 s pendant 30 s.'
+    - Ocean2MQTT répond automatiquement, la LED clignote en vert.
+    en:
+    - Plug in the Smart Plug.
+    - 'Hold the button for 2 seconds until the LED turns red, then release: the plug sends a pairing request
+      every 3 s for 30 s.'
+    - Ocean2MQTT answers automatically and the LED blinks green.
+    de:
+    - Stecken Sie den Zwischenstecker ein.
+    - 'Halten Sie die Taste 2 Sekunden gedrückt, bis die LED rot leuchtet, und lassen Sie los: Der Stecker
+      sendet 30 s lang alle 3 s eine Anlernanfrage.'
+    - Ocean2MQTT antwortet automatisch, die LED blinkt grün.
+reglages:
+- led
+- power_on_state
+- local_control
+- power_failure
+- auto_off
+recom: true
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052200
+photo: asp-2.png
+variantes:
+- ASP-2-1-00
+- ASP-2-1-10

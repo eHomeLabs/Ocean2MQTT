@@ -1,0 +1,40 @@
+ref: MSP-2
+marque: NodOn
+nom:
+  fr: Micro Smart Plug EnOcean + Mesure
+  en: EnOcean Micro Smart Plug + Metering
+  de: EnOcean Micro-Zwischenstecker mit Messung
+type: prise
+eep: D2-01-0E
+fabricant_id: 70
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Branchez la prise.
+    - 'Maintenez le bouton 2 secondes jusqu''à ce que la LED passe au rouge, puis relâchez : la prise
+      envoie une demande d''appairage toutes les 3 s pendant 30 s.'
+    - Ocean2MQTT répond automatiquement, la LED clignote en vert.
+    en:
+    - Plug in the Micro Smart Plug.
+    - 'Hold the button for 2 seconds until the LED turns red, then release: the plug sends a pairing request
+      every 3 s for 30 s.'
+    - Ocean2MQTT answers automatically and the LED blinks green.
+    de:
+    - Stecken Sie den Zwischenstecker ein.
+    - 'Halten Sie die Taste 2 Sekunden gedrückt, bis die LED rot leuchtet, und lassen Sie los: Der Stecker
+      sendet 30 s lang alle 3 s eine Anlernanfrage.'
+    - Ocean2MQTT antwortet automatisch, die LED blinkt grün.
+mesure: true
+reglages:
+- led
+- power_on_state
+- local_control
+- power_failure
+- auto_off
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052208
+photo: msp-2.png
+variantes:
+- MSP-2-1-01
+- MSP-2-1-11

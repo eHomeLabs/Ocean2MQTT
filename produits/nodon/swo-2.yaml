@@ -1,0 +1,26 @@
+ref: SWO-2
+marque: NodOn
+nom:
+  fr: Capteur d'ouverture invisible sans pile EnOcean
+  en: EnOcean Battery-free Invisible Opening Sensor
+  de: EnOcean unsichtbarer batterieloser Öffnungssensor
+type: capteur
+eep: D5-00-01
+fabricant_id: 70
+appairage:
+  mode: 1bs
+  etapes:
+    fr:
+    - Maintenez le bouton LRN du capteur enfoncé et actionnez le ressort (enfoncez-le ou relâchez-le).
+    - Le bouton LRN seul n'émet rien.
+    en:
+    - Hold the LRN button of the sensor and actuate the spring (press or release it).
+    - The LRN button alone sends nothing.
+    de:
+    - Halten Sie die LRN-Taste gedrückt und betätigen Sie die Feder (eindrücken oder loslassen).
+    - Die LRN-Taste allein sendet nichts.
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000192084
+photo: swo-2.png
+variantes:
+- SWO-2-1-00

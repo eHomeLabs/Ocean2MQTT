@@ -1,0 +1,28 @@
+ref: SDO-2
+marque: NodOn
+nom:
+  fr: Détecteur d'ouverture portes et fenêtres EnOcean
+  en: EnOcean Door and Window Sensor
+  de: EnOcean Tür- und Fensterkontakt
+type: capteur
+eep: D5-00-01
+fabricant_id: 70
+appairage:
+  mode: 1bs
+  etapes:
+    fr:
+    - Faites un appui simple sur le bouton d'appairage situé à l'arrière du capteur.
+    - Si le capteur est neuf, exposez-le quelques minutes à la lumière pour charger sa cellule solaire.
+    en:
+    - Press once the pairing button at the back of the sensor.
+    - If the sensor is new, expose it to light for a few minutes to charge its solar cell.
+    de:
+    - Drücken Sie einmal die Anlerntaste auf der Rückseite des Sensors.
+    - Ist der Sensor neu, legen Sie ihn einige Minuten ins Licht, um die Solarzelle zu laden.
+reglages:
+- timeout
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000053854
+photo: sdo-2.png
+variantes:
+- SDO-2-1-05

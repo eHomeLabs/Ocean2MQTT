@@ -1,0 +1,23 @@
+ref: CCS-2
+marque: NodOn
+nom:
+  fr: Interrupteur à carte EnOcean
+  en: EnOcean Card Switch
+  de: EnOcean Kartenschalter
+type: interrupteur
+eep: F6-04-01
+fabricant_id: 70
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - Insérez une carte dans l'interrupteur à carte.
+    en:
+    - Insert a card into the card switch.
+    de:
+    - Stecken Sie eine Karte in den Kartenschalter.
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052274
+photo: ccs-2.png
+variantes:
+- CCS-2-1-01

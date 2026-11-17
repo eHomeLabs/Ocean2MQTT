@@ -1,0 +1,24 @@
+ref: TSB-2
+marque: NodOn
+nom:
+  fr: Soft Button EnOcean
+  en: EnOcean Soft Button
+  de: EnOcean Soft Button
+type: interrupteur
+eep: D2-03-0A
+fabricant_id: 70
+appairage:
+  mode: ute_uni
+  etapes:
+    fr:
+    - Appuyez 5 fois brièvement de suite sur le Soft Button (moins d'une demi-seconde entre chaque appui).
+    en:
+    - Press the Soft Button 5 times briefly in a row (less than half a second between presses).
+    de:
+    - Drücken Sie den Soft Button 5-mal kurz hintereinander (weniger als eine halbe Sekunde zwischen den
+      Drücken).
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052273
+photo: tsb-2.png
+variantes:
+- TSB-2-2-02

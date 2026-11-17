@@ -1,0 +1,24 @@
+ref: CFS-2
+marque: NodOn
+nom:
+  fr: Interrupteur de sol EnOcean
+  en: EnOcean Floor Switch
+  de: EnOcean Bodenschalter
+type: interrupteur
+eep: F6-02-01
+decodeur: single_button
+fabricant_id: 70
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - Appuyez avec le pied (ou la main) sur l'interrupteur de sol.
+    en:
+    - Press the floor switch with your foot (or hand).
+    de:
+    - Drücken Sie mit dem Fuß (oder der Hand) auf den Bodenschalter.
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000052272
+photo: cfs-2.png
+variantes:
+- CFS-2-1-05

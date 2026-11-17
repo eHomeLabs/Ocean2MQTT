@@ -1,0 +1,28 @@
+ref: PIR-2
+marque: NodOn
+nom:
+  fr: Détecteur de mouvement EnOcean
+  en: EnOcean Motion Sensor
+  de: EnOcean Bewegungsmelder
+type: capteur
+eep: A5-07-03
+fabricant_id: 70
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Faites un appui simple sur le bouton Pairing du détecteur.
+    - '(Un appui long de 3 s change la temporisation : ne le faites pas ici.)'
+    en:
+    - Press the detector's Pairing button once.
+    - '(A 3 s long press changes the time-out: don''t do it here.)'
+    de:
+    - Drücken Sie einmal kurz die Pairing-Taste des Melders.
+    - '(Ein langer Druck von 3 s ändert die Nachlaufzeit: hier nicht ausführen.)'
+reglages:
+- timeout
+support: valide
+notice: https://support.nodon.fr/support/solutions/articles/150000053859
+photo: pir-2.png
+variantes:
+- PIR-2-1-01
