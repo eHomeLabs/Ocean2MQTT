@@ -9,9 +9,10 @@ TEACH_UTE_BIDIR = "ute_bidir"  # le produit envoie une requête UTE, la passerel
 TEACH_UTE_UNI = "ute_uni"  # requête UTE sans réponse attendue
 TEACH_1BS = "1bs"  # télégramme 1BS avec bit LRN
 TEACH_4BS = "4bs"  # télégramme 4BS avec bit LRN
+TEACH_4BS_BIDIR = "4bs_bidir"  # teach-in 4BS avec réponse de la passerelle (vanne)
 TEACH_RPS = "rps"  # premier appui de touche reçu
 
-TEACH_MODES = (TEACH_UTE_BIDIR, TEACH_UTE_UNI, TEACH_1BS, TEACH_4BS, TEACH_RPS)
+TEACH_MODES = (TEACH_UTE_BIDIR, TEACH_UTE_UNI, TEACH_1BS, TEACH_4BS, TEACH_4BS_BIDIR, TEACH_RPS)
 
 # Niveaux de support affichés dans l'interface
 SUPPORT_VALIDE = "valide"
@@ -46,7 +47,8 @@ class Product:
 
     @property
     def is_actuator(self) -> bool:
-        return self.teach_in == TEACH_UTE_BIDIR
+        """Le produit reçoit des télégrammes de la passerelle (adresse d'émission dédiée)."""
+        return self.teach_in in (TEACH_UTE_BIDIR, TEACH_4BS_BIDIR)
 
     @property
     def rorg_func_type(self) -> tuple[int, int, int]:

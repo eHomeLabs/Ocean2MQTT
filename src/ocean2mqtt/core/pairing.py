@@ -6,12 +6,18 @@ import asyncio
 import logging
 from dataclasses import dataclass
 
-from .eep import is_1bs_teach_in, is_4bs_teach_in, parse_4bs_teach_in_eep
-from .esp3 import RORG_RPS, RadioTelegram, UteRequest, parse_ute
+from .eep import (
+    is_1bs_teach_in,
+    is_4bs_teach_in,
+    parse_4bs_teach_in_eep,
+    teach_in_4bs_response,
+)
+from .esp3 import RORG_4BS, RORG_RPS, RadioTelegram, UteRequest, parse_ute
 from .gateway import Gateway
 from .product import (
     TEACH_1BS,
     TEACH_4BS,
+    TEACH_4BS_BIDIR,
     TEACH_RPS,
     TEACH_UTE_BIDIR,
     TEACH_UTE_UNI,
@@ -46,7 +52,7 @@ def match_teach_in(product: Product, telegram: RadioTelegram) -> tuple[bool, Ute
         return True, ute
     if product.teach_in == TEACH_1BS:
         return is_1bs_teach_in(telegram), None
-    if product.teach_in == TEACH_4BS:
+    if product.teach_in in (TEACH_4BS, TEACH_4BS_BIDIR):
         if not is_4bs_teach_in(telegram):
             return False, None
         eep = parse_4bs_teach_in_eep(telegram)
@@ -79,15 +85,22 @@ async def wait_for_teach_in(
         ok, ute = match_teach_in(product, telegram)
         if not ok:
             return
-        if product.teach_in == TEACH_UTE_BIDIR and ute is not None:
+        respond_ute = product.teach_in == TEACH_UTE_BIDIR and ute is not None
+        respond_4bs = product.teach_in == TEACH_4BS_BIDIR
+        if respond_ute or respond_4bs:
             assert sender_offset is not None
             sender = gateway.sender_id(sender_offset)
 
             async def _respond() -> None:
                 try:
-                    await gateway.send_ute_response(ute, telegram.sender, sender)
+                    if respond_ute:
+                        await gateway.send_ute_response(ute, telegram.sender, sender)
+                    else:
+                        await gateway.send_radio(
+                            RORG_4BS, teach_in_4bs_response(telegram), sender, telegram.sender
+                        )
                 except Exception:
-                    _LOGGER.exception("Échec d'envoi de la réponse UTE")
+                    _LOGGER.exception("Échec d'envoi de la réponse d'appairage")
 
             task = loop.create_task(_respond())
             pending_responses.add(task)

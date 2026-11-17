@@ -454,6 +454,41 @@ def decode_f610(t: RadioTelegram) -> dict[str, Any] | None:
     return {"handle": position} if position else None
 
 
+# --- A5-20-01 : tête thermostatique (bidirectionnelle) ---------------------------
+# La vanne émet régulièrement son état ; la passerelle doit répondre aussitôt avec
+# la consigne (sinon la vanne garde la précédente). Consigne en °C (bit SPS = 1).
+
+
+def decode_a52001(t: RadioTelegram) -> dict[str, Any] | None:
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    cv, flags, temp, _ = t.payload
+    return {
+        "valve_position": min(cv, 100),
+        "temperature": round(temp * 40 / 255, 1),
+        "window_open": bool(flags & 0x02),
+        "battery_low": bool(flags & 0x10),
+        "valve_error": bool(flags & 0x01 or flags & 0x04),
+    }
+
+
+def a52001_setpoint(setpoint: float, room_temperature: float | None = None) -> bytes:
+    """Réponse à la vanne : consigne en °C (0..40), température pièce facultative."""
+    sp = round(max(0.0, min(40.0, setpoint)) * 255 / 40)
+    db1 = 0x04  # SPS : la consigne est une température
+    tmp = 0
+    if room_temperature is not None:
+        tmp = 255 - round(max(0.0, min(40.0, room_temperature)) * 255 / 40)
+        db1 |= 0x01  # RCU : utiliser la température fournie par la passerelle
+    return bytes([sp, tmp, db1, 0x08])
+
+
+def teach_in_4bs_response(t: RadioTelegram) -> bytes:
+    """Réponse au teach-in 4BS bidirectionnel : même EEP / fabricant, statut accepté."""
+    p = t.payload
+    return bytes([p[0], p[1], p[2], 0xF0])
+
+
 # --- Choix du décodeur ----------------------------------------------------------
 # Clé = EEP complet, préfixe « RR-FF » ou nom de décodeur particulier (champ
 # « decodeur » d'une fiche produit).
@@ -474,6 +509,7 @@ DECODERS = {
     "F6-10-00": decode_f610,
     "F6-10-01": decode_f610,
     "D2-03-0A": decode_d2030a,
+    "A5-20-01": decode_a52001,
     "soft_remote": lambda t: decode_f60201(t, SOFT_REMOTE_NAMES),
     "single_button": decode_single_button,
 }

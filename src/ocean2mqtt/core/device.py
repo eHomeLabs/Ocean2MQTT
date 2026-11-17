@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from . import eep, recom
-from .esp3 import RORG_MSC, RORG_VLD, RadioTelegram, id_to_str
+from .esp3 import RORG_4BS, RORG_MSC, RORG_VLD, RadioTelegram, id_to_str
 from .gateway import Gateway, GatewayError, ReComError
 from .product import Product
 
@@ -33,6 +33,9 @@ ENERGY_REPORT = {"delta": 10, "max_interval": 600, "min_interval": 10}  # Wh, s,
 # impossible n'est publié que si la lecture suivante le confirme.
 ENERGY_MAX_POWER = 4000  # W, au-delà de ce que peut consommer une prise 16 A
 ENERGY_MARGIN = 0.01  # kWh, tolérance (arrondis, horloges)
+
+# Consigne par défaut des têtes thermostatiques (°C)
+DEFAULT_SETPOINT = 20.0
 
 # Clé spéciale envoyée aux entités pour réévaluer leur disponibilité
 AVAILABILITY_KEY = "_availability"
@@ -117,6 +120,7 @@ class Device:
             self.settings[f"auto_off_{ch}"] = 0.0
             self.settings[f"delay_off_{ch}"] = 0.0
         self._listeners: list[Callable[[set[str]], None]] = []
+        self._pending: set[asyncio.Task] = set()
         self._unsub: Callable[[], None] | None = None
 
     @property
@@ -188,6 +192,8 @@ class Device:
         if changes:
             self.state.update(changes)
             keys |= set(changes)
+            if self.product.eep == "A5-20-01":
+                self._answer_valve()
         else:
             _LOGGER.debug(
                 "%s (%s) : télégramme non interprété RORG=%02X %s",
@@ -256,6 +262,22 @@ class Device:
             self.gateway.sender_id(self.sender_offset),
             self.device_id,
         )
+
+    # Tête thermostatique A5-20-01 : la consigne part en réponse à chaque message
+    def _answer_valve(self) -> None:
+        setpoint = self.settings.get("setpoint", DEFAULT_SETPOINT)
+        self.state["setpoint"] = setpoint
+        task = asyncio.get_running_loop().create_task(
+            self._send(eep.a52001_setpoint(setpoint), RORG_4BS)
+        )
+        self._pending.add(task)
+        task.add_done_callback(self._pending.discard)
+
+    async def set_setpoint(self, value: float) -> None:
+        """Nouvelle consigne : envoyée au prochain réveil de la vanne."""
+        self.settings["setpoint"] = round(max(5.0, min(30.0, float(value))) * 2) / 2
+        self.state["setpoint"] = self.settings["setpoint"]
+        self.notify({"setpoint"})
 
     async def set_output(self, channel: int, on: bool) -> None:
         await self._send(eep.d201_set_output(channel, on))
