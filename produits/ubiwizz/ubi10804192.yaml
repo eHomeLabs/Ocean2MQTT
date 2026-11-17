@@ -1,0 +1,20 @@
+ref: UBI10804192
+marque: Ubiwizz
+nom:
+  fr: Poignée de fenêtre connectée (alu gris, 32-42)
+  en: Connected window handle (grey aluminium, 32-42)
+type: capteur
+eep: F6-10-01
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - Tournez la poignée d'une position à une autre.
+    - Le premier changement de position reçu appaire la poignée.
+    en:
+    - Turn the handle from one position to another.
+    - The first position change received pairs the handle.
+support: communaute
+notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=895
+notes: Sans pile (magnéto-résistif), 3 positions (fermée, ouverte, oscillo-battant). Correspondance des
+  valeurs F6-10-01 à confirmer sur produit réel.

@@ -1,0 +1,20 @@
+ref: UBID1220211
+marque: Ubiwizz
+nom:
+  fr: Détecteur de présence d'eau ECO
+  en: ECO water leak detector
+type: capteur
+eep: F6-05-01
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - 'Le détecteur n''a ni pile ni bouton : c''est le contact avec l''eau qui produit l''énergie d''émission.'
+    - Mettez les disques du détecteur au contact de l'eau ; le premier télégramme reçu appaire le détecteur.
+    en:
+    - 'The detector has no battery and no button: contact with water produces the energy to transmit.'
+    - Put the detector's discs in contact with water; the first telegram received pairs the detector.
+support: communaute
+notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=415
+notes: Magnéto-résistif, IP43. Vérifier sur produit réel la procédure d'apprentissage (disques
+  remplaçables ?) et la valeur émise (0x11 attendu).

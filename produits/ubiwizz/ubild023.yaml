@@ -1,0 +1,24 @@
+ref: UBILD023
+marque: Ubiwizz
+nom:
+  fr: Capteur de qualité d'air CO2 et COV
+  en: CO2 and VOC air quality sensor
+type: capteur
+eep: A5-09-04
+eep_supplementaires:
+- A5-09-05
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Alimentez le capteur (230 V).
+    - 'Mettez le capteur en mode apprentissage (voir sa notice) : il envoie un télégramme d''apprentissage.'
+    en:
+    - Power the sensor (230 V).
+    - 'Put the sensor in learn mode (see its manual): it sends a teach-in telegram.'
+reglages:
+- timeout
+support: communaute
+notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=925
+notes: CO2 en ppm (A5-09-04) et COV en ppb (A5-09-05). Vérifier sur produit réel si les deux profils sont
+  émis avec le même identifiant et lequel est annoncé à l'apprentissage.
