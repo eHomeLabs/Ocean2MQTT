@@ -72,6 +72,7 @@ async def main(port: int, data: Path, empty: bool) -> None:
             await app.request("device/rename", {"id": entry["id"], "name": name, "room": room})
         dongle.inject(0xD2, bytes.fromhex("0A 01"), 0x051E575A)  # fil pilote : Confort
         dongle.inject(0xD2, bytes.fromhex("07 60 00 00 02 62"), 0x051E575A)
+        dongle.inject(0xD2, bytes.fromhex("07 20 00 00 B3 F0"), 0x051E575A)  # 46 kWh
         dongle.inject(0xD2, bytes.fromhex("04 1E 00"), 0x05B2C3D4)
 
     app._task(watch_pairing())
@@ -127,12 +128,15 @@ async def main(port: int, data: Path, empty: bool) -> None:
         app._task(neighbours())
 
     async def life() -> None:
+        wh = 12_400  # compteur d'énergie du lave-linge (Wh)
         while True:
             hum = random.randint(130, 150)
             temp = random.randint(118, 132)
             dongle.inject(0xA5, bytes([0, hum, temp, 0x0A]), 0x0181A2B3, dbm=random.randint(55, 75))
             dongle.inject(0xD2, bytes.fromhex("07 60 00 00") + random.randint(1700, 1900).to_bytes(2,
                           "big"), 0x01A3C4D5)
+            wh += 3
+            dongle.inject(0xD2, bytes.fromhex("07 20") + wh.to_bytes(4, "big"), 0x01A3C4D5)
             await asyncio.sleep(5)
 
     if not empty:
