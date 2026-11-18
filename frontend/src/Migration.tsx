@@ -54,6 +54,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
   const [plan, setPlan] = useState<MigrationPlan | null>(null);
   const [result, setResult] = useState<{ imported: number; repair: number; codes?: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [choices, setChoices] = useState<Record<string, string>>({});
   const params = () => (target.kind === "ha" ? { index: target.index } : { file: target.file });
   const haSource = target.kind === "ha" ? info?.migration?.nodocean[target.index] : undefined;
   const [active, setActive] = useState<boolean | null | undefined>(haSource?.active);
@@ -73,7 +74,16 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
   useEffect(() => {
     if (step !== "preview") return;
     request<MigrationPlan>("migration/preview", { ...params(), mode: mode === "fresh" ? "new" : mode })
-      .then(setPlan)
+      .then((p) => {
+        setPlan(p);
+        // Une seule fiche correspond (ex. D2-01-0C -> SIN-2-FP-01) : présélectionnée
+        const auto: Record<string, string> = {};
+        for (const i of p.items) {
+          const real = (i.alternatives ?? []).filter((a) => !a.startsWith("generique/"));
+          if (real.length === 1) auto[i.id] = real[0];
+        }
+        setChoices((c) => ({ ...auto, ...c }));
+      })
       .catch((e: Error) => {
         onError(e.message);
         onClose();
@@ -92,7 +102,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
   const run = async () => {
     setBusy(true);
     try {
-      setResult(await request("migration/import", { ...params(), mode: mode === "fresh" ? "new" : mode }));
+      setResult(await request("migration/import", { ...params(), mode: mode === "fresh" ? "new" : mode, choices }));
       setStep("done");
     } catch (e) {
       onError((e as Error).message);
@@ -178,6 +188,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
               <>
                 {plan.key_mismatch && <p className="callout warn">{t("mig.mismatch", { current: plan.current_base_id ?? "?", source: plan.source.base_id ?? "?" })}</p>}
                 <h3>{t("mig.preview")}</h3>
+                {plan.items.some((i) => i.alternatives?.length) && <p className="small muted">{t("mig.chooseHint")}</p>}
                 <div className="table-card">
                   <table className="table">
                     <tbody>
@@ -186,7 +197,24 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
                           <td className="strong">{i.name}</td>
                           <td className="muted small">{i.room ?? ""}</td>
                           <td className="small">
-                            {i.brand} {i.model}
+                            {i.alternatives?.length ? (
+                              <select
+                                aria-label={`${t("mig.chooseProduct")} ${i.name}`}
+                                value={choices[i.id] ?? i.product}
+                                onChange={(e) => setChoices({ ...choices, [i.id]: e.target.value })}
+                              >
+                                <option value={i.product}>{t("mig.keepGeneric", { eep: i.model })}</option>
+                                {i.alternatives.map((a) => (
+                                  <option key={a} value={a}>
+                                    {i.labels?.[a] ?? a}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <>
+                                {i.brand} {i.model}
+                              </>
+                            )}
                           </td>
                           <td className="small">
                             <code>{i.id}</code>

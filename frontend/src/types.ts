@@ -128,6 +128,8 @@ export type MigrationItem = {
   actuator: boolean;
   recom: boolean;
   status: "ok" | "repair" | "exists" | "unknown" | "code";
+  alternatives?: string[];
+  labels?: Record<string, string>;
 };
 
 export type MigrationPlan = { source: MigrationSource; mode: "same" | "new"; current_base_id?: string | null; key_mismatch: boolean; items: MigrationItem[] };

@@ -4,9 +4,9 @@ import { request, useStore } from "./api";
 import { useConfirm } from "./Confirm";
 import { DeviceControls } from "./DeviceCard";
 import { RecomPanel } from "./Recom";
-import { label, option, supportName, t } from "./i18n";
+import { label, option, productText, supportName, t } from "./i18n";
 import { TelegramTable } from "./Telegrams";
-import type { Device, Setting } from "./types";
+import type { Device, Product, Setting } from "./types";
 
 type Tab = "control" | "settings" | "recom" | "telegrams" | "info";
 
@@ -173,6 +173,22 @@ function SettingRow({ setting, done, apply }: { setting: Setting; done: boolean;
 }
 
 function Info({ device, onClose, onError }: { device: Device; onClose: () => void; onError: (m: string) => void }) {
+  const [compatible, setCompatible] = useState<Product[] | null>(null);
+  const [sheet, setSheet] = useState(device.product.id);
+  const [sheetDone, setSheetDone] = useState(false);
+  useEffect(() => {
+    request<Product[]>("device/compatible", { id: device.id }).then(setCompatible).catch(() => setCompatible([]));
+    setSheet(device.product.id);
+  }, [device.id, device.product.id]);
+  const changeSheet = async () => {
+    try {
+      await request("device/change_product", { id: device.id, product: sheet });
+      setSheetDone(true);
+      setTimeout(() => setSheetDone(false), 2500);
+    } catch (e) {
+      onError((e as Error).message);
+    }
+  };
   const [name, setName] = useState(device.name);
   const [room, setRoom] = useState(device.room ?? "");
   const save = () => request("device/rename", { id: device.id, name, room }).catch((e: Error) => onError(e.message));
@@ -216,6 +232,32 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
           </div>
         )}
       </dl>
+      <h3>
+        {t("detail.sheet")}
+        {sheetDone && <span className="applied"> ✓ {t("detail.sheetDone")}</span>}
+      </h3>
+      {compatible && compatible.length === 0 ? (
+        <p className="small muted">{t("detail.sheetNone")}</p>
+      ) : (
+        <>
+          <p className="small muted">{t("detail.sheetHint", { eep: p.eep })}</p>
+          <div className="number-form">
+            <select className="grow" aria-label={t("detail.sheet")} value={sheet} onChange={(e) => setSheet(e.target.value)}>
+              <option value={p.id}>
+                {p.brand} {p.model} — {productText(p).name}
+              </option>
+              {(compatible ?? []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.brand} {c.model} — {productText(c).name}
+                </option>
+              ))}
+            </select>
+            <button type="button" className="secondary" disabled={sheet === p.id} onClick={changeSheet}>
+              {t("detail.sheetChange")}
+            </button>
+          </div>
+        </>
+      )}
       <h3>{t("detail.rename")}</h3>
       <label className="field">
         {t("detail.name")}
