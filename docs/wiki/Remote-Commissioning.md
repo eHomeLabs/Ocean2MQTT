@@ -4,6 +4,18 @@
 
 Le **Remote Commissioning** (protocole EnOcean Remote Management, « ReMan / ReCom ») permet de régler un produit à distance : lire et modifier la liste des télécommandes qui lui sont associées, lire les paramètres d'un volet, etc. Il est géré par les modules NodOn (SIN-2-x, volet SIN-2-RS-01…). Onglet **Remote Commissioning** de la fiche du produit, ou page **Remote Commissioning** pour tous les produits.
 
+## Appairer un module sans toucher à son bouton
+
+Module encastré, bouton inaccessible ? Dans **Ajouter un produit**, ouvrez la fiche du module puis **« Pas d'accès au bouton d'apprentissage ? »** :
+
+1. saisissez l'identifiant EnOcean du module (étiquette, QR code ou notice) ;
+2. coupez puis remettez le courant du module : il accepte les commandes à distance pendant 5 minutes ;
+3. cliquez sur **Appairer à distance**.
+
+Ocean2MQTT envoie au module la commande Remote Management « mise en mode apprentissage » : le module envoie alors sa demande d'appairage, à laquelle Ocean2MQTT répond comme d'habitude. Si le module a déjà un code (attribué par une autre box), saisissez-le : il est envoyé en clair à la radio pour le déverrouiller.
+
+> Fonction à confirmer sur chaque modèle : si rien ne se passe, vérifiez l'identifiant, recommencez juste après une remise sous tension, ou utilisez le bouton du module.
+
 ## Le code de sécurité
 
 Chaque produit peut être protégé par un **code de sécurité** de 32 bits :

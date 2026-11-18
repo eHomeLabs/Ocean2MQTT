@@ -10,7 +10,7 @@
 
 The device appears in **My devices** and in Home Assistant under **Settings → Devices & services → MQTT**.
 
-**No access to the learn button?** For a **sensor or switch**, open its sheet and use **"Add with the EnOcean ID"** (8 hex characters, on the label, box or QR code, or in the Telegrams page). Not possible for an actuator, which must learn Ocean2MQTT's address through its pairing procedure.
+**No access to the learn button?** For a **sensor or switch**, open its sheet and use **"Add with the EnOcean ID"** (8 hex characters, on the label, box or QR code, or in the Telegrams page). For a **NodOn actuator supporting Remote Commissioning**, the same panel offers **remote pairing**: enter the module ID, switch its power off and on, then click **Pair remotely** within 5 minutes (enter its Remote Commissioning code if it already has one). Other actuators still need their pairing procedure.
 
 Ocean2MQTT listens all the time: when an unknown device sends its teach-in, a **"This device looks like"** banner suggests matching sheets; sensors and switches are then added in one click.
 

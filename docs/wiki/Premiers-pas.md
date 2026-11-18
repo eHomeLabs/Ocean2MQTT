@@ -16,7 +16,9 @@ Le produit apparaît dans **Mes produits** et, dans Home Assistant, dans **Param
 
 Pour un **capteur ou un interrupteur** (produit déjà installé, bouton inaccessible…), ouvrez sa fiche puis **« Pas d'accès au bouton d'apprentissage ? Ajouter avec l'identifiant EnOcean »** : saisissez son identifiant (8 caractères hexadécimaux, ex. `0512ABCD`, sur l'étiquette, l'emballage ou le QR code du produit, ou dans la page **Télégrammes** s'il a déjà émis). Il est reconnu dès son télégramme suivant.
 
-Impossible pour un **actionneur** : il doit apprendre l'adresse d'Ocean2MQTT, ce que fait sa procédure d'appairage.
+Pour un **actionneur NodOn qui gère le Remote Commissioning** (SIN-2-x…), le même volet propose l'**appairage à distance** : saisissez l'identifiant du module, coupez puis remettez son courant, et cliquez sur **Appairer à distance** dans les 5 minutes. Ocean2MQTT le met en mode appairage par radio, puis l'appairage se termine comme avec le bouton. Si le module a déjà un code Remote Commissioning, saisissez-le aussi. Voir [[Remote Commissioning]].
+
+Pour les autres actionneurs, la procédure d'appairage reste nécessaire : ils doivent apprendre l'adresse d'Ocean2MQTT.
 
 ### Capteurs et interrupteurs déjà entendus
 

@@ -4,6 +4,10 @@
 
 **Remote Commissioning** (EnOcean Remote Management, "ReMan / ReCom") lets you configure a device remotely: read and edit its linked remotes, read shutter parameters… Supported by NodOn modules.
 
+## Pairing a module without touching its button
+
+In **Add a device**, open the module's sheet, then **"No access to the learn button?"**: enter the module's EnOcean ID, switch its power off and on, and click **Pair remotely** within 5 minutes. Ocean2MQTT sends the Remote Management "set learn mode" command; the module then sends its pairing request and pairing ends as usual. If the module already has a code, enter it (sent in clear over the air). To be confirmed on each model.
+
 ## Security code
 
 - **Without a code**, the device only accepts remote commands during the **5 minutes after it is powered on**.
