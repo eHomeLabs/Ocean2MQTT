@@ -19,6 +19,7 @@ appairage:
 reglages:
 - timeout
 support: communaute
+photo: ubild023.png
 notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=925
 notes: CO2 en ppm (A5-09-04) et COV en ppb (A5-09-05). Vérifier sur produit réel si les deux profils sont
   émis avec le même identifiant et lequel est annoncé à l'apprentissage.

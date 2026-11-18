@@ -1,0 +1,23 @@
+ref: UBILD001
+marque: Ubiwizz
+nom:
+  fr: Détecteur de fumée
+  en: Smoke detector
+type: capteur
+eep: F6-05-02
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - Installez la pile 9 V fournie.
+    - Appuyez 2 secondes sur le bouton « Learn » du détecteur jusqu'au bip et au flash de la LED rouge.
+    en:
+    - Insert the supplied 9 V battery.
+    - Press the detector's "Learn" button for 2 seconds until it beeps and the red LED flashes.
+reglages:
+- timeout
+support: communaute
+photo: ubild001.png
+notice: https://www.decelect.com/fichesproduits/UBILD001.pdf
+notes: Norme EN 14604, sirène 85 dB, pile 9 V (5 ans). Alarme fumée et pile faible (F6-05-02) à confirmer
+  sur produit réel avant de passer la fiche en « valide ».
