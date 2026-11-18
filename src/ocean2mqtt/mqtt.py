@@ -18,6 +18,7 @@ import ssl
 from typing import TYPE_CHECKING, Any
 
 from .core.exposes import Expose, exposes
+from .core.settings import settings_for
 
 if TYPE_CHECKING:
     import paho.mqtt.client as mqtt
@@ -28,6 +29,26 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 ORIGIN = {"name": "Ocean2MQTT", "support_url": "https://github.com/eHomeLabs/Ocean2MQTT"}
+
+# Noms des réglages (entités « configuration » de HA)
+SETTING_NAMES = {
+    "fr": {"led": "LED", "local_control": "Bouton local", "taught_in": "Télécommandes directes",
+           "power_failure": "Détection de coupure", "power_on_state": "État au retour du courant",
+           "switch_type": "Type d'interrupteur", "auto_off": "Extinction automatique",
+           "delay_off": "Extinction retardée", "travel_time": "Temps de course",
+           "rs_switch_type": "Type d'interrupteur (volet)", "calibration": "Calibration",
+           "repeater": "Répéteur", "energy_reset": "Remise à zéro de l'énergie",
+           "buttons": "Nombre de boutons", "temperature_offset": "Correction température",
+           "humidity_offset": "Correction humidité", "timeout": "Délai d'indisponibilité"},
+    "en": {"led": "LED", "local_control": "Local button", "taught_in": "Direct remotes",
+           "power_failure": "Power failure detection", "power_on_state": "Power-on state",
+           "switch_type": "Switch type", "auto_off": "Auto off", "delay_off": "Delay off",
+           "travel_time": "Travel time", "rs_switch_type": "Switch type (shutter)",
+           "calibration": "Calibration", "repeater": "Repeater",
+           "energy_reset": "Reset energy", "buttons": "Number of buttons",
+           "temperature_offset": "Temperature offset", "humidity_offset": "Humidity offset",
+           "timeout": "Unavailability timeout"},
+}
 
 # Noms des entités (la découverte MQTT de HA n'est pas traduisible)
 NAMES = {
@@ -139,6 +160,31 @@ def discovery_configs(
             add("event", e, {"name": names["action"], "device_class": "button",
                              "state_topic": f"{topic}/action", "event_types": list(e.options),
                              "value_template": '{"event_type": "{{ value }}"}'})
+    labels = SETTING_NAMES["fr" if app.config["language"].startswith("fr") else "en"]
+    for s in settings_for(device):
+        base_key = s.key.rsplit("_l", 1)[0] if s.channel is not None else s.key
+        name = labels.get(base_key, s.key)
+        if s.channel is not None and product.channels > 1:
+            name = f"{name} {s.channel + 1}"
+        e = Expose(s.key, s.kind, category="config")
+        if s.kind == "binary":
+            add("switch", e, {"name": name, "command_topic": cmd,
+                              "command_template": f'{{"{s.key}": "{{{{ value }}}}"}}',
+                              "payload_on": "ON", "payload_off": "OFF",
+                              "value_template": _v(s.key), "state_on": "ON",
+                              "state_off": "OFF"})
+        elif s.kind == "enum":
+            add("select", e, {"name": name, "command_topic": cmd,
+                              "command_template": f'{{"{s.key}": "{{{{ value }}}}"}}',
+                              "value_template": _v(s.key), "options": list(s.options)})
+        elif s.kind == "numeric":
+            add("number", e, {"name": name, "command_topic": cmd,
+                              "command_template": f'{{"{s.key}": {{{{ value }}}}}}',
+                              "value_template": _v(s.key), "min": s.min, "max": s.max,
+                              "step": s.step, "unit_of_measurement": s.unit, "mode": "box"})
+        elif s.key == "energy_reset":
+            add("button", e, {"name": name, "command_topic": cmd,
+                              "payload_press": '{"energy_reset": "reset"}'})
     return out
 
 

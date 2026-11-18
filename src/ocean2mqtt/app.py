@@ -13,19 +13,38 @@ import logging
 import re
 import time
 import unicodedata
+from collections import deque
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
 from . import __version__
 from .config import Config, DeviceStore
+from .core import recom
 from .core.convert import CommandError, apply_command, device_payload, text_command
-from .core.device import AVAILABILITY_KEY, Device
-from .core.esp3 import id_to_str, str_to_id
+from .core.device import (
+    AVAILABILITY_KEY,
+    LINK_TYPES,
+    LINK_TYPES_BY_MODEL,
+    LINK_TYPES_DEFAULT,
+    Device,
+)
+from .core.eep import is_1bs_teach_in, is_4bs_teach_in, parse_4bs_teach_in_eep
+from .core.esp3 import (
+    RORG_1BS,
+    RORG_4BS,
+    RORG_RPS,
+    RORG_VLD,
+    RadioTelegram,
+    id_to_str,
+    parse_ute,
+    str_to_id,
+)
 from .core.exposes import exposes
-from .core.gateway import Gateway, GatewayError
+from .core.gateway import Gateway, GatewayError, ReComError
 from .core.pairing import wait_for_teach_in
 from .core.product import Product
+from .core.settings import SettingError, apply_setting, describe, is_setting
 from .library import Library, load_library
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +53,8 @@ Listener = Callable[[str, Any, bool], None]  # topic, données, retenu
 
 PAIRING_TIMEOUT = 60
 RECONNECT_DELAY = 15
+UNKNOWN_MAX = 50  # émetteurs inconnus gardés en mémoire
+RECOM_LOG_MAX = 200
 
 
 def slugify(text: str) -> str:
@@ -62,6 +83,9 @@ class Ocean2MQTT:
         self.pairing: dict[str, Any] | None = None
         self._tasks: set[asyncio.Task] = set()
         self._stopping = False
+        # Émetteurs entendus mais pas appairés (id -> infos), suggestion automatique
+        self.unknown: dict[str, dict[str, Any]] = {}
+        self.recom_log: deque[dict[str, Any]] = deque(maxlen=RECOM_LOG_MAX)
 
     # -- Diffusion -----------------------------------------------------------
 
@@ -91,6 +115,8 @@ class Ocean2MQTT:
 
     async def start(self) -> None:
         self.gateway.on_disconnect = self._on_gateway_lost
+        self.gateway.add_record_listener(self._on_record)
+        self.gateway.subscribe_all(self._on_any_telegram)
         await self._connect_gateway(wait=False)
         for entry in list(self.store.devices.values()):
             self._add_device(entry)
@@ -146,13 +172,13 @@ class Ocean2MQTT:
     # -- Produits ------------------------------------------------------------
 
     def _product(self, product_id: str) -> Product:
-        try:
-            return self.library.products[product_id]
-        except KeyError as err:
-            raise RequestError(f"Produit inconnu dans la bibliothèque : {product_id}") from err
+        product = self.library.get(product_id)
+        if product is None:
+            raise RequestError(f"Produit inconnu dans la bibliothèque : {product_id}")
+        return product
 
     def _add_device(self, entry: dict[str, Any]) -> Device | None:
-        product = self.library.products.get(entry["product"])
+        product = self.library.get(entry["product"])
         if product is None:
             _LOGGER.error("%s : fiche %s introuvable, produit ignoré", entry["id"],
                           entry["product"])
@@ -210,10 +236,13 @@ class Ocean2MQTT:
             "teach_in": product.teach_in,
             "steps": list(product.steps(lang)),
             "after": product.after_text(lang),
+            "i18n": {code: {"name": product.name(code), "steps": list(product.steps(code)),
+                            "after": product.after_text(code)} for code in ("fr", "en")},
             "manual": product.manual,
             "image": self._image_url(product),
             "variants": list(product.variants),
             "recom": product.recom,
+            "generic": product.generic,
             "exposes": [e.as_dict() for e in exposes(product)],
         }
 
@@ -230,6 +259,23 @@ class Ocean2MQTT:
             "available": device.available,
             "last_seen": self.last_seen.get(device.id_str),
             "actuator": product.is_actuator,
+            "settings": describe(device),
+            "recom": self.recom_status(device) if product.recom else None,
+        }
+
+    def recom_status(self, device: Device) -> dict[str, Any]:
+        """État du Remote Commissioning (le code n'est jamais transmis)."""
+        types = LINK_TYPES_BY_MODEL.get(device.product.model, LINK_TYPES_DEFAULT)
+        return {
+            "secured": device.recom_secured,
+            "pending": device.recom_pending,
+            "has_code": device.recom_code is not None,
+            "links": device.state.get("links"),
+            "links_max": device.state.get("links_max"),
+            "link_types": list(types),
+            "config": {k: device.state[k] for k in ("rs_switch_type", "rs_calibration_type",
+                                                     "rs_time_down", "rs_time_up")
+                       if device.state.get(k) is not None},
         }
 
     def _listener(self, device: Device) -> Callable[[set[str]], None]:
@@ -244,16 +290,74 @@ class Ocean2MQTT:
             if "rssi" in keys:
                 self.last_seen[device.id_str] = datetime.now(UTC).isoformat(timespec="seconds")
             if "setpoint" in keys:
-                entry = self.store.devices[device.id_str]
-                entry["settings"] = {**entry.get("settings", {}), "setpoint": device.settings.get(
-                    "setpoint")}
-                self.store.put(entry)
+                self._save_settings(device)
             event = device.state.pop("event", None) if "event" in keys else None
             if event:
                 self.emit(f"{topic}/action", event, False)
             self._publish_state(device)
 
         return _update
+
+    def _save_settings(self, device: Device) -> None:
+        entry = self.store.devices.get(device.id_str)
+        if entry is not None:
+            entry["settings"] = dict(device.settings)
+            self.store.put(entry)
+
+    # -- Journal radio, émetteurs inconnus -----------------------------------
+
+    def _on_record(self, record: dict[str, Any]) -> None:
+        known = self.devices.get(record["sender"])
+        self.emit("bridge/telegrams", {**record, "name": known.title if known else None})
+
+    def _on_any_telegram(self, telegram: RadioTelegram) -> None:
+        sender = telegram.sender_str
+        if sender in self.devices or telegram.rorg not in (RORG_RPS, RORG_1BS, RORG_4BS,
+                                                            RORG_VLD, 0xD4):
+            return
+        now = datetime.now(UTC).isoformat(timespec="seconds")
+        entry = self.unknown.get(sender)
+        new = entry is None
+        if new:
+            if len(self.unknown) >= UNKNOWN_MAX:
+                oldest = min(self.unknown, key=lambda k: self.unknown[k]["last_seen"])
+                self.unknown.pop(oldest)
+            entry = {"id": sender, "rorg": f"{telegram.rorg:02X}", "count": 0,
+                     "first_seen": now, "eep": None, "manufacturer": None,
+                     "teach_in": None, "suggestions": []}
+            self.unknown[sender] = entry
+        entry["count"] += 1
+        entry["last_seen"] = now
+        entry["rssi"] = telegram.dbm
+        teach = self._teach_in_info(telegram)
+        if teach is not None:
+            mode, eep, manufacturer = teach
+            entry["teach_in"] = mode
+            entry["eep"] = eep or entry["eep"]
+            entry["manufacturer"] = manufacturer
+            products = self.library.match_teach_in(eep, manufacturer) if eep else []
+            if eep and not products and (generic := self.library.get(f"generique/{eep}")):
+                products = [generic]
+            entry["suggestions"] = [p.id for p in products]
+        if new or teach is not None:
+            self.emit("bridge/unknown", list(self.unknown.values()))
+            if teach is not None and entry["suggestions"]:
+                self.emit("bridge/event", {"type": "suggestion", "data": entry})
+
+    @staticmethod
+    def _teach_in_info(telegram: RadioTelegram) -> tuple[str, str | None, int | None] | None:
+        """(mode, EEP, fabricant) si le télégramme est une demande d'appairage."""
+        if (ute := parse_ute(telegram)) is not None:
+            return "ute", ute.eep, ute.manufacturer
+        if is_4bs_teach_in(telegram):
+            parsed = parse_4bs_teach_in_eep(telegram)
+            if parsed:
+                func, type_, manufacturer = parsed
+                return "4bs", f"A5-{func:02X}-{type_:02X}", manufacturer
+            return "4bs", None, None
+        if telegram.rorg == RORG_1BS and is_1bs_teach_in(telegram):
+            return "1bs", "D5-00-01", None
+        return None
 
     def _publish_state(self, device: Device) -> None:
         payload = device_payload(device)
@@ -313,6 +417,9 @@ class Ocean2MQTT:
             self._publish_info()
             return
         device_id = id_to_str(result.device_id)
+        if product.generic and result.eep != product.eep:
+            product = self.library.get(f"generique/{result.eep}") or product
+        self.unknown.pop(device_id, None)
         old = self.store.devices.get(device_id)
         if old is not None:  # nouvel appairage d'un produit connu : on garde nom et pièce
             self._remove_device(device_id, keep_entry=True)
@@ -384,6 +491,33 @@ class Ocean2MQTT:
             products = self.library.search(data["search"]) if data.get("search") else list(
                 self.library.products.values())
             return [self.product_dict(p) for p in products]
+        if command == "library/generic":
+            return [self.product_dict(p) for p in self.library.generics()]
+        if command == "unknown":
+            return list(self.unknown.values())
+        if command == "unknown/clear":
+            self.unknown.clear()
+            self.emit("bridge/unknown", [])
+            return []
+        if command == "telegrams":
+            return [{**r, "name": self.devices[r["sender"]].title
+                     if r["sender"] in self.devices else None}
+                    for r in self.gateway.history]
+        if command == "device/add":
+            return self._add_known(data)
+        if command == "device/settings":
+            return describe(self._device(data))
+        if command == "device/settings/set":
+            device = self._device(data)
+            values = data.get("settings")
+            if not isinstance(values, dict):
+                values = {str(data.get("key")): data.get("value")}
+            await self._apply_settings(device, values)
+            return describe(device)
+        if command.startswith("device/recom/"):
+            return await self._recom_request(command.removeprefix("device/recom/"), data)
+        if command == "recom/log":
+            return list(self.recom_log)
         if command == "pairing/start":
             if not self.gateway_ok:
                 raise RequestError("Clé EnOcean non connectée")
@@ -437,12 +571,129 @@ class Ocean2MQTT:
         raise RequestError(f"Commande inconnue : {command}")
 
     async def command(self, device: Device, payload: dict[str, Any]) -> None:
+        settings = {k: v for k, v in payload.items() if is_setting(device, k)}
+        controls = {k: v for k, v in payload.items() if k not in settings}
+        if settings:
+            await self._apply_settings(device, settings)
+        if not controls:
+            return
         if not device.product.is_actuator:
             raise RequestError(f"{device.title} est un capteur : pas de commande possible")
         try:
-            ignored = await apply_command(device, payload)
+            ignored = await apply_command(device, controls)
         except (GatewayError, CommandError, ValueError, TypeError) as err:
             raise RequestError(f"Commande impossible : {err}") from err
         self._publish_state(device)
         if ignored:
             raise RequestError(f"{device.title} ne comprend pas : {', '.join(ignored)}")
+
+    async def _apply_settings(self, device: Device, values: dict[str, Any]) -> None:
+        errors: list[str] = []
+        for key, value in values.items():
+            try:
+                await apply_setting(device, key, value)
+            except SettingError as err:
+                errors.append(str(err))
+            except GatewayError as err:
+                errors.append(f"{key} : {err}")
+        self._save_settings(device)
+        self._publish_state(device)
+        self._publish_devices()
+        if errors:
+            raise RequestError("Réglage non appliqué : " + " ; ".join(errors))
+
+    def _add_known(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Appairage en un clic d'un émetteur déjà entendu (capteurs, interrupteurs)."""
+        device_id = str(data.get("id") or "").upper()
+        try:
+            str_to_id(device_id)
+        except ValueError as err:
+            raise RequestError(f"Identifiant EnOcean invalide : {device_id}") from err
+        if device_id in self.devices:
+            raise RequestError(f"{device_id} est déjà appairé")
+        product = self._product(str(data.get("product")))
+        if product.is_actuator:
+            raise RequestError("Un actionneur doit être appairé avec sa procédure "
+                               "(il attend une réponse de la passerelle)")
+        name = str(data.get("name") or "").strip() or (
+            f"{product.name(self.config['language'])} {device_id[-4:]}")
+        entry = {"id": device_id, "product": product.id, "name": name,
+                 "room": data.get("room") or None, "sender_offset": None, "settings": {},
+                 "recom_code": None,
+                 "paired_at": datetime.now(UTC).isoformat(timespec="seconds")}
+        self.store.put(entry)
+        device = self._add_device(entry)
+        self.unknown.pop(device_id, None)
+        self.emit("bridge/unknown", list(self.unknown.values()))
+        self._publish_devices()
+        self._publish_info()
+        result = self.device_dict(device) if device else {"id": device_id}
+        self.emit("bridge/event", {"type": "device_joined", "data": result})
+        return result
+
+    # -- Remote Commissioning ------------------------------------------------
+
+    async def _recom_request(self, action: str, data: dict[str, Any]) -> Any:
+        device = self._device(data)
+        if not device.product.recom:
+            raise RequestError(f"{device.title} ne gère pas le Remote Commissioning")
+        if not self.gateway_ok:
+            raise RequestError("Clé EnOcean non connectée")
+        sender = self.gateway.sender_id(device.sender_offset or 0)
+        detail: Any = None
+        try:
+            if action == "status":
+                return self.recom_status(device)
+            if action == "ping":
+                ok = await self.gateway.ping(device.device_id, sender)
+                detail = "répond" if ok else "muet"
+                if not ok:
+                    raise ReComError("Le produit ne répond pas au Ping", "no_answer")
+            elif action == "unlock":
+                detail = await device.unlock_recom()
+            elif action == "code":
+                code = recom.parse_code(str(data.get("code") or ""))
+                if code is None:
+                    raise RequestError("Code invalide : 8 caractères hexadécimaux (avec ou sans "
+                                       "le préfixe 11Z du QR code)")
+                await device.use_code(code)
+                detail = "code accepté"
+            elif action == "links":
+                links = await device.read_links()
+                detail = f"{len(links)} télécommande(s)"
+            elif action == "links/add":
+                link_type = str(data.get("type") or "")
+                if link_type not in LINK_TYPES:
+                    raise RequestError(f"Type de télécommande inconnu : {link_type}")
+                try:
+                    link_id = str_to_id(str(data.get("link_id") or ""))
+                except ValueError as err:
+                    raise RequestError("Identifiant de télécommande invalide") from err
+                index = await device.add_link(link_id, link_type)
+                detail = f"ajoutée en position {index}"
+            elif action == "links/delete":
+                index = int(data.get("index"))
+                await device.delete_link(index)
+                detail = f"position {index} supprimée"
+            elif action == "config":
+                if not device.product.has("roller_shutter"):
+                    raise RequestError("Paramètres lisibles uniquement sur le volet roulant")
+                detail = await device.rs_read_config()
+            else:
+                raise RequestError(f"Commande ReCom inconnue : {action}")
+        except ReComError as err:
+            self._log_recom(device, action, False, str(err))
+            raise RequestError(f"ReCom : {err}") from err
+        except GatewayError as err:
+            self._log_recom(device, action, False, str(err))
+            raise RequestError(f"ReCom : {err}") from err
+        self._log_recom(device, action, True, detail)
+        self._publish_devices()
+        return self.recom_status(device)
+
+    def _log_recom(self, device: Device, action: str, ok: bool, detail: Any) -> None:
+        entry = {"time": datetime.now(UTC).isoformat(timespec="seconds"), "id": device.id_str,
+                 "name": device.title, "action": action, "ok": ok,
+                 "detail": detail if isinstance(detail, str) else None}
+        self.recom_log.append(entry)
+        self.emit("bridge/event", {"type": "recom", "data": entry})
