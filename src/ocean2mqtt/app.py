@@ -53,6 +53,7 @@ Listener = Callable[[str, Any, bool], None]  # topic, données, retenu
 
 PAIRING_TIMEOUT = 60
 RECONNECT_DELAY = 15
+POLL_INTERVAL = 60  # s, interrogation des actionneurs (état, puissance, énergie)
 UNKNOWN_MAX = 50  # émetteurs inconnus gardés en mémoire
 RECOM_LOG_MAX = 200
 
@@ -121,6 +122,7 @@ class Ocean2MQTT:
         for entry in list(self.store.devices.values()):
             self._add_device(entry)
         self._task(self._availability_loop())
+        self._task(self._poll_loop())
         self.emit("bridge/state", "online", True)
         self._publish_info()
         self._publish_devices()
@@ -142,9 +144,7 @@ class Ocean2MQTT:
             await self.gateway.connect()
             self.gateway_ok = True
             _LOGGER.info("Clé EnOcean prête, Base ID %s", id_to_str(self.gateway.info.base_id))
-            for device in self.devices.values():
-                if device.product.is_actuator:
-                    self._task(device.refresh())
+            self._task(self._init_actuators())
         except GatewayError as err:
             self.gateway_ok = False
             _LOGGER.warning("Clé EnOcean indisponible (%s), nouvel essai dans %s s", err,
@@ -162,6 +162,33 @@ class Ocean2MQTT:
         self._publish_info()
         if not self._stopping:
             self._task(self._reconnect_later())
+
+    async def _init_actuator(self, device: Device) -> None:
+        """Comme NodOcean : infos NodOn, rapport automatique des mesures, état."""
+        if device.product.brand.lower() == "nodon":
+            await device.query_info()
+            await asyncio.sleep(0.2)
+        if device.product.metering:
+            await device.configure_reporting()
+            await asyncio.sleep(0.2)
+        await device.refresh()
+
+    async def _init_actuators(self) -> None:
+        for device in list(self.devices.values()):
+            if device.product.is_actuator and self.gateway_ok:
+                await self._init_actuator(device)
+                await asyncio.sleep(0.3)
+
+    async def _poll_loop(self) -> None:
+        """Interroge régulièrement les actionneurs (mesures manquées, état réel)."""
+        while True:
+            await asyncio.sleep(POLL_INTERVAL)
+            if not self.gateway_ok:
+                continue
+            for device in list(self.devices.values()):
+                if device.product.is_actuator and self.gateway_ok:
+                    await device.refresh()
+                    await asyncio.sleep(0.2)
 
     async def _availability_loop(self) -> None:
         while True:
@@ -448,7 +475,7 @@ class Ocean2MQTT:
         self.emit("bridge/event", {"type": "device_joined", "data": data})
         if device is not None and product.is_actuator:
             await asyncio.sleep(1)
-            await device.refresh()
+            await self._init_actuator(device)
 
     def _remove_device(self, device_id: str, keep_entry: bool = False) -> None:
         device = self.devices.pop(device_id, None)
