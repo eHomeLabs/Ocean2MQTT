@@ -328,3 +328,39 @@ def test_nodocean_generic_models() -> None:
     library = load_library()
     assert library.get(product_id("EEP-F6-02-01")).eep == "F6-02-01"
     assert library.get(product_id("EEP-D2-01-12")).channels == 2
+
+
+async def test_change_product_same_eep(app: Ocean2MQTT) -> None:  # noqa: F811
+    """Générique F6-02-01 -> NodOn CWS-2-1 sans réappairage ; EEP différent refusé."""
+    data = await _pair(app, "generique/f6-02-01", 0xF6, "30", 0xFECDB2CC)
+    await app.request("device/rename", {"id": data["id"], "name": "Inter labo", "room": "Labo"})
+    compatible = {p["id"] for p in await app.request("device/compatible", {"id": data["id"]})}
+    assert {"nodon/cws-2-1", "nodon/crc-2", "nodon/cfs-2"} <= compatible
+    assert "nodon/stph-2" not in compatible
+    result = await app.request("device/change_product", {"id": data["id"],
+                                                         "product": "nodon/cws-2-1"})
+    assert result["product"]["id"] == "nodon/cws-2-1"
+    assert result["name"] == "Inter labo" and result["room"] == "Labo"
+    assert app.store.devices[data["id"]]["product"] == "nodon/cws-2-1"
+    app.dongle.inject(0xF6, bytes([0x30]), 0xFECDB2CC)  # toujours reçu
+    assert app.devices[data["id"]].product.model == "CWS-2-1"
+    # Retour possible vers la fiche générique ; EEP différent refusé
+    back = {p["id"] for p in await app.request("device/compatible", {"id": data["id"]})}
+    assert "generique/f6-02-01" in back
+    with pytest.raises(RequestError, match="incompatible"):
+        await app.request("device/change_product", {"id": data["id"],
+                                                    "product": "nodon/stph-2"})
+
+
+async def test_import_choose_product_for_generic(app: Ocean2MQTT, tmp_path) -> None:  # noqa: F811
+    base = app.info()["gateway"]["base_id"]
+    export = {"format": "ocean2mqtt-import", "gateway": {"base_id": base},
+              "devices": [{"id": "FECDB2CC", "model": "EEP-F6-02-01", "name": "Inter",
+                           "sender_offset": None}]}
+    plan = await app.request("migration/preview", {"file": export, "mode": "same"})
+    item = plan["items"][0]
+    assert item["product"] == "generique/f6-02-01" and "nodon/cws-2-1" in item["alternatives"]
+    # Choix non autorisé ignoré, choix valide appliqué
+    await app.request("migration/import", {"file": export, "mode": "same",
+                                           "choices": {"FECDB2CC": "nodon/cws-2-1"}})
+    assert app.store.devices["FECDB2CC"]["product"] == "nodon/cws-2-1"
