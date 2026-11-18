@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b5)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b6)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
