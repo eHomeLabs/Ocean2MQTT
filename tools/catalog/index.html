@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ocean2MQTT — Produits compatibles</title>
+<meta name="description" content="Produits EnOcean compatibles avec Ocean2MQTT, la passerelle EnOcean ↔ MQTT multimarque.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+  :root { --navy:#0b2e4a; --teal:#14b8a6; --action:#0f766e; --action-soft:#ccf0ea; --bg:#f5f7fa; --card:#fff; --ink:#0f1c2b; --muted:#5b6b7c; --line:#e3e8ee; --warn:#fff4e0; --warn-ink:#8a5a00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1724; --card:#11202f; --ink:#e7eef5; --muted:#9aabbc; --line:#1f3245; --action-soft:#134e4a; --warn:#3a2c10; --warn-ink:#f2c46d; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: var(--navy); color: #fff; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+  .top { display: flex; align-items: center; gap: 14px; padding: 18px 0; flex-wrap: wrap; }
+  .top img { width: 40px; height: 40px; background: #fff; border-radius: 10px; padding: 4px; }
+  .brandname { font-family: "Space Grotesk", Inter, sans-serif; font-size: 22px; font-weight: 700; }
+  .brandname b { color: var(--teal); }
+  .top nav { margin-left: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .top nav a { color: #cfe3f2; text-decoration: none; font-size: 14px; }
+  .top nav a:hover { color: #fff; }
+  .lang button { background: transparent; color: #cfe3f2; border: 1px solid #2c4d69; border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .lang button.on { background: #fff; color: var(--navy); border-color: #fff; }
+  .hero { padding: 26px 0 30px; }
+  .hero h1 { font-family: "Space Grotesk", Inter, sans-serif; font-size: 30px; margin: 0 0 8px; }
+  .hero p { margin: 0; color: #cfe3f2; max-width: 760px; line-height: 1.5; }
+  .cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; background: var(--teal); color: #05242a; font-weight: 700; text-decoration: none; padding: 12px 18px; border-radius: 12px; }
+  .cta:hover { filter: brightness(1.06); }
+  .tools { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 16px; align-items: center; }
+  .tools input, .tools select { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-height: 42px; }
+  .tools input { flex: 1 1 260px; }
+  .count { color: var(--muted); font-size: 14px; margin-left: auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .card:hover, .card:focus-visible { border-color: var(--teal); outline: none; }
+  .ph { aspect-ratio: 1; border-radius: 12px; background: #f1f4f7; display: grid; place-items: center; overflow: hidden; }
+  @media (prefers-color-scheme: dark) { .ph { background: #e9eef3; } }
+  .ph img { width: 82%; height: 82%; object-fit: contain; }
+  .ph span { font-weight: 700; color: #7b8a99; font-size: 18px; }
+  .meta { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .name { font-weight: 700; line-height: 1.3; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--action-soft); color: var(--action); font-weight: 600; }
+  .badge.comm { background: var(--warn); color: var(--warn-ink); }
+  .badge.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .generic { background: var(--card); border: 1px dashed var(--teal); border-radius: 16px; padding: 18px; margin: 22px 0; line-height: 1.5; }
+  .generic h2, .propose h2 { margin: 0 0 6px; font-size: 18px; }
+  .propose { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin: 26px 0 40px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .propose p { margin: 0; color: var(--muted); max-width: 680px; line-height: 1.5; }
+  .propose .cta { margin: 0 0 0 auto; background: var(--action); color: #fff; }
+  dialog { border: none; border-radius: 18px; padding: 0; max-width: 640px; width: calc(100% - 32px); background: var(--card); color: var(--ink); }
+  dialog::backdrop { background: rgba(5, 20, 33, .55); }
+  .dlg { padding: 22px; display: grid; gap: 12px; }
+  .dlg .head { display: flex; gap: 14px; align-items: center; }
+  .dlg .head .ph { width: 110px; flex: none; }
+  .dlg h2 { margin: 0; font-size: 20px; }
+  .dlg ol { margin: 0; padding-left: 20px; line-height: 1.5; }
+  .dlg .close { justify-self: end; font: inherit; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .dlg a { color: var(--action); }
+  footer { color: var(--muted); font-size: 13px; padding: 10px 0 40px; }
+  footer a { color: var(--action); }
+  .empty { color: var(--muted); padding: 30px 0; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <img src="logo.svg" alt="">
+      <span class="brandname">Ocean<b>2</b>MQTT</span>
+      <nav>
+        <a href="https://github.com/eHomeLabs/Ocean2MQTT" data-i18n="code">Code source</a>
+        <a href="https://github.com/eHomeLabs/Ocean2MQTT/wiki" data-i18n="doc">Documentation</a>
+        <span class="lang"><button type="button" data-lang="fr">FR</button> <button type="button" data-lang="en">EN</button></span>
+      </nav>
+    </div>
+    <div class="hero">
+      <h1 data-i18n="title">Produits EnOcean compatibles</h1>
+      <p data-i18n="intro">Tous les produits de la bibliothèque d'Ocean2MQTT, avec leur procédure d'appairage. Votre produit n'y est pas ? Il fonctionne peut-être déjà en mode générique, ou proposez-le : il sera ajouté après validation.</p>
+      <a class="cta" data-propose href="#">＋ <span data-i18n="propose">Proposer un nouveau produit EnOcean</span></a>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <div class="tools">
+    <input id="q" type="search" data-i18n-ph="search" placeholder="Marque, référence, profil EEP…">
+    <select id="brand"><option value="" data-i18n="allBrands">Toutes les marques</option></select>
+    <select id="type"><option value="" data-i18n="allTypes">Tous les types</option></select>
+    <select id="support"><option value="" data-i18n="allSupport">Tous les niveaux</option><option value="valide" data-i18n="valide">Validé</option><option value="communaute" data-i18n="communaute">Communauté</option></select>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <section class="generic">
+    <h2 data-i18n="genericTitle">Et tous les produits EnOcean standard</h2>
+    <div data-i18n="genericText">Le mode générique d'Ocean2MQTT reconnaît tout produit qui respecte l'un de ces profils EEP, quelle que soit sa marque :</div>
+    <div class="row" id="generic" style="margin-top:10px"></div>
+  </section>
+  <section class="propose">
+    <div>
+      <h2 data-i18n="proposeTitle">Votre produit n'est pas dans la liste ?</h2>
+      <p data-i18n="proposeText">Remplissez le formulaire (marque, référence, profil EEP, procédure d'appairage, photo). Après validation, la fiche est créée et le produit apparaît dans Ocean2MQTT à la version suivante. Un compte GitHub gratuit est nécessaire.</p>
+    </div>
+    <a class="cta" data-propose href="#">＋ <span data-i18n="propose">Proposer un nouveau produit EnOcean</span></a>
+  </section>
+  <footer data-i18n-html="footer">Ocean2MQTT est un projet open source eHomeLabs (licence MIT), indépendant. Les noms de produits et de marques appartiennent à leurs propriétaires.</footer>
+</main>
+<dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
+<script>
+const FORM = "https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml";
+const T = {
+  fr: { code: "Code source", doc: "Documentation", title: "Produits EnOcean compatibles",
+    intro: "Tous les produits de la bibliothèque d'Ocean2MQTT, avec leur procédure d'appairage. Votre produit n'y est pas ? Il fonctionne peut-être déjà en mode générique, ou proposez-le : il sera ajouté après validation.",
+    propose: "Proposer un nouveau produit EnOcean", search: "Marque, référence, profil EEP…", allBrands: "Toutes les marques", allTypes: "Tous les types", allSupport: "Tous les niveaux",
+    valide: "Validé", communaute: "Communauté", count: n => `${n} produit${n > 1 ? "s" : ""}`, empty: "Aucun produit ne correspond.",
+    genericTitle: "Et tous les produits EnOcean standard", genericText: "Le mode générique d'Ocean2MQTT reconnaît tout produit qui respecte l'un de ces profils EEP, quelle que soit sa marque :",
+    proposeTitle: "Votre produit n'est pas dans la liste ?", proposeText: "Remplissez le formulaire (marque, référence, profil EEP, procédure d'appairage, photo). Après validation, la fiche est créée et le produit apparaît dans Ocean2MQTT à la version suivante. Un compte GitHub gratuit est nécessaire.",
+    footer: "Ocean2MQTT est un projet open source eHomeLabs (licence MIT), indépendant. Les noms de produits et de marques appartiennent à leurs propriétaires.",
+    types: { actionneur: "Actionneur", prise: "Prise", interrupteur: "Interrupteur", capteur: "Capteur", chauffage: "Chauffage" },
+    pairing: "Appairage", profile: "Profil", refs: "Références", manual: "Notice", sheet: "Fiche YAML", close: "Fermer", metering: "Mesure d'énergie", recom: "Remote Commissioning",
+    supportHelp: { valide: "Testé sur produit réel.", communaute: "Fiche de la communauté, à confirmer sur produit réel." } },
+  en: { code: "Source code", doc: "Documentation", title: "Compatible EnOcean devices",
+    intro: "All devices of the Ocean2MQTT library, with their pairing procedure. Your device isn't listed? It may already work in generic mode, or suggest it: it will be added once approved.",
+    propose: "Suggest a new EnOcean device", search: "Brand, reference, EEP profile…", allBrands: "All brands", allTypes: "All types", allSupport: "All levels",
+    valide: "Validated", communaute: "Community", count: n => `${n} device${n > 1 ? "s" : ""}`, empty: "No matching device.",
+    genericTitle: "And every standard EnOcean device", genericText: "Ocean2MQTT's generic mode handles any device following one of these EEP profiles, whatever its brand:",
+    proposeTitle: "Your device isn't listed?", proposeText: "Fill in the form (brand, reference, EEP profile, pairing procedure, picture). Once approved, the sheet is created and the device appears in Ocean2MQTT in the next version. A free GitHub account is required.",
+    footer: "Ocean2MQTT is an independent eHomeLabs open source project (MIT licence). Product and brand names belong to their owners.",
+    types: { actionneur: "Actuator", prise: "Plug", interrupteur: "Switch", capteur: "Sensor", chauffage: "Heating" },
+    pairing: "Pairing", profile: "Profile", refs: "References", manual: "Manual", sheet: "YAML sheet", close: "Close", metering: "Energy metering", recom: "Remote Commissioning",
+    supportHelp: { valide: "Tested on a real device.", communaute: "Community sheet, to be confirmed on a real device." } },
+};
+let lang = (localStorageGet("o2m-lang") || (navigator.language || "fr")).startsWith("fr") ? "fr" : "en";
+let data = { products: [], generic_eeps: [] };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function localStorageGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function localStorageSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function t(k) { return T[lang][k]; }
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => { const v = t(el.dataset.i18n); if (typeof v === "string") el.textContent = v; });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { el.textContent = t(el.dataset.i18nHtml); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+  document.querySelectorAll("[data-propose]").forEach(a => { a.href = FORM; a.target = "_blank"; a.rel = "noopener"; });
+  fillSelect($("#type"), [...new Set(data.products.map(p => p.type))], v => t("types")[v] || v);
+  render();
+}
+function fillSelect(sel, values, label) {
+  const cur = sel.value; const first = sel.options[0];
+  sel.innerHTML = ""; sel.append(first);
+  values.sort((a, b) => String(label(a)).localeCompare(label(b))).forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = label(v); sel.append(o); });
+  sel.value = cur;
+}
+function photo(p, big) {
+  return `<div class="ph">${p.photo ? `<img src="${esc(p.photo)}" alt="${esc(p.brand + " " + p.model)}" loading="lazy">` : `<span>${esc(p.eep)}</span>`}</div>`;
+}
+function render() {
+  const q = $("#q").value.trim().toLowerCase(), brand = $("#brand").value, type = $("#type").value, support = $("#support").value;
+  const list = data.products.filter(p => (!brand || p.brand === brand) && (!type || p.type === type) && (!support || p.support === support) &&
+    (!q || [p.brand, p.model, ...p.references, p.names.fr, p.names.en, p.eep, ...p.extra_eeps].join(" ").toLowerCase().includes(q)));
+  $("#count").textContent = t("count")(list.length);
+  $("#grid").innerHTML = list.length ? list.map((p, i) => `
+    <button type="button" class="card" data-id="${esc(p.id)}">
+      ${photo(p)}
+      <span class="meta">${esc(p.brand)} · ${esc(p.references.join(" / "))}</span>
+      <span class="name">${esc(p.names[lang] || p.names.fr)}</span>
+      <span class="row"><span class="badge ${p.support === "valide" ? "" : "comm"}">${esc(t(p.support))}</span><span class="badge plain"><code>${esc(p.eep)}</code></span><span class="badge plain">${esc(t("types")[p.type] || p.type)}</span></span>
+    </button>`).join("") : `<p class="empty">${esc(t("empty"))}</p>`;
+}
+function openProduct(id) {
+  const p = data.products.find(x => x.id === id); if (!p) return;
+  const steps = p.steps[lang]?.length ? p.steps[lang] : p.steps.fr;
+  const tags = [p.metering && t("metering"), p.recom && t("recom")].filter(Boolean);
+  $("#dlgBody").innerHTML = `
+    <div class="head">${photo(p, true)}<div>
+      <div class="meta">${esc(p.brand)}</div><h2>${esc(p.names[lang] || p.names.fr)}</h2>
+      <div class="row" style="margin-top:6px"><span class="badge ${p.support === "valide" ? "" : "comm"}">${esc(t(p.support))}</span>${tags.map(x => `<span class="badge plain">${esc(x)}</span>`).join("")}</div>
+    </div></div>
+    <div class="meta">${esc(t("supportHelp")[p.support])}</div>
+    <div><b>${esc(t("refs"))}</b> : ${esc(p.references.join(" / "))} · <b>${esc(t("profile"))}</b> : <code>${esc([p.eep, ...p.extra_eeps].join(", "))}</code></div>
+    <div><b>${esc(t("pairing"))}</b><ol>${steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol></div>
+    <div class="row">${p.manual ? `<a href="${esc(p.manual)}" target="_blank" rel="noopener">${esc(t("manual"))}</a> ·` : ""} <a href="${esc(p.sheet)}" target="_blank" rel="noopener">${esc(t("sheet"))}</a></div>
+    <button type="button" class="close">${esc(t("close"))}</button>`;
+  $("#dlgBody .close").onclick = () => $("#dlg").close();
+  $("#dlg").showModal();
+}
+$("#grid").addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openProduct(c.dataset.id); });
+$("#dlg").addEventListener("click", e => { if (e.target.id === "dlg") $("#dlg").close(); });
+["#q", "#brand", "#type", "#support"].forEach(s => $(s).addEventListener("input", render));
+document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => { lang = b.dataset.lang; localStorageSet("o2m-lang", lang); applyLang(); }));
+fetch("catalogue.json").then(r => r.json()).then(d => {
+  data = d;
+  fillSelect($("#brand"), [...new Set(d.products.map(p => p.brand))], v => v);
+  $("#generic").innerHTML = d.generic_eeps.map(e => `<span class="badge plain"><code>${esc(e)}</code></span>`).join("");
+  applyLang();
+});
+applyLang();
+</script>
+</body>
+</html>
