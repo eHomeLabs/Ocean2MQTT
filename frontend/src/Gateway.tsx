@@ -115,6 +115,7 @@ type MqttSettings = {
   tls: boolean;
   auto: boolean;
   can_auto: boolean;
+  editable: boolean;
   connected: boolean;
 };
 
@@ -125,7 +126,7 @@ export function MqttSection({ onError }: { onError: (m: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const editable = info?.mqtt?.editable !== false;
+  const editable = settings?.editable ?? info?.mqtt?.editable !== false;
   const load = () => request<MqttSettings>("config/mqtt").then(setSettings).catch(() => {});
   useEffect(() => {
     load();
