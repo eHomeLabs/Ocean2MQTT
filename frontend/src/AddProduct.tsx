@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { clearPairing, clearSuggestion, request, useNow, useStore } from "./api";
 import { label, locale, productText, supportName, t, teachIn, typeName } from "./i18n";
+import { CodeChoice, codeChoiceValid, type CodeMode } from "./Recom";
 import type { Device, Product, Unknown } from "./types";
 
 type Props = { onDone: () => void; onError: (m: string) => void; preset?: string | null };
@@ -389,6 +390,10 @@ function Pairing({ library, onDone, onError }: { library: Product[]; onDone: () 
 function Name({ device, onDone, onError }: { device: Device; onDone: () => void; onError: (m: string) => void }) {
   const [name, setName] = useState(device.name);
   const [room, setRoom] = useState(device.room ?? "");
+  const askCode = !!device.recom && !device.recom.has_code;
+  const [mode, setMode] = useState<CodeMode>("auto");
+  const [code, setCode] = useState("");
+  const [saving, setSaving] = useState(false);
   const slug = name
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
@@ -396,12 +401,23 @@ function Name({ device, onDone, onError }: { device: Device; onDone: () => void;
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_|_$/g, "");
   const save = async () => {
+    setSaving(true);
     try {
       await request("device/rename", { id: device.id, name, room });
+      if (askCode) {
+        // Dans la foulée de l'appairage : le produit est encore dans sa fenêtre de mise sous tension
+        try {
+          await request("device/recom/assign", { id: device.id, mode, code });
+        } catch (e) {
+          onError(`${(e as Error).message} — ${t("recom.assignLater")}`);
+        }
+      }
       clearPairing();
       onDone();
     } catch (e) {
       onError((e as Error).message);
+    } finally {
+      setSaving(false);
     }
   };
   return (
@@ -428,9 +444,16 @@ function Name({ device, onDone, onError }: { device: Device; onDone: () => void;
         <span className="small strong">{t("detail.topic")}</span>
         <code className="topic">ocean2mqtt/{slug || device.id}</code>
       </div>
+      {askCode && (
+        <section className="field">
+          <span className="small strong">{t("recom.choiceTitle")}</span>
+          <CodeChoice mode={mode} code={code} onChange={(m, c) => { setMode(m); setCode(c); }} />
+          {mode !== "none" && <span className="small muted">{t("recom.warning")}</span>}
+        </section>
+      )}
       <div className="sheet-actions">
-        <button type="button" className="primary big" onClick={save}>
-          {t("add.finish")}
+        <button type="button" className="primary big" onClick={save} disabled={saving || (askCode && !codeChoiceValid(mode, code))}>
+          {saving ? t("loading") : t("add.finish")}
         </button>
       </div>
     </div>

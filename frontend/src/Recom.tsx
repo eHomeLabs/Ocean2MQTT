@@ -66,10 +66,36 @@ export function RecomPage({ onOpen }: { onOpen: (device: Device) => void }) {
 }
 
 function Access({ recom }: { recom: Recom }) {
-  if (recom.secured) return <span className="badge valide">{t("recom.secured")}</span>;
+  if (recom.secured) return <span className="badge valide">{t(`recom.mode.${recom.mode ?? "custom"}`)}</span>;
   if (recom.pending) return <span className="badge communaute">{t("recom.pending")}</span>;
+  if (recom.mode === "none") return <span className="badge neutral">{t("recom.mode.none")}</span>;
   return <span className="badge neutral">{t("recom.locked")}</span>;
 }
+
+export type CodeMode = "auto" | "custom" | "none";
+
+// Choix du code de sécurité (à l'appairage ou plus tard, dans la fenêtre qui suit la mise sous tension)
+export function CodeChoice({ mode, code, onChange }: { mode: CodeMode; code: string; onChange: (mode: CodeMode, code: string) => void }) {
+  return (
+    <div className="stack">
+      {(["auto", "custom", "none"] as CodeMode[]).map((m) => (
+        <label key={m} className={`choice${mode === m ? " selected" : ""}`}>
+          <input type="radio" name="recom-code-mode" checked={mode === m} onChange={() => onChange(m, code)} />
+          <span>
+            <span className="strong">{t(`recom.choice.${m}`)}</span>
+            <span className="small muted block">{t(`recom.choice.${m}Hint`)}</span>
+          </span>
+        </label>
+      ))}
+      {mode === "custom" && (
+        <input value={code} onChange={(e) => onChange(mode, e.target.value)} placeholder={t("recom.codeHint")} autoComplete="off" spellCheck={false} />
+      )}
+    </div>
+  );
+}
+
+export const codeChoiceValid = (mode: CodeMode, code: string) =>
+  mode !== "custom" || /^(11Z)?[0-9A-F]{8}$/i.test(code.trim().replace(/ /g, ""));
 
 function RecomLogTable({ entries }: { entries: { time: string; name: string; action: string; ok: boolean; detail?: string | null }[] }) {
   if (!entries.length) return <p className="muted small">{t("recom.logEmpty")}</p>;
@@ -97,6 +123,8 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
   const recom = device.recom!;
   const [busy, setBusy] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  const [mode, setMode] = useState<CodeMode>("auto");
+  const [newCode, setNewCode] = useState("");
   const [linkId, setLinkId] = useState("");
   const [linkType, setLinkType] = useState(recom.link_types[0] ?? "rocker_a");
   const [dialog, confirm] = useConfirm();
@@ -104,7 +132,7 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
   const sessionLeft = Math.max(0, Math.round(((recom.session_until ?? 0) * 1000 - now) / 60000));
   const run = async (action: string, data: Record<string, unknown> = {}) => {
     // Toute opération autre que le Ping peut renvoyer le code : confirmation hors session
-    if (action !== "ping" && (action === "unlock" || action === "code" || !sessionLeft)) {
+    if (action !== "ping" && !(action === "assign" && data.mode === "none") && (["unlock", "code", "assign", "detect"].includes(action) || !sessionLeft)) {
       const ok = await confirm({ title: t("recom.confirmTitle"), text: t("recom.confirmText", { name: device.name }), ok: t("recom.confirmOk") });
       if (!ok) return false;
     }
@@ -131,29 +159,63 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
             <Access recom={recom} />
           </span>
         </div>
-        <div className="button-row">
-          <button type="button" className="primary" disabled={!!busy} onClick={() => run("unlock")}>
-            {busy === "unlock" ? t("loading") : t("recom.unlock")}
-          </button>
-          <button type="button" className="secondary" disabled={!!busy} onClick={() => run("ping")}>
-            {busy === "ping" ? t("loading") : t("recom.ping")}
-          </button>
-        </div>
-        <form
-          className="number-form"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (await run("code", { code })) setCode("");
-          }}
-        >
-          <label className="field grow">
-            {t("recom.code")}
-            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("recom.codeHint")} autoComplete="off" spellCheck={false} />
-          </label>
-          <button type="submit" className="secondary" disabled={!!busy || !code.trim()}>
-            {t("recom.useCode")}
-          </button>
-        </form>
+        {!recom.has_code && recom.mode !== "none" ? (
+          <div className="stack">
+            <p className="small">{t("recom.assignIntro")}</p>
+            <CodeChoice mode={mode} code={newCode} onChange={(m, c) => { setMode(m); setNewCode(c); }} />
+            <div className="button-row">
+              <button type="button" className="primary" disabled={!!busy || !codeChoiceValid(mode, newCode)} onClick={() => run("assign", { mode, code: newCode })}>
+                {busy === "assign" ? t("loading") : t("recom.assign")}
+              </button>
+              <button type="button" className="secondary" disabled={!!busy} onClick={() => run("ping")}>
+                {busy === "ping" ? t("loading") : t("recom.ping")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="button-row">
+            {recom.has_code && (
+              <button type="button" className="primary" disabled={!!busy} onClick={() => run("unlock")}>
+                {busy === "unlock" ? t("loading") : recom.pending ? t("recom.retry") : t("recom.unlock")}
+              </button>
+            )}
+            {recom.mode === "none" && (
+              <button type="button" className="secondary" disabled={!!busy} onClick={() => run("assign", { mode: "auto" })}>
+                {busy === "assign" ? t("loading") : t("recom.assignAuto")}
+              </button>
+            )}
+            <button type="button" className="secondary" disabled={!!busy} onClick={() => run("ping")}>
+              {busy === "ping" ? t("loading") : t("recom.ping")}
+            </button>
+          </div>
+        )}
+        {recom.mode === "none" && <p className="small muted">{t("recom.noneInfo")}</p>}
+        <details className="small">
+          <summary>{t("recom.known")}</summary>
+          <div className="stack">
+            <p className="muted">{t("recom.detectHint")}</p>
+            <form
+              className="number-form"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (await run("code", { code })) setCode("");
+              }}
+            >
+              <label className="field grow">
+                {t("recom.code")}
+                <input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("recom.codeHint")} autoComplete="off" spellCheck={false} />
+              </label>
+              <button type="submit" className="secondary" disabled={!!busy || !code.trim()}>
+                {t("recom.useCode")}
+              </button>
+            </form>
+            <div>
+              <button type="button" className="secondary" disabled={!!busy} onClick={() => run("detect", { code })}>
+                {busy === "detect" ? t("loading") : t("recom.detect")}
+              </button>
+            </div>
+          </div>
+        </details>
         <p className="small muted">{t("recom.warning")}</p>
       </section>
 

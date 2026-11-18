@@ -53,6 +53,7 @@ export type Recom = {
   secured: boolean;
   pending: boolean;
   has_code: boolean;
+  mode?: "auto" | "custom" | "random" | "none" | null;
   links?: Link[] | null;
   links_max?: number | null;
   link_types: string[];
