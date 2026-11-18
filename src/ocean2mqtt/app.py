@@ -576,7 +576,8 @@ class Ocean2MQTT:
             return self._plan(source, str(data.get("mode") or "same"))
         if command == "migration/import":
             source = self._migration_source(data)
-            return await self._import(source, str(data.get("mode") or "same"))
+            choices = data.get("choices") if isinstance(data.get("choices"), dict) else None
+            return await self._import(source, str(data.get("mode") or "same"), choices)
         if command == "migration/dismiss":
             self.store.meta["migration_dismissed"] = True
             self.store.save()
@@ -586,6 +587,11 @@ class Ocean2MQTT:
             base = id_to_str(self.gateway.info.base_id) if self.gateway.info else None
             return make_backup(self.store.devices, base or self.store.meta.get("base_id"),
                                __version__, self.config.public())
+        if command == "device/compatible":
+            device = self._device(data)
+            return [self.product_dict(p) for p in self.library.compatible(device.product)]
+        if command == "device/change_product":
+            return self._change_product(self._device(data), str(data.get("product") or ""))
         if command == "device/settings":
             return describe(self._device(data))
         if command == "device/settings/set":
@@ -697,8 +703,14 @@ class Ocean2MQTT:
                 status = "repair"
             else:
                 status = "ok"
+            alts = self.library.compatible(product) if (
+                product is not None and product.generic and status != "exists") else []
+            alternatives = [p.id for p in alts]
+            labels = {p.id: f"{p.brand} {p.model} — {p.name(self.config['language'])}"
+                      for p in alts}
             items.append({"id": entry["id"], "name": entry["name"], "room": entry["room"],
-                          "product": entry["product"],
+                          "product": entry["product"], "alternatives": alternatives,
+                          "labels": labels,
                           "model": product.model if product else entry["product"],
                           "brand": product.brand if product else None,
                           "actuator": actuator, "recom": entry["recom_code"] is not None,
@@ -706,9 +718,14 @@ class Ocean2MQTT:
         return {"source": source.summary(), "mode": mode, "current_base_id": current,
                 "key_mismatch": mismatch, "items": items}
 
-    async def _import(self, source: Source, mode: str) -> dict[str, Any]:
+    async def _import(self, source: Source, mode: str,
+                      choices: dict[str, str] | None = None) -> dict[str, Any]:
         plan = self._plan(source, mode)
         status = {i["id"]: i["status"] for i in plan["items"]}
+        # Fiche choisie par l'utilisateur pour les produits génériques (même EEP)
+        allowed = {i["id"]: set(i["alternatives"]) for i in plan["items"]}
+        choices = {k.upper(): v for k, v in (choices or {}).items()
+                   if v in allowed.get(k.upper(), set())}
         imported = repair = codes = 0
         for entry in source.devices:
             if status.get(entry["id"]) == "code":
@@ -724,6 +741,8 @@ class Ocean2MQTT:
             if status.get(entry["id"]) not in ("ok", "repair"):
                 continue
             entry = dict(entry)
+            if entry["id"] in choices:
+                entry["product"] = choices[entry["id"]]
             if status[entry["id"]] == "repair":
                 entry["needs_pairing"] = True
                 entry["sender_offset"] = None
@@ -780,6 +799,27 @@ class Ocean2MQTT:
         self._publish_devices()
         if errors:
             raise RequestError("Réglage non appliqué : " + " ; ".join(errors))
+
+    def _change_product(self, device: Device, product_id: str) -> dict[str, Any]:
+        """Change la fiche d'un produit (même EEP) : nom, pièce, topic et code gardés."""
+        if product_id == device.product.id:
+            return self.device_dict(device)
+        allowed = {p.id: p for p in self.library.compatible(device.product)}
+        if product_id not in allowed:
+            raise RequestError("Fiche incompatible : même profil EEP requis "
+                               f"({device.product.eep})")
+        entry = self.store.devices[device.id_str]
+        self._remove_device(device.id_str, keep_entry=True)
+        entry["product"] = product_id
+        self.store.put(entry)
+        new = self._add_device(entry)
+        if new is None:
+            raise RequestError("Fiche introuvable")
+        self._publish_state(new)
+        self._publish_devices()
+        result = self.device_dict(new)
+        self.emit("bridge/event", {"type": "device_changed", "data": result})
+        return result
 
     def _add_known(self, data: dict[str, Any]) -> dict[str, Any]:
         """Appairage en un clic d'un émetteur déjà entendu (capteurs, interrupteurs)."""
