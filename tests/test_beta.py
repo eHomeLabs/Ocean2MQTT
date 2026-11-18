@@ -364,3 +364,75 @@ async def test_import_choose_product_for_generic(app: Ocean2MQTT, tmp_path) -> N
     await app.request("migration/import", {"file": export, "mode": "same",
                                            "choices": {"FECDB2CC": "nodon/cws-2-1"}})
     assert app.store.devices["FECDB2CC"]["product"] == "nodon/cws-2-1"
+
+
+async def test_recom_code_modes(app: Ocean2MQTT, monkeypatch) -> None:  # noqa: F811
+    """b8 : code auto (dérivé du secret de l'installation), saisi, aucun ; détection."""
+    from ocean2mqtt.core import recom
+
+    secret = app.store.meta["recom_secret"]
+    assert len(secret) == 32
+    auto = recom.derive_code(secret, FP)
+    assert auto == recom.derive_code(secret, FP) != recom.derive_code(secret, RELAY2)
+    assert recom.derive_code(recom.new_secret(), FP) != auto
+
+    data = await _pair(app, "nodon/sin-2-fp-01", 0xD4, "A0 01 46 00 0C 01 D2", FP)
+    device = app.devices[data["id"]]
+    sent: list[tuple[str, int]] = []
+
+    async def set_code(_dev, _sender, code):
+        sent.append(("set", code))
+        return True
+
+    monkeypatch.setattr(app.gateway, "set_code", set_code)
+    status = await app.request("device/recom/assign", {"id": data["id"], "mode": "auto"})
+    assert status["secured"] and status["mode"] == "auto" and sent == [("set", auto)]
+    assert app.store.devices[data["id"]]["recom_mode"] == "auto"
+    assert device.recom_code == auto
+
+    # Détection : le code stocké est perdu, on retrouve le code auto
+    device.recom_code, device.recom_mode = None, None
+    tried: list[int] = []
+
+    async def unlock(_dev, _sender, code):
+        tried.append(code)
+        return code == auto
+
+    monkeypatch.setattr(app.gateway, "unlock", unlock)
+    status = await app.request("device/recom/detect", {"id": data["id"], "code": "11Z0A0B0C0D"})
+    assert status["mode"] == "auto" and status["secured"] and tried == [auto]
+
+    # Aucun code accepté
+    async def refuse(_dev, _sender, code):
+        tried.append(code)
+        return False
+
+    async def pong(*_a):
+        return True
+
+    monkeypatch.setattr(app.gateway, "unlock", refuse)
+    monkeypatch.setattr(app.gateway, "ping", pong)
+    with pytest.raises(RequestError, match="Aucun code connu"):
+        await app.request("device/recom/detect", {"id": data["id"], "code": "0A0B0C0D"})
+    assert tried[-2:] == [auto, 0x0A0B0C0D]  # code stocké = auto, pas de doublon
+
+    # « Aucun » refusé quand le produit a déjà un code
+    with pytest.raises(RequestError, match="reset usine"):
+        await app.request("device/recom/assign", {"id": data["id"], "mode": "none"})
+
+    # Autre produit : code saisi puis « aucun »
+    relay = await _pair(app, "nodon/sin-2-2-01", 0xD4, "A0 02 46 00 12 01 D2", RELAY2)
+    with pytest.raises(RequestError, match="Code invalide"):
+        await app.request("device/recom/assign", {"id": relay["id"], "mode": "custom",
+                                                   "code": "XYZ"})
+    status = await app.request("device/recom/assign", {"id": relay["id"], "mode": "none"})
+    assert status["mode"] == "none" and not status["has_code"]
+    status = await app.request("device/recom/assign", {"id": relay["id"], "mode": "custom",
+                                                        "code": "11Z12345678"})
+    assert status["mode"] == "custom" and sent[-1] == ("set", 0x12345678)
+
+    # La sauvegarde contient le secret et le mode
+    backup = await app.request("backup/create", {})
+    assert backup["recom_secret"] == secret
+    assert {d["id"]: d["recom_mode"] for d in backup["devices"]}[data["id"]] == "auto"
+    await asyncio.sleep(0)
