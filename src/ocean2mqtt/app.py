@@ -54,6 +54,7 @@ Listener = Callable[[str, Any, bool], None]  # topic, données, retenu
 
 PAIRING_TIMEOUT = 60
 RECONNECT_DELAY = 15
+REMOTE_PAIRING_TIMEOUT = 60  # s : demande d'appairage attendue après Remote Learn
 POLL_INTERVAL = 60  # s, interrogation des actionneurs (état, puissance, énergie)
 UNKNOWN_MAX = 50  # émetteurs inconnus gardés en mémoire
 RECOM_LOG_MAX = 200
@@ -582,7 +583,7 @@ class Ocean2MQTT:
 
     # -- Appairage -----------------------------------------------------------
 
-    async def _run_pairing(self, product: Product, timeout: int) -> None:
+    async def _run_pairing(self, product: Product, timeout: int, only: int | None = None) -> None:
         offset = self.store.free_sender_offset() if product.is_actuator else None
         self.pairing = {"product": product.id, "timeout": timeout,
                         "until": round(time.time() + timeout)}
@@ -590,7 +591,8 @@ class Ocean2MQTT:
                                                                **self.pairing}})
         self._publish_info()
         try:
-            result = await wait_for_teach_in(self.gateway, product, offset, timeout, set())
+            result = await wait_for_teach_in(self.gateway, product, offset, timeout, set(),
+                                             only)
         except asyncio.CancelledError:
             self.pairing = None
             self.emit("bridge/event", {"type": "pairing", "data": {"status": "stopped"}})
@@ -747,6 +749,8 @@ class Ocean2MQTT:
                 self._pairing.cancel()
             self._pairing = self._task(self._run_pairing(product, timeout))
             return {"product": product.id, "timeout": timeout}
+        if command == "pairing/remote":
+            return await self._remote_pairing(data)
         if command == "pairing/stop":
             if self._pairing and not self._pairing.done():
                 self._pairing.cancel()
@@ -960,9 +964,9 @@ class Ocean2MQTT:
         self.emit("bridge/event", {"type": "device_changed", "data": result})
         return result
 
-    def _add_known(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Appairage en un clic d'un émetteur déjà entendu (capteurs, interrupteurs)."""
-        device_id = str(data.get("id") or "").strip().upper().removeprefix("0X")
+    def _parse_device_id(self, raw: Any) -> tuple[str, int]:
+        """Identifiant EnOcean saisi (0x, espaces tolérés) ; refuse les adresses réservées."""
+        device_id = re.sub(r"[\s:-]", "", str(raw or "")).upper().removeprefix("0X")
         try:
             value = str_to_id(device_id)
         except ValueError as err:
@@ -972,6 +976,56 @@ class Ocean2MQTT:
         if value in (0, 0xFFFFFFFF) or (base is not None and base <= value < base + 128):
             raise RequestError(f"{device_id} n'est pas l'identifiant d'un produit (adresse "
                                "réservée ou adresse de la clé)")
+        return device_id, value
+
+    async def _remote_pairing(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Appairage d'un actionneur Remote Commissioning sans toucher à son bouton.
+
+        Le produit (juste remis sous tension, ou déverrouillé avec son code) reçoit
+        la commande ReMan « Remote Set Learn Mode » : il passe en mode apprentissage
+        et envoie sa demande UTE, à laquelle on répond comme pour un appairage normal.
+        """
+        if not self.gateway_ok:
+            raise RequestError("Clé EnOcean non connectée")
+        if not self.recom_enabled:
+            raise RequestError("Remote Commissioning désactivé dans la configuration")
+        product = self._product(str(data.get("product")))
+        if not (product.recom and product.is_actuator):
+            raise RequestError(f"{product.model} ne gère pas l'appairage à distance")
+        device_id, value = self._parse_device_id(data.get("id"))
+        code = None
+        if str(data.get("code") or "").strip():
+            code = recom.parse_code(str(data["code"]))
+            if code is None:
+                raise RequestError("Code invalide : 8 caractères hexadécimaux (avec ou sans "
+                                   "le préfixe 11Z du QR code)")
+        if self._pairing and not self._pairing.done():
+            self._pairing.cancel()
+        timeout = REMOTE_PAIRING_TIMEOUT
+        self._pairing = self._task(self._run_pairing(product, timeout, only=value))
+        await asyncio.sleep(0.2)
+        sender = self.gateway.sender_id(self.store.free_sender_offset())
+        try:
+            await self.gateway.reman_request(value, sender, recom.remote_learn(0), None, 3.0,
+                                             code=code)
+        except ReComError as err:
+            if err.status is not None:  # refus explicite (code, verrouillé…)
+                self._pairing.cancel()
+                self._log_recom_id(device_id, "remote_learn", False, str(err))
+                raise RequestError(f"Appairage à distance refusé : {err}") from err
+            # Pas d'accusé : normal pour cette commande, on attend la demande d'appairage
+        self._log_recom_id(device_id, "remote_learn", True, None)
+        return {"product": product.id, "id": device_id, "timeout": timeout}
+
+    def _log_recom_id(self, device_id: str, action: str, ok: bool, detail: str | None) -> None:
+        entry = {"time": datetime.now(UTC).isoformat(timespec="seconds"), "id": device_id,
+                 "name": device_id, "action": action, "ok": ok, "detail": detail}
+        self.recom_log.append(entry)
+        self.emit("bridge/event", {"type": "recom", "data": entry})
+
+    def _add_known(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Appairage en un clic d'un émetteur déjà entendu (capteurs, interrupteurs)."""
+        device_id, _value = self._parse_device_id(data.get("id"))
         if device_id in self.devices:
             raise RequestError(f"{device_id} est déjà appairé")
         product = self._product(str(data.get("product")))
