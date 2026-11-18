@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b2)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b3)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -38,6 +38,13 @@ Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLab
 **Réglages et Remote Commissioning**
 - **Réglages des produits** : LED, bouton local, télécommandes appairées en direct, détection de coupure, état au retour du courant, extinction automatique ou retardée par canal, type d'interrupteur filaire, temps de course et calibration du volet, répéteur, remise à zéro de l'énergie. Réglages appliqués par Ocean2MQTT : nombre de boutons, corrections de température et d'humidité, délai d'indisponibilité.
 - **Remote Commissioning** (ReMan / ReCom) des produits qui le gèrent : déverrouillage avec un code propre à chaque produit, saisie du code du QR code, test Ping, lecture / ajout / suppression des télécommandes appairées, lecture des paramètres du volet, journal des opérations.
+
+**Migration et sauvegarde**
+- **Reprise depuis NodOcean for HA, sans réappairer** : l'add-on détecte NodOcean dans Home Assistant et reprend produits, noms, pièces, adresses d'émission et codes Remote Commissioning. Un assistant rappelle de désactiver NodOcean (une clé ne sert qu'à un seul logiciel).
+- **Fichier d'export NodOcean** (bouton « Exporter pour Ocean2MQTT » de NodOcean for HA 0.8.6) pour Ocean2MQTT en Docker ou sur une autre machine.
+- **Autre clé EnOcean** : reprendre seulement les capteurs (les actionneurs gardent nom, pièce et réglages et sont signalés « à réappairer »), ou partir d'une installation vierge.
+- **Changement de clé détecté** automatiquement, avec un bouton « Réappairer » sur chaque actionneur concerné.
+- **Sauvegarde / restauration** de tous les produits appairés dans un fichier JSON.
 
 **Diagnostic**
 - **Journal radio** en direct : télégrammes reçus et émis, filtres par émetteur et par RORG, pause, export CSV.
@@ -73,6 +80,14 @@ Clés prises en charge : clés ESP3 en USB ou série (USB300, USB500, TCM310 / E
 | Toutes | Mode générique : F6-02-01, F6-04-01, F6-05-01, F6-10-00, D5-00-01, A5-02-05, A5-04-01, A5-06-01, A5-07-03, A5-09-04, A5-09-05, A5-20-01, D2-01-xx, D2-05-00 | Générique |
 
 Votre produit n'est pas dans la liste ? Essayez le mode générique, puis proposez sa fiche (voir *Contribuer*).
+
+### Vous utilisiez NodOcean for HA ?
+
+1. Installez Ocean2MQTT (add-on) en gardant **la même clé EnOcean**.
+2. **Désactivez NodOcean for HA** (Paramètres → Appareils et services → NodOcean for HA → ⋮ → Désactiver), puis redémarrez l'add-on.
+3. Sur « Mes produits », cliquez sur **Reprendre mes produits** : rien à réappairer.
+
+Ocean2MQTT en Docker : dans NodOcean for HA, appuyez sur **Exporter pour Ocean2MQTT** (appareil « Clé EnOcean »), puis importez le fichier `nodocean_export_ocean2mqtt.json` dans **Réglages → Migration et sauvegarde**. Les entités MQTT d'Ocean2MQTT remplacent celles de NodOcean : pensez à vos automatisations.
 
 ### Installation
 
@@ -122,6 +137,8 @@ Requêtes `bridge/request/…` :
 | --- | --- |
 | `info`, `devices`, `library`, `library/generic` | Passerelle, produits appairés, bibliothèque, profils génériques |
 | `pairing/start`, `pairing/stop` | Appairage (`{"product": "nodon/sin-2-fp-01"}` ou `{"product": "generique/a5-04-01"}`) |
+| `migration/sources`, `migration/preview`, `migration/import`, `migration/dismiss` | Reprise depuis NodOcean ou un fichier (`{"mode": "same"}` même clé, `"new"` autre clé) |
+| `backup/create` | Sauvegarde (restauration : `migration/import` avec `{"file": …}`) |
 | `unknown`, `unknown/clear`, `device/add` | Émetteurs inconnus, ajout en un clic (`{"id": "0181A2B3", "product": "nodon/stph-2"}`) |
 | `device/rename`, `device/remove`, `device/set`, `device/get` | Gestion et commande d'un produit |
 | `device/settings`, `device/settings/set` | Réglages (`{"id": "…", "key": "led", "value": false}`) |
@@ -160,6 +177,7 @@ Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a w
 - **Device settings**: LED, local button, power-on state, auto off / delay off per channel, wired switch type, shutter travel time and calibration, repeater, energy reset, measurement offsets, unavailability timeout.
 - **Remote Commissioning** (ReMan / ReCom): unlock with a per-device code, QR code entry, ping, read / add / delete paired remotes, read shutter parameters, operation log.
 - **Live telegram log** with filters and CSV export; list of heard but unpaired devices.
+- **Migration from NodOcean for HA without re-pairing** (same stick), NodOcean export file import, sensors-only import or fresh install with another stick, stick change detection with one-click re-pairing, backup and restore.
 - **MQTT bridge** with Zigbee2MQTT-like topics and **Home Assistant discovery** (settings become configuration entities).
 - **Web interface** in **French and English**, mobile-friendly, live updates over WebSocket.
 - **Home Assistant add-on** (sidebar access), **Docker image** (amd64 / arm64) or **Python** package.
