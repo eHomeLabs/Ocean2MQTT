@@ -47,6 +47,7 @@ class Source:
     active: bool | None = None  # NodOcean encore activé dans Home Assistant
     port: str | None = None
     title: str | None = None
+    recom_secret: str | None = None
 
     def summary(self) -> dict[str, Any]:
         return {"kind": self.kind, "base_id": self.base_id, "active": self.active,
@@ -82,7 +83,9 @@ def _device_id(value: Any) -> str:
 
 def _entry(dev_id: str, product: str, name: str | None, room: str | None,
            sender_offset: Any, recom_code: Any, recom_pending: bool = False,
-           settings: dict | None = None, paired_at: str | None = None) -> dict[str, Any]:
+           settings: dict | None = None, paired_at: str | None = None,
+           recom_mode: str | None = None) -> dict[str, Any]:
+    code = _code(recom_code)
     return {
         "id": dev_id,
         "product": product,
@@ -90,8 +93,10 @@ def _entry(dev_id: str, product: str, name: str | None, room: str | None,
         "room": room or None,
         "sender_offset": sender_offset if isinstance(sender_offset, int) else None,
         "settings": settings or {},
-        "recom_code": _code(recom_code),
+        "recom_code": code,
         "recom_pending": bool(recom_pending),
+        "recom_mode": recom_mode if recom_mode in ("auto", "custom", "random", "none")
+        else ("random" if code is not None else None),
         "paired_at": paired_at or datetime.now(UTC).isoformat(timespec="seconds"),
     }
 
@@ -184,7 +189,12 @@ def parse_file(data: Any) -> Source:
             ))
         return source
     if fmt == BACKUP_FORMAT:
-        source = Source(kind="backup", base_id=(data.get("base_id") or "").upper() or None)
+        secret = data.get("recom_secret")
+        if not (isinstance(secret, str) and len(secret) == 32
+                and all(c in "0123456789abcdefABCDEF" for c in secret)):
+            secret = None
+        source = Source(kind="backup", base_id=(data.get("base_id") or "").upper() or None,
+                        recom_secret=secret)
         for dev in data.get("devices") or []:
             try:
                 dev_id = _device_id(dev.get("id"))
@@ -194,6 +204,7 @@ def parse_file(data: Any) -> Source:
                 dev_id, str(dev.get("product")), dev.get("name"), dev.get("room"),
                 dev.get("sender_offset"), dev.get("recom_code"),
                 bool(dev.get("recom_pending")), dev.get("settings"), dev.get("paired_at"),
+                dev.get("recom_mode"),
             ))
         return source
     raise MigrationError("Format inconnu : export NodOcean for HA ou sauvegarde Ocean2MQTT "
@@ -201,7 +212,8 @@ def parse_file(data: Any) -> Source:
 
 
 def make_backup(devices: dict[str, dict[str, Any]], base_id: str | None,
-                version: str, configuration: dict[str, Any]) -> dict[str, Any]:
+                version: str, configuration: dict[str, Any],
+                recom_secret: str | None = None) -> dict[str, Any]:
     """Sauvegarde complète des produits appairés (codes ReCom compris)."""
     out = []
     for entry in devices.values():
@@ -215,6 +227,8 @@ def make_backup(devices: dict[str, dict[str, Any]], base_id: str | None,
         "ocean2mqtt": version,
         "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "base_id": base_id,
+        # Secret des codes ReCom « auto » : à garder comme les codes eux-mêmes
+        "recom_secret": recom_secret,
         "devices": out,
         "configuration": configuration,  # pour information (mots de passe masqués)
     }

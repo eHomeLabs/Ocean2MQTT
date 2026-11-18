@@ -73,6 +73,9 @@ class Ocean2MQTT:
         self.config = config
         self.library = library or load_library()
         self.store = DeviceStore(config.data_dir).load()
+        if not self.store.meta.get("recom_secret"):
+            self.store.meta["recom_secret"] = recom.new_secret()
+            self.store.save()
         self.gateway = Gateway(config["serial"]["port"])
         self.gateway.reman_enabled = bool(config["recom"].get("enabled", True))
         self.gateway_ok = False
@@ -247,6 +250,8 @@ class Ocean2MQTT:
         device.settings.update(entry.get("settings") or {})
         device.recom_code = entry.get("recom_code")
         device.recom_pending = entry.get("recom_pending", False)
+        device.recom_mode = entry.get("recom_mode") or (
+            "random" if device.recom_code is not None else None)
         device.on_code_change = self._save_code
         self.devices[entry["id"]] = device
         self._unsubs[entry["id"]] = device.add_listener(self._listener(device), first=True)
@@ -258,6 +263,7 @@ class Ocean2MQTT:
         entry = self.store.devices[device.id_str]
         entry["recom_code"] = device.recom_code
         entry["recom_pending"] = device.recom_pending
+        entry["recom_mode"] = device.recom_mode
         self.store.put(entry)
 
     def topic_name(self, device_id: str) -> str:
@@ -325,6 +331,7 @@ class Ocean2MQTT:
             "secured": device.recom_secured,
             "pending": device.recom_pending,
             "has_code": device.recom_code is not None,
+            "mode": device.recom_mode,
             # Session encore ouverte : la prochaine opération ne renverra pas le code
             "session_until": round(time.time() + left) if (
                 left := self.gateway.unlocked_for(device.device_id)) else 0,
@@ -498,6 +505,8 @@ class Ocean2MQTT:
             "sender_offset": offset,
             "settings": old.get("settings", {}) if old else {},
             "recom_code": old.get("recom_code") if old else None,
+            "recom_pending": bool(old.get("recom_pending")) if old else False,
+            "recom_mode": old.get("recom_mode") if old else None,
             "paired_at": datetime.now(UTC).isoformat(timespec="seconds"),
         }
         self.store.put(entry)
@@ -586,7 +595,8 @@ class Ocean2MQTT:
         if command == "backup/create":
             base = id_to_str(self.gateway.info.base_id) if self.gateway.info else None
             return make_backup(self.store.devices, base or self.store.meta.get("base_id"),
-                               __version__, self.config.public())
+                               __version__, self.config.public(),
+                               self.store.meta.get("recom_secret"))
         if command == "device/compatible":
             device = self._device(data)
             return [self.product_dict(p) for p in self.library.compatible(device.product)]
@@ -754,6 +764,12 @@ class Ocean2MQTT:
         if repair and source.base_id:
             self.store.meta["previous_base_id"] = source.base_id
         self.store.meta["migration_dismissed"] = True
+        if source.recom_secret and not any(
+            e.get("recom_mode") == "auto" for e in self.store.devices.values()
+            if e["id"] not in status
+        ):
+            # Restauration : on reprend le secret pour recalculer les mêmes codes auto
+            self.store.meta["recom_secret"] = source.recom_secret
         self.store.save()
         for device_id, st in status.items():
             if st in ("ok", "repair") and device_id not in self.devices:
@@ -856,6 +872,9 @@ class Ocean2MQTT:
     def recom_enabled(self) -> bool:
         return bool(self.config["recom"].get("enabled", True))
 
+    def auto_code(self, device: Device) -> int:
+        return recom.derive_code(self.store.meta["recom_secret"], device.device_id)
+
     async def _recom_request(self, action: str, data: dict[str, Any]) -> Any:
         device = self._device(data)
         if not self.recom_enabled:
@@ -877,6 +896,38 @@ class Ocean2MQTT:
                     raise ReComError("Le produit ne répond pas au Ping", "no_answer")
             elif action == "unlock":
                 detail = await device.unlock_recom()
+            elif action == "assign":
+                mode = str(data.get("mode") or "auto")
+                if mode not in recom.CODE_MODES:
+                    raise RequestError(f"Mode de code inconnu : {mode}")
+                if mode == "none":
+                    await device.set_no_code()
+                    detail = "sans code"
+                else:
+                    if mode == "auto":
+                        code = self.auto_code(device)
+                    else:
+                        code = recom.parse_code(str(data.get("code") or ""))
+                        if code is None:
+                            raise RequestError("Code invalide : 8 caractères hexadécimaux "
+                                               "(avec ou sans le préfixe 11Z du QR code)")
+                    detail = await device.unlock_recom(code, mode)
+            elif action == "detect":
+                candidates = [("auto", self.auto_code(device))]
+                if device.recom_code is not None:
+                    candidates.insert(0, (device.recom_mode or "custom", device.recom_code))
+                extra = recom.parse_code(str(data.get("code") or ""))
+                if extra is not None:
+                    candidates.append(("custom", extra))
+                found = await device.detect_code(candidates)
+                if found is None:
+                    if await self.gateway.ping(device.device_id, sender):
+                        raise ReComError("Aucun code connu accepté : le produit a un autre "
+                                         "code, ou n'en a pas (déverrouillage possible "
+                                         "seulement juste après sa mise sous tension)",
+                                         "unknown_code")
+                    raise ReComError("Le produit ne répond pas au Ping", "no_answer")
+                detail = f"code {found}"
             elif action == "code":
                 code = recom.parse_code(str(data.get("code") or ""))
                 if code is None:
