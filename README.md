@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b12)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b13)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -74,6 +74,8 @@ Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLab
 
 ### Produits
 
+**[Catalogue en ligne des produits compatibles](https://ehomelabs.github.io/Ocean2MQTT/)** · **[Proposer un nouveau produit EnOcean](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml)** (fiche créée automatiquement après validation)
+
 Clés prises en charge : clés ESP3 en USB ou série (USB300, USB500, TCM310 / EnOcean Pi), 868 MHz.
 
 | Marque | Produits | Support |
@@ -108,7 +110,7 @@ docker run -d --name ocean2mqtt --restart unless-stopped \
   -v $(pwd)/data:/app/data -p 8080:8080 \
   --device /dev/ttyUSB0:/dev/ttyUSB0 \
   -e OCEAN2MQTT_MQTT_HOST=192.168.1.10 \
-  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b12
+  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b13
 ```
 
 Exemple avec Mosquitto : `docker-compose.example.yml`. Ouvrez ensuite `http://<machine>:8080`.
@@ -191,6 +193,7 @@ Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a w
 - **Broken or replaced stick**: write the old **Base ID** into the new stick so actuators recognise it without re-pairing. **MQTT server and topics editable in the interface**, with a connection test.
 - **Migration from NodOcean for HA without re-pairing** (same stick), NodOcean export file import, sensors-only import or fresh install with another stick, stick change detection with one-click re-pairing, backup and restore.
 - **MQTT bridge** with Zigbee2MQTT-like topics and **Home Assistant discovery** (settings become configuration entities).
+- **[Online catalogue of compatible devices](https://ehomelabs.github.io/Ocean2MQTT/)** and a **[Suggest a new EnOcean device](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml)** form (sheet created automatically once approved), also from the **Add a device** page.
 - **Web interface** in **French and English**, mobile-friendly, live updates over WebSocket.
 - **Home Assistant add-on** (sidebar access), **Docker image** (amd64 / arm64) or **Python** package.
 - **Open contributions**: one device = one YAML file + one picture, no code needed.
