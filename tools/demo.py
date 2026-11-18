@@ -83,7 +83,14 @@ async def main(port: int, data: Path, empty: bool) -> None:
         await asyncio.sleep(0.3)
         return True
 
+    async def accept(device_id, _sender, _code) -> bool:
+        await asyncio.sleep(0.4)
+        app.gateway._unlocked[device_id] = time.monotonic()  # session ouverte
+        return True
+
     app.gateway.ping = ping
+    app.gateway.set_code = accept
+    app.gateway.unlock = accept
     for device in app.devices.values():
         if not device.product.recom:
             continue
@@ -98,12 +105,6 @@ async def main(port: int, data: Path, empty: bool) -> None:
                 device.notify({"links"})
                 return links
 
-            async def unlock():
-                await asyncio.sleep(0.4)
-                device.recom_code, device.recom_pending = 0x1234ABCD, False
-                app.gateway._unlocked[device.device_id] = time.monotonic()  # session ouverte
-                return "assigned"
-
             async def add_link(link_id, link_type):
                 links.append({"index": len(links), "id": f"{link_id:08X}", "eep": "F6-02-01"})
                 return await read_links() and len(links) - 1
@@ -112,7 +113,7 @@ async def main(port: int, data: Path, empty: bool) -> None:
                 links[:] = [x for x in links if x["index"] != index]
                 await read_links()
 
-            device.read_links, device.unlock_recom = read_links, unlock
+            device.read_links = read_links
             device.add_link, device.delete_link = add_link, delete_link
 
         fake()
