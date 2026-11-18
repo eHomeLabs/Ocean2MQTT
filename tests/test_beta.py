@@ -315,3 +315,16 @@ async def test_recom_disabled(app: Ocean2MQTT) -> None:  # noqa: F811
     # Garde au plus bas niveau : rien n'est émis, même en appelant la clé directement
     assert not await app.gateway.unlock(0x05A1B2C3, app.gateway.sender_id(1), 0x1234)
     assert len(app.dongle.sent) == before
+
+
+def test_nodocean_generic_models() -> None:
+    """Produits génériques de NodOcean (« EEP-F6-02-01 ») -> mode générique d'Ocean2MQTT."""
+    from ocean2mqtt.library import load_library
+    from ocean2mqtt.migration import product_id
+
+    assert product_id("EEP-F6-02-01") == "generique/f6-02-01"
+    assert product_id("eep-d2-01-12") == "generique/d2-01-12"
+    assert product_id("SIN-2-FP-01") == "nodon/sin-2-fp-01"
+    library = load_library()
+    assert library.get(product_id("EEP-F6-02-01")).eep == "F6-02-01"
+    assert library.get(product_id("EEP-D2-01-12")).channels == 2
