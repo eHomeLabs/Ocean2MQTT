@@ -22,6 +22,18 @@ Dans NodOcean for HA 0.8.6 ou plus : appareil **Clé EnOcean** → bouton **Expo
 
 ⚠️ Ce fichier contient les codes Remote Commissioning de vos produits : ne le partagez pas.
 
+## Depuis une autre box (Jeedom…) avec la même clé
+
+Un actionneur obéit à l'**adresse d'émission** qu'il a apprise : le Base ID de la clé plus un décalage de 0 à 127 (ex. clé `FFE56B80` → adresses `FFE56B80` à `FFE56BFF`). En gardant la même clé, Ocean2MQTT peut réutiliser l'adresse de chaque actionneur, sans nouvel appairage :
+
+1. Arrêtez l'autre box et branchez sa clé sur Ocean2MQTT (ou donnez son Base ID à une nouvelle clé : **Réglages → Clé EnOcean → Changer le Base ID**).
+2. **Ajouter un produit** → fiche de l'actionneur → **« Pas d'accès au bouton d'apprentissage ? »** → **« Déjà appairé avec une autre box ? »**.
+3. Saisissez l'identifiant de l'actionneur et l'**adresse d'émission** que l'autre box utilisait pour lui, puis **Déclarer l'actionneur**.
+
+Où trouver cette adresse : configuration de l'équipement ou logs (mode debug) du plugin EnOcean de l'autre box ; pour un module NodOn avec Remote Commissioning, **Lire la table** des télécommandes (onglet Remote Commissioning, juste après une remise sous tension) ; ou la page **Télégrammes** d'Ocean2MQTT avec une deuxième clé pendant que l'autre box commande l'actionneur.
+
+Limite : si l'autre box a appairé l'actionneur avec l'identifiant de la puce de la clé (adresse hors de la plage du Base ID), il faut le réappairer.
+
 ## Après la migration
 
 Les entités de NodOcean sont remplacées par les **entités MQTT** d'Ocean2MQTT : mettez à jour vos automatisations et tableaux de bord, puis supprimez l'intégration NodOcean. L'historique (énergie notamment) reste attaché aux anciennes entités.

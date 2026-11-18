@@ -18,7 +18,7 @@ Pour un **capteur ou un interrupteur** (produit déjà installé, bouton inacces
 
 Pour un **actionneur NodOn qui gère le Remote Commissioning** (SIN-2-x…), le même volet propose l'**appairage à distance** : saisissez l'identifiant du module, coupez puis remettez son courant, et cliquez sur **Appairer à distance** dans les 5 minutes. Ocean2MQTT le met en mode appairage par radio, puis l'appairage se termine comme avec le bouton. Si le module a déjà un code Remote Commissioning, saisissez-le aussi. Voir [[Remote Commissioning]].
 
-Pour les autres actionneurs, la procédure d'appairage reste nécessaire : ils doivent apprendre l'adresse d'Ocean2MQTT.
+Un actionneur **déjà appairé par une autre box avec la même clé** se déclare avec l'adresse d'émission qu'il a apprise : voir [[Migration depuis NodOcean]] (« Depuis une autre box »). Sinon, la procédure d'appairage reste nécessaire.
 
 ### Capteurs et interrupteurs déjà entendus
 
