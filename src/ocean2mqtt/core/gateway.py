@@ -11,10 +11,16 @@ from dataclasses import dataclass
 
 from . import recom
 from .esp3 import (
+    BASE_ID_MAX,
+    BASE_ID_MIN,
     CO_RD_IDBASE,
     CO_RD_VERSION,
+    CO_WR_IDBASE,
+    CO_WR_RESET,
     PACKET_RADIO_ERP1,
     PACKET_RESPONSE,
+    RET_BASEID_MAX_REACHED,
+    RET_BASEID_OUT_OF_RANGE,
     RET_OK,
     RORG_UTE,
     RORG_VLD,
@@ -74,6 +80,8 @@ class GatewayInfo:
     chip_id: int | None = None
     app_version: str | None = None
     description: str | None = None
+    # Nombre d'écritures du Base ID encore possibles (10 au départ, None = inconnu)
+    base_id_writes_left: int | None = None
 
 
 class _SerialProtocol(asyncio.Protocol):
@@ -177,6 +185,10 @@ class Gateway:
         if len(resp.data) < 5 or resp.data[0] != RET_OK:
             raise GatewayError("Lecture du Base ID impossible")
         info = GatewayInfo(base_id=int.from_bytes(resp.data[1:5], "big"))
+        if len(resp.data) >= 6:
+            info.base_id_writes_left = resp.data[5]
+        elif resp.optional:
+            info.base_id_writes_left = resp.optional[0]
         try:
             ver = await self.command(build_common_command(CO_RD_VERSION))
             d = ver.data
@@ -193,6 +205,40 @@ class Gateway:
             id_to_str(info.chip_id) if info.chip_id else "?",
         )
         return info
+
+    async def write_base_id(self, base_id: int) -> GatewayInfo:
+        """Change le Base ID de la clé (CO_WR_IDBASE). Limité à 10 fois par clé.
+
+        Sert à reprendre sur une nouvelle clé le Base ID de l'ancienne : les
+        actionneurs appairés avec l'ancienne la reconnaissent sans réappairage.
+        """
+        if not BASE_ID_MIN <= base_id <= BASE_ID_MAX or base_id & 0x7F:
+            raise GatewayError(
+                "Base ID invalide : de FF800000 à FFFFFF80, multiple de 80 (hexadécimal)"
+            )
+        resp = await self.command(
+            build_common_command(CO_WR_IDBASE, base_id.to_bytes(4, "big")), timeout=3.0
+        )
+        code = resp.data[0] if resp.data else None
+        if code == RET_BASEID_MAX_REACHED:
+            raise GatewayError("Cette clé a atteint le nombre maximal de changements de Base ID")
+        if code == RET_BASEID_OUT_OF_RANGE:
+            raise GatewayError("Base ID refusé par la clé (hors plage)")
+        if code != RET_OK:
+            raise GatewayError(f"Écriture du Base ID refusée par la clé (code {code})")
+        # Certaines clés n'appliquent le nouveau Base ID qu'après un redémarrage
+        try:
+            await self.command(build_common_command(CO_WR_RESET), timeout=2.0)
+        except GatewayError:
+            pass
+        await asyncio.sleep(1.0)
+        self.info = await self._read_info()
+        if self.info.base_id != base_id:
+            raise GatewayError(
+                f"La clé indique toujours le Base ID {id_to_str(self.info.base_id)} : "
+                "débranchez-la et rebranchez-la, puis vérifiez."
+            )
+        return self.info
 
     # -- Émission ------------------------------------------------------------
 
