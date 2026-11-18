@@ -147,7 +147,7 @@ export function AddProduct({ onDone, onError, preset }: Props) {
         ) : selected === GENERIC ? (
           <GenericPicker generics={generics} onPick={setSelected} />
         ) : product ? (
-          <Sheet product={product} onError={onError} onBack={product.generic ? () => setSelected(GENERIC) : undefined} />
+          <Sheet product={product} onError={onError} onAddById={(id) => addKnown(id, product.id)} onBack={product.generic ? () => setSelected(GENERIC) : undefined} />
         ) : (
           <p className="muted">{t("add.choose")}</p>
         )}
@@ -302,8 +302,11 @@ function GenericPicker({ generics, onPick }: { generics: Product[]; onPick: (id:
   );
 }
 
-function Sheet({ product, onError, onBack }: { product: Product; onError: (m: string) => void; onBack?: () => void }) {
+function Sheet({ product, onError, onBack, onAddById }: { product: Product; onError: (m: string) => void; onBack?: () => void; onAddById: (id: string) => void }) {
   const features = product.exposes.filter((e) => e.key !== "rssi");
+  const actuator = product.teach_in.endsWith("bidir");
+  const [manualId, setManualId] = useState("");
+  const cleanId = manualId.trim().toUpperCase().replace(/^0X/, "").replace(/[\s:-]/g, "");
   const start = () => request("pairing/start", { product: product.id, timeout: 60 }).catch((e: Error) => onError(e.message));
   return (
     <div className="sheet-body">
@@ -364,6 +367,31 @@ function Sheet({ product, onError, onBack }: { product: Product; onError: (m: st
           </a>
         )}
       </div>
+      <details className="manual-id">
+        <summary>{t("add.byIdTitle")}</summary>
+        {actuator ? (
+          <p className="small muted">{t("add.byIdActuator")}</p>
+        ) : (
+          <form
+            className="stack"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onAddById(cleanId);
+            }}
+          >
+            <p className="small muted">{t("add.byIdHint")}</p>
+            <div className="number-form">
+              <label className="field grow">
+                {t("add.byIdLabel")}
+                <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="0512ABCD" spellCheck={false} autoComplete="off" />
+              </label>
+              <button type="submit" className="secondary" disabled={!/^[0-9A-F]{8}$/.test(cleanId)}>
+                {t("add.byIdAdd")}
+              </button>
+            </div>
+          </form>
+        )}
+      </details>
     </div>
   );
 }

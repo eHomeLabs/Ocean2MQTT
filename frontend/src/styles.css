@@ -262,3 +262,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 a.tile.propose { text-decoration: none; color: inherit; border-style: dashed; }
 .propose-icon { display: grid; place-items: center; font-size: 42px; font-weight: 300; color: var(--action); }
 .propose-link { margin-right: 10px; }
+
+.manual-id { margin-top: 14px; border-top: 1px solid var(--line-2); padding-top: 12px; }
+.manual-id summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--action); }
+.manual-id .stack { margin-top: 10px; }
