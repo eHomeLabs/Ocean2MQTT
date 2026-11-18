@@ -84,7 +84,8 @@ async def test_mqtt_settings_from_interface(app: Ocean2MQTT) -> None:  # noqa: F
         assert settings["host"] == "127.0.0.1" and settings["port"] == port
         assert settings["base_topic"] == "maison" and not settings["has_password"]
         assert restarts == ["maison"]
-        assert (await app.request("config/mqtt", {}))["base_topic"] == "maison"
+        mq = await app.request("config/mqtt", {})
+        assert mq["base_topic"] == "maison" and mq["editable"]
     finally:
         await broker.shutdown()
 
