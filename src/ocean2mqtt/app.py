@@ -962,11 +962,16 @@ class Ocean2MQTT:
 
     def _add_known(self, data: dict[str, Any]) -> dict[str, Any]:
         """Appairage en un clic d'un émetteur déjà entendu (capteurs, interrupteurs)."""
-        device_id = str(data.get("id") or "").upper()
+        device_id = str(data.get("id") or "").strip().upper().removeprefix("0X")
         try:
-            str_to_id(device_id)
+            value = str_to_id(device_id)
         except ValueError as err:
             raise RequestError(f"Identifiant EnOcean invalide : {device_id}") from err
+        device_id = id_to_str(value)
+        base = self.gateway.info.base_id if self.gateway.info else None
+        if value in (0, 0xFFFFFFFF) or (base is not None and base <= value < base + 128):
+            raise RequestError(f"{device_id} n'est pas l'identifiant d'un produit (adresse "
+                               "réservée ou adresse de la clé)")
         if device_id in self.devices:
             raise RequestError(f"{device_id} est déjà appairé")
         product = self._product(str(data.get("product")))
