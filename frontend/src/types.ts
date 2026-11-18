@@ -125,7 +125,7 @@ export type MigrationItem = {
   brand?: string | null;
   actuator: boolean;
   recom: boolean;
-  status: "ok" | "repair" | "exists" | "unknown";
+  status: "ok" | "repair" | "exists" | "unknown" | "code";
 };
 
 export type MigrationPlan = { source: MigrationSource; mode: "same" | "new"; current_base_id?: string | null; key_mismatch: boolean; items: MigrationItem[] };

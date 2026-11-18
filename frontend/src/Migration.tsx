@@ -52,7 +52,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
   const [step, setStep] = useState<Step>(backup ? "preview" : "key");
   const [mode, setMode] = useState<Mode>("same");
   const [plan, setPlan] = useState<MigrationPlan | null>(null);
-  const [result, setResult] = useState<{ imported: number; repair: number } | null>(null);
+  const [result, setResult] = useState<{ imported: number; repair: number; codes?: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const params = () => (target.kind === "ha" ? { index: target.index } : { file: target.file });
   const haSource = target.kind === "ha" ? info?.migration?.nodocean[target.index] : undefined;
@@ -101,7 +101,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
     }
   };
   const title = target.kind === "ha" ? t("mig.title") : backup ? t("mig.titleBackup") : t("mig.titleFile");
-  const toImport = plan?.items.filter((i) => i.status === "ok" || i.status === "repair").length ?? 0;
+  const toImport = plan?.items.filter((i) => i.status === "ok" || i.status === "repair" || i.status === "code").length ?? 0;
 
   return (
     <div className="dialog-backdrop" role="presentation" onClick={onClose}>
@@ -193,7 +193,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
                             {i.recom && <span className="muted"> · {t("mig.recom")}</span>}
                           </td>
                           <td>
-                            <span className={`badge ${{ ok: "valide", repair: "communaute", exists: "neutral", unknown: "error" }[i.status]}`}>{t(`mig.st.${i.status}` as Key)}</span>
+                            <span className={`badge ${{ ok: "valide", repair: "communaute", exists: "neutral", unknown: "error", code: "valide" }[i.status]}`}>{t(`mig.st.${i.status}` as Key)}</span>
                           </td>
                         </tr>
                       ))}
@@ -222,6 +222,7 @@ export function MigrationWizard({ target, onClose, onError }: { target: Migratio
               <>
                 <h3>✓ {t("mig.doneTitle")}</h3>
                 <p>{t("mig.done", { n: result.imported, r: result.repair })}</p>
+                {!!result.codes && <p>{t("mig.doneCodes", { n: result.codes })}</p>}
                 {target.kind !== "file" || !backup ? <p className="callout">{t("mig.after")}</p> : null}
               </>
             ) : (
