@@ -1,11 +1,20 @@
 // Remote Commissioning : page (liste des produits + journal) et panneau d'un produit
 import { useState } from "react";
-import { request, useStore } from "./api";
+import { request, useNow, useStore } from "./api";
+import { useConfirm } from "./Confirm";
 import { formatValue, label, locale, option, t } from "./i18n";
 import type { Device, Recom } from "./types";
 
 export function RecomPage({ onOpen }: { onOpen: (device: Device) => void }) {
-  const { devices, recomLog } = useStore();
+  const { devices, recomLog, info } = useStore();
+  if (info && info.recom_enabled === false) {
+    return (
+      <div className="card empty">
+        <h2>{t("recom.disabled")}</h2>
+        <p>{t("recom.disabledHint")}</p>
+      </div>
+    );
+  }
   const items = devices.filter((d) => d.recom);
   return (
     <div className="stack">
@@ -90,7 +99,15 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
   const [code, setCode] = useState("");
   const [linkId, setLinkId] = useState("");
   const [linkType, setLinkType] = useState(recom.link_types[0] ?? "rocker_a");
+  const [dialog, confirm] = useConfirm();
+  const now = useNow(15000);
+  const sessionLeft = Math.max(0, Math.round(((recom.session_until ?? 0) * 1000 - now) / 60000));
   const run = async (action: string, data: Record<string, unknown> = {}) => {
+    // Toute opération autre que le Ping peut renvoyer le code : confirmation hors session
+    if (action !== "ping" && (action === "unlock" || action === "code" || !sessionLeft)) {
+      const ok = await confirm({ title: t("recom.confirmTitle"), text: t("recom.confirmText", { name: device.name }), ok: t("recom.confirmOk") });
+      if (!ok) return false;
+    }
     setBusy(action);
     try {
       await request(`device/recom/${action}`, { id: device.id, ...data });
@@ -109,7 +126,10 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
       <section className="stack">
         <div className="row">
           <span className="strong">{t("recom.access")}</span>
-          <Access recom={recom} />
+          <span className="button-row">
+            {sessionLeft > 0 && <span className="badge valide">{t("recom.session", { n: sessionLeft })}</span>}
+            <Access recom={recom} />
+          </span>
         </div>
         <div className="button-row">
           <button type="button" className="primary" disabled={!!busy} onClick={() => run("unlock")}>
@@ -230,6 +250,7 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
         <h3>{t("recom.log")}</h3>
         <RecomLogTable entries={recomLog.filter((e) => e.id === device.id)} />
       </section>
+      {dialog}
     </div>
   );
 }

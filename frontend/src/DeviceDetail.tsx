@@ -1,6 +1,7 @@
 // Fiche d'un produit appairé : Contrôle, Réglages, Remote Commissioning, Télégrammes, Informations
 import { useEffect, useState } from "react";
 import { request, useStore } from "./api";
+import { useConfirm } from "./Confirm";
 import { DeviceControls } from "./DeviceCard";
 import { RecomPanel } from "./Recom";
 import { label, option, supportName, t } from "./i18n";
@@ -62,7 +63,13 @@ export function DeviceDetail({ device, initialTab = "control", onClose, onError 
 
 function SettingsForm({ device, onError }: { device: Device; onError: (m: string) => void }) {
   const [done, setDone] = useState<string | null>(null);
+  const [dialog, confirm] = useConfirm();
   const apply = async (key: string, value: unknown) => {
+    const setting = device.settings.find((s) => s.key === key);
+    if (setting?.group === "recom" && (device.recom?.session_until ?? 0) * 1000 <= Date.now()) {
+      const ok = await confirm({ title: t("recom.confirmTitle"), text: t("recom.confirmText", { name: device.name }), ok: t("recom.confirmOk") });
+      if (!ok) return;
+    }
     try {
       await request("device/settings/set", { id: device.id, key, value });
       setDone(key);
@@ -91,6 +98,7 @@ function SettingsForm({ device, onError }: { device: Device; onError: (m: string
           </section>
         );
       })}
+      {dialog}
     </div>
   );
 }

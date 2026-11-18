@@ -56,6 +56,7 @@ export type Recom = {
   links?: Link[] | null;
   links_max?: number | null;
   link_types: string[];
+  session_until?: number;
   config: Record<string, unknown>;
 };
 
@@ -111,6 +112,7 @@ export type Info = {
   pairing: { product: string; timeout: number; until: number } | null;
   config: Record<string, Record<string, unknown>>;
   devices: number;
+  recom_enabled?: boolean;
   migration?: { nodocean: MigrationSource[]; dismissed: boolean; previous_base_id?: string | null };
 };
 

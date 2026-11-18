@@ -249,3 +249,5 @@ input[type="range"] { width: 100%; accent-color: var(--action); min-height: 32px
 .choice input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--action); }
 .choice span { display: flex; flex-direction: column; gap: 2px; }
 .block { display: block; }
+.confirm-backdrop { z-index: 60; }
+.confirm-backdrop .dialog { max-width: 520px; }

@@ -50,7 +50,7 @@ export function App() {
           <LogoMark />
           <Wordmark />
         </div>
-        {PAGES.map(([key, text]) => (
+        {PAGES.filter(([key]) => key !== "recom" || info?.recom_enabled !== false).map(([key, text]) => (
           <button key={key} type="button" className={`nav ${page === key ? "current" : ""}`} aria-current={page === key ? "page" : undefined} onClick={() => { setPreset(null); setPage(key); }}>
             {t(text)}
           </button>
@@ -235,6 +235,11 @@ function AppSettings({ onStart, onError }: { onStart: (t: MigrationTarget) => vo
           </div>
         </dl>
         <p className="small muted">{t("app.configHint")}</p>
+      </section>
+      <section className="card stack">
+        <h3>{t("app.recom")}</h3>
+        <p className="small">{info?.recom_enabled === false ? `${t("recom.disabled")}. ${t("recom.disabledHint")}` : t("app.recomOn")}</p>
+        {info?.recom_enabled !== false && <p className="small muted">{t("app.recomHow")}</p>}
       </section>
       <MigrationSettings onStart={onStart} onError={onError} />
       <section className="card stack">
