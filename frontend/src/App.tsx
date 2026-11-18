@@ -4,6 +4,7 @@ import { clearError, refresh, useStore } from "./api";
 import { DeviceCard } from "./DeviceCard";
 import { DeviceDetail } from "./DeviceDetail";
 import { getLang, setLang, t, type Key, type Lang } from "./i18n";
+import { BaseIdSection, MqttSection } from "./Gateway";
 import { LogoMark, Wordmark } from "./Logo";
 import { MigrationBanner, MigrationSettings, MigrationWizard, RepairBanner, type MigrationTarget } from "./Migration";
 import { RecomPage } from "./Recom";
@@ -105,7 +106,7 @@ export function App() {
         {page === "products" && (
           <>
             <MigrationBanner onStart={setMigration} />
-            <RepairBanner />
+            <RepairBanner onError={onError} />
             <div className="toolbar">
               <label className="inline">
                 {t("products.room")}
@@ -174,8 +175,6 @@ export function App() {
 function AppSettings({ onStart, onError }: { onStart: (t: MigrationTarget) => void; onError: (m: string) => void }) {
   const { info } = useStore();
   const gw = info?.gateway;
-  const mqtt = (info?.config.mqtt ?? {}) as Record<string, unknown>;
-  const yes = (v: unknown) => (v ? t("app.yes") : t("app.no"));
   return (
     <div className="stack narrow">
       <section className="card stack">
@@ -217,24 +216,11 @@ function AppSettings({ onStart, onError }: { onStart: (t: MigrationTarget) => vo
             <dd>{gw?.app_version ?? "—"}</dd>
           </div>
         </dl>
+        <BaseIdSection onError={onError} />
       </section>
       <section className="card stack">
         <h3>{t("app.mqtt")}</h3>
-        <dl className="facts">
-          <div>
-            <dt>{t("app.host")}</dt>
-            <dd><code>{String(mqtt.host ?? "—")}:{String(mqtt.port ?? "")}</code></dd>
-          </div>
-          <div>
-            <dt>{t("app.baseTopic")}</dt>
-            <dd><code>{String(mqtt.base_topic ?? "ocean2mqtt")}</code></dd>
-          </div>
-          <div>
-            <dt>{t("app.discovery")}</dt>
-            <dd>{yes(mqtt.discovery)}</dd>
-          </div>
-        </dl>
-        <p className="small muted">{t("app.configHint")}</p>
+        <MqttSection onError={onError} />
       </section>
       <section className="card stack">
         <h3>{t("app.recom")}</h3>

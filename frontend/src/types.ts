@@ -108,7 +108,8 @@ export type Device = {
 
 export type Info = {
   version: string;
-  gateway: { connected: boolean; port: string; base_id?: string | null; chip_id?: string | null; app_version?: string | null };
+  gateway: { connected: boolean; port: string; base_id?: string | null; chip_id?: string | null; app_version?: string | null; base_id_writes_left?: number | null };
+  mqtt?: { connected: boolean; editable: boolean };
   language: string;
   pairing: { product: string; timeout: number; until: number } | null;
   config: Record<string, Record<string, unknown>>;

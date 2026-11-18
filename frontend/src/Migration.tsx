@@ -1,5 +1,6 @@
 // Reprise des produits de NodOcean for HA, import d'un fichier, sauvegarde et restauration
 import { useEffect, useRef, useState } from "react";
+import { CloneBaseIdButton } from "./Gateway";
 import { request, useStore } from "./api";
 import { t } from "./i18n";
 import type { Key } from "./i18n";
@@ -32,7 +33,7 @@ export function MigrationBanner({ onStart }: { onStart: (target: MigrationTarget
   );
 }
 
-export function RepairBanner() {
+export function RepairBanner({ onError }: { onError: (m: string) => void }) {
   const { devices, info } = useStore();
   const count = devices.filter((d) => d.needs_pairing).length;
   if (!count) return null;
@@ -41,6 +42,14 @@ export function RepairBanner() {
       <div>
         <h3>{t("repair.bannerTitle")}</h3>
         <p className="small muted">{t("repair.bannerText", { n: count, base: info?.migration?.previous_base_id ?? "?" })}</p>
+        {info?.migration?.previous_base_id && info.gateway.base_id_writes_left !== 0 && (
+          <>
+            <p className="small">{t("repair.cloneHint")}</p>
+            <div className="button-row">
+              <CloneBaseIdButton onError={onError} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

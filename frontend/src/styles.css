@@ -73,7 +73,7 @@ a { color: var(--action); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
 .toolbar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: center; }
 .inline { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
-select, input[type="search"], input:not([type]) { padding: 10px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--card); min-height: 42px; }
+select, input[type="search"], input:not([type]), .field input[type="number"], .field input[type="password"] { padding: 10px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--card); min-height: 42px; }
 .field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
 .field input, .field select { font-weight: 400; font-size: 15px; }
 
@@ -251,3 +251,10 @@ input[type="range"] { width: 100%; accent-color: var(--action); min-height: 32px
 .block { display: block; }
 .confirm-backdrop { z-index: 60; }
 .confirm-backdrop .dialog { max-width: 520px; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.check input { width: 18px; height: 18px; accent-color: var(--action); }
+.banner .button-row { margin-top: 8px; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
