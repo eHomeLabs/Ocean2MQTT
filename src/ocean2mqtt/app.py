@@ -677,10 +677,15 @@ class Ocean2MQTT:
         for entry in source.devices:
             product = self.library.get(entry["product"])
             actuator = bool(product and product.is_actuator)
+            existing = self.store.devices.get(entry["id"])
             if product is None:
                 status = "unknown"
-            elif entry["id"] in self.store.devices:
-                status = "exists"
+            elif existing is not None:
+                # Déjà présent : on reprend seulement le code ReCom s'il manque
+                # (ou si le nôtre n'est qu'un candidat jamais confirmé par le produit).
+                status = "code" if entry["recom_code"] is not None and (
+                    existing.get("recom_code") is None or existing.get("recom_pending")
+                ) and existing.get("recom_code") != entry["recom_code"] else "exists"
             elif actuator and (mode == "new" or mismatch or entry["sender_offset"] is None
                                or entry["sender_offset"] in used):
                 status = "repair"
@@ -698,8 +703,18 @@ class Ocean2MQTT:
     async def _import(self, source: Source, mode: str) -> dict[str, Any]:
         plan = self._plan(source, mode)
         status = {i["id"]: i["status"] for i in plan["items"]}
-        imported = repair = 0
+        imported = repair = codes = 0
         for entry in source.devices:
+            if status.get(entry["id"]) == "code":
+                stored = self.store.devices[entry["id"]]
+                stored["recom_code"] = entry["recom_code"]
+                stored["recom_pending"] = entry["recom_pending"]
+                if (device := self.devices.get(entry["id"])) is not None:
+                    device.recom_code = entry["recom_code"]
+                    device.recom_pending = entry["recom_pending"]
+                    self.gateway.forget_unlock(device.device_id)
+                codes += 1
+                continue
             if status.get(entry["id"]) not in ("ok", "repair"):
                 continue
             entry = dict(entry)
@@ -723,8 +738,8 @@ class Ocean2MQTT:
         self._publish_info()
         if self.gateway_ok:
             self._task(self._init_actuators())
-        result = {"imported": imported, "repair": repair,
-                  "skipped": len(plan["items"]) - imported, "source": plan["source"]}
+        result = {"imported": imported, "repair": repair, "codes": codes,
+                  "skipped": len(plan["items"]) - imported - codes, "source": plan["source"]}
         self.emit("bridge/event", {"type": "migration", "data": result})
         return result
 
