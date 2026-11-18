@@ -20,7 +20,7 @@ export type Product = {
   type: string;
   eep: string;
   extra_eeps: string[];
-  support: "valide" | "communaute";
+  support: "valide" | "communaute" | "generique";
   teach_in: string;
   steps: string[];
   after: string;
@@ -28,8 +28,64 @@ export type Product = {
   image?: string | null;
   variants: string[];
   recom: boolean;
+  generic?: boolean;
+  i18n?: Record<string, { name: string; steps: string[]; after: string }>;
   exposes: Expose[];
 };
+
+export type Setting = {
+  key: string;
+  kind: "binary" | "enum" | "numeric" | "action";
+  group?: "product" | "local" | "recom";
+  options?: string[];
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  channel?: number;
+  readable?: boolean;
+  value?: unknown;
+};
+
+export type Link = { index: number; id: string; eep: string; channel?: number };
+
+export type Recom = {
+  secured: boolean;
+  pending: boolean;
+  has_code: boolean;
+  links?: Link[] | null;
+  links_max?: number | null;
+  link_types: string[];
+  config: Record<string, unknown>;
+};
+
+export type Telegram = {
+  time: number;
+  dir: "rx" | "tx";
+  sender: string;
+  destination: string;
+  rorg: string;
+  data: string;
+  status: string;
+  dbm?: number | null;
+  duplicate?: boolean;
+  name?: string | null;
+};
+
+export type Unknown = {
+  id: string;
+  rorg: string;
+  count: number;
+  first_seen: string;
+  last_seen: string;
+  rssi?: number;
+  eep?: string | null;
+  manufacturer?: number | null;
+  teach_in?: string | null;
+  suggestions: string[];
+};
+
+export type RecomLog = { time: string; id: string; name: string; action: string; ok: boolean; detail?: string | null };
 
 export type DeviceState = Record<string, unknown>;
 
@@ -43,6 +99,8 @@ export type Device = {
   available: boolean;
   last_seen?: string | null;
   actuator: boolean;
+  settings: Setting[];
+  recom?: Recom | null;
 };
 
 export type Info = {

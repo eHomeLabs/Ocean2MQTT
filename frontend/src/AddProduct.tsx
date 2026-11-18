@@ -1,50 +1,84 @@
-// Ajouter un produit : bibliothèque filtrée, fiche, appairage, nommage
+// Ajouter un produit : bibliothèque filtrée, mode générique, suggestions, appairage, nommage
 import { useEffect, useMemo, useState } from "react";
-import { clearPairing, request, useNow, useStore } from "./api";
-import { TEACH_IN, TYPES, label } from "./labels";
-import type { Device, Product } from "./types";
+import { clearPairing, clearSuggestion, request, useNow, useStore } from "./api";
+import { label, locale, productText, supportName, t, teachIn, typeName } from "./i18n";
+import type { Device, Product, Unknown } from "./types";
 
 type Props = { onDone: () => void; onError: (m: string) => void };
+const GENERIC = "__generic__";
 
 export function AddProduct({ onDone, onError }: Props) {
   const [library, setLibrary] = useState<Product[]>([]);
+  const [generics, setGenerics] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
-  const [brand, setBrand] = useState("Toutes");
-  const [type, setType] = useState("Tous");
+  const [brand, setBrand] = useState("");
+  const [type, setType] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-  const { pairing, connected } = useStore();
+  const [added, setAdded] = useState<Device | null>(null);
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const { pairing, connected, suggestion, unknown } = useStore();
 
   useEffect(() => {
-    if (connected) request<Product[]>("library").then(setLibrary).catch((e: Error) => onError(e.message));
+    if (!connected) return;
+    request<Product[]>("library").then(setLibrary).catch((e: Error) => onError(e.message));
+    request<Product[]>("library/generic").then(setGenerics).catch(() => {});
   }, [connected, onError]);
 
-  const brands = useMemo(() => ["Toutes", ...Array.from(new Set(library.map((p) => p.brand)))], [library]);
-  const types = useMemo(() => ["Tous", ...Array.from(new Set(library.map((p) => p.type)))], [library]);
+  const all = useMemo(() => [...library, ...generics], [library, generics]);
+  const brands = useMemo(() => Array.from(new Set(library.map((p) => p.brand))), [library]);
+  const types = useMemo(() => Array.from(new Set(library.map((p) => p.type))), [library]);
   const words = search.toLowerCase().split(/\s+/).filter(Boolean);
   const items = library.filter(
     (p) =>
-      (brand === "Toutes" || p.brand === brand) &&
-      (type === "Tous" || p.type === type) &&
-      words.every((w) => [p.model, p.name, p.brand, p.eep, ...p.extra_eeps, ...p.variants].join(" ").toLowerCase().includes(w)),
+      (!brand || p.brand === brand) &&
+      (!type || p.type === type) &&
+      words.every((w) => [p.model, productText(p).name, p.name, p.brand, p.eep, ...p.extra_eeps, ...p.variants].join(" ").toLowerCase().includes(w)),
   );
-  const product = library.find((p) => p.id === selected) ?? null;
+  const product = all.find((p) => p.id === selected) ?? null;
+  // Bandeau : dernière demande d'appairage d'un émetteur inconnu qui ressemble à un produit
+  const banner =
+    (suggestion && !dismissed.includes(suggestion.id) && unknown.some((u) => u.id === suggestion.id) ? suggestion : null) ??
+    [...unknown].filter((u) => u.teach_in && u.suggestions.length && !dismissed.includes(u.id)).sort((a, b) => b.last_seen.localeCompare(a.last_seen))[0] ??
+    null;
   const active = pairing && (pairing.status === "started" || pairing.status === "success" || pairing.status === "timeout");
+
+  const addKnown = async (id: string, productId: string) => {
+    try {
+      const device = await request<Device>("device/add", { id, product: productId });
+      clearSuggestion();
+      setAdded(device);
+    } catch (e) {
+      onError((e as Error).message);
+    }
+  };
 
   return (
     <div className="split">
-      <section className="library" aria-label="Bibliothèque de produits">
+      <section className="library" aria-label="Bibliothèque">
+        {banner && !active && !added && (
+          <Suggestion
+            entry={banner}
+            products={all}
+            onPick={(id) => setSelected(id)}
+            onAdd={addKnown}
+            onClose={() => {
+              setDismissed([...dismissed, banner.id]);
+              clearSuggestion();
+            }}
+          />
+        )}
         <div className="card filters">
           <label className="field">
-            Rechercher
-            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Référence, nom ou EEP (ex. SIN-2, fil pilote, D2-01-0C)" />
+            {t("add.search")}
+            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("add.searchHint")} />
           </label>
-          <Chips label="Marque" values={brands} value={brand} onChange={setBrand} />
-          <Chips label="Type" values={types} value={type} onChange={setType} format={(t) => TYPES[t] ?? t} />
+          <Chips title={t("add.brand")} values={brands} value={brand} onChange={setBrand} all={t("add.all")} />
+          <Chips title={t("add.type")} values={types} value={type} onChange={setType} format={typeName} all={t("add.allTypes")} />
         </div>
         <div className="legend small muted">
-          <span>{items.length} produit{items.length > 1 ? "s" : ""}</span>
+          <span>{t("add.count", { n: items.length })}</span>
           <span>
-            <span className="badge valide">Validé</span> testé sur produit réel · <span className="badge communaute">Communauté</span> pas encore testé
+            <span className="badge valide">{t("add.valid")}</span> {t("add.legend")} · <span className="badge communaute">{t("add.community")}</span> {t("add.legendCommunity")}
           </span>
         </div>
         <div className="tiles">
@@ -53,69 +87,229 @@ export function AddProduct({ onDone, onError }: Props) {
               {p.image ? <img src={p.image} alt="" /> : <div className="tile-placeholder" aria-hidden="true" />}
               <span className="brand">{p.brand.toUpperCase()}</span>
               <span className="model">{p.model}</span>
-              <span className="name">{p.name}</span>
+              <span className="name">{productText(p).name}</span>
               <span className="tile-foot">
                 <code>{p.eep}</code>
-                <span className={`badge ${p.support}`}>{p.support === "valide" ? "Validé" : "Communauté"}</span>
+                <span className={`badge ${p.support}`}>{supportName(p.support)}</span>
               </span>
             </button>
           ))}
+          <button type="button" className={`tile generic ${selected === GENERIC || product?.generic ? "selected" : ""}`} onClick={() => setSelected(GENERIC)}>
+            <div className="tile-placeholder generic-icon" aria-hidden="true">
+              EEP
+            </div>
+            <span className="brand">{t("add.generic").toUpperCase()}</span>
+            <span className="model">{t("add.genericTitle")}</span>
+            <span className="name">{t("add.genericTile")}</span>
+            <span className="tile-foot">
+              <span className="badge generique">{t("add.generic")}</span>
+            </span>
+          </button>
         </div>
+        {unknown.length > 0 && <UnknownList unknown={unknown} products={all} onAdd={addKnown} onPick={(id) => setSelected(id)} />}
       </section>
 
-      <aside className="card sheet" aria-label="Fiche produit">
-        {active ? (
-          <Pairing library={library} onDone={onDone} onError={onError} />
+      <aside className="card sheet" aria-label={t("add.procedure")}>
+        {added ? (
+          <Name
+            device={added}
+            onDone={() => {
+              setAdded(null);
+              onDone();
+            }}
+            onError={onError}
+          />
+        ) : active ? (
+          <Pairing library={all} onDone={onDone} onError={onError} />
+        ) : selected === GENERIC ? (
+          <GenericPicker generics={generics} onPick={setSelected} />
         ) : product ? (
-          <Sheet product={product} onError={onError} />
+          <Sheet product={product} onError={onError} onBack={product.generic ? () => setSelected(GENERIC) : undefined} />
         ) : (
-          <p className="muted">Choisissez un produit dans la bibliothèque pour afficher sa procédure d'appairage.</p>
+          <p className="muted">{t("add.choose")}</p>
         )}
       </aside>
     </div>
   );
 }
 
-function Chips({ label: title, values, value, onChange, format = (v) => v }: { label: string; values: string[]; value: string; onChange: (v: string) => void; format?: (v: string) => string }) {
+function Chips({ title, values, value, onChange, format = (v) => v, all }: { title: string; values: string[]; value: string; onChange: (v: string) => void; format?: (v: string) => string; all: string }) {
   return (
     <div className="chips" role="group" aria-label={title}>
       <span className="small strong chips-label">{title}</span>
-      {values.map((v) => (
-        <button key={v} type="button" aria-pressed={v === value} className={`chip ${v === value ? "active" : ""}`} onClick={() => onChange(v)}>
-          {format(v)}
+      {["", ...values].map((v) => (
+        <button key={v || "all"} type="button" aria-pressed={v === value} className={`chip ${v === value ? "active" : ""}`} onClick={() => onChange(v)}>
+          {v ? format(v) : all}
         </button>
       ))}
     </div>
   );
 }
 
-function Sheet({ product, onError }: { product: Product; onError: (m: string) => void }) {
+function Suggestion({ entry, products, onPick, onAdd, onClose }: { entry: Unknown; products: Product[]; onPick: (id: string) => void; onAdd: (id: string, product: string) => void; onClose: () => void }) {
+  const matches = entry.suggestions.map((id) => products.find((p) => p.id === id)).filter(Boolean) as Product[];
+  if (!matches.length) return null;
+  return (
+    <div className="card suggestion" role="status">
+      <div className="row-title">
+        <div>
+          <h3>{t("add.suggestTitle")}</h3>
+          <p className="small muted">{t("add.suggestText", { id: entry.id, eep: entry.eep ?? "?" })}</p>
+        </div>
+        <button type="button" className="link" onClick={onClose}>
+          {t("close")}
+        </button>
+      </div>
+      <div className="suggest-list">
+        {matches.map((p) => (
+          <div key={p.id} className="suggest-item">
+            {p.image ? <img src={p.image} alt="" className="thumb" /> : <div className="thumb placeholder" aria-hidden="true" />}
+            <div className="device-title">
+              <strong>
+                {p.brand} {p.model}
+              </strong>
+              <span className="small muted">{productText(p).name}</span>
+            </div>
+            {p.teach_in.endsWith("bidir") ? (
+              <button type="button" className="secondary" onClick={() => onPick(p.id)}>
+                {t("add.procedure")}
+              </button>
+            ) : (
+              <button type="button" className="primary" onClick={() => onAdd(entry.id, p.id)}>
+                {t("add.pairOneClick")}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UnknownList({ unknown, products, onAdd, onPick }: { unknown: Unknown[]; products: Product[]; onAdd: (id: string, product: string) => void; onPick: (id: string) => void }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const sensors = products.filter((p) => !p.teach_in.endsWith("bidir"));
+  return (
+    <section className="card stack">
+      <div className="row-title">
+        <div>
+          <h3>{t("add.unknownTitle")}</h3>
+          <p className="small muted">{t("add.unknownHint")}</p>
+        </div>
+        <button type="button" className="link" onClick={() => request("unknown/clear")}>
+          {t("add.unknownClear")}
+        </button>
+      </div>
+      <table className="table">
+        <tbody>
+          {[...unknown]
+            .sort((a, b) => b.last_seen.localeCompare(a.last_seen))
+            .map((u) => {
+              const suggested = u.suggestions.map((id) => products.find((p) => p.id === id)).filter(Boolean) as Product[];
+              const candidates = suggested.length ? suggested : sensors.filter((p) => p.eep.slice(0, 2) === u.rorg);
+              return (
+                <tr key={u.id}>
+                  <td>
+                    <code>{u.id}</code>
+                  </td>
+                  <td className="small">
+                    <code>{u.eep ?? u.rorg}</code>
+                    {u.teach_in && <span className="badge valide"> {t("add.teachIn")}</span>}
+                  </td>
+                  <td className="small muted">
+                    {t("add.seen", { n: u.count })} · {new Date(u.last_seen).toLocaleTimeString(locale())}
+                    {u.rssi != null && ` · ${-Math.abs(u.rssi)} dBm`}
+                  </td>
+                  <td className="right">
+                    {open === u.id ? (
+                      <select
+                        autoFocus
+                        aria-label={t("add.pairWith")}
+                        defaultValue=""
+                        onChange={(e) => {
+                          const p = products.find((x) => x.id === e.target.value);
+                          if (!p) return;
+                          if (p.teach_in.endsWith("bidir")) onPick(p.id);
+                          else onAdd(u.id, p.id);
+                          setOpen(null);
+                        }}
+                        onBlur={() => setOpen(null)}
+                      >
+                        <option value="">{t("add.pairWith")}</option>
+                        {candidates.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.brand} {p.model} — {productText(p).name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <button type="button" className="secondary" disabled={!candidates.length} onClick={() => setOpen(u.id)}>
+                        {t("add.pairWith")}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+function GenericPicker({ generics, onPick }: { generics: Product[]; onPick: (id: string) => void }) {
+  return (
+    <div className="sheet-body">
+      <h2>{t("add.genericTitle")}</h2>
+      <p className="muted">{t("add.genericIntro")}</p>
+      <div className="generic-list">
+        {generics.map((p) => (
+          <button key={p.id} type="button" className="generic-item" onClick={() => onPick(p.id)}>
+            <code>{p.eep.startsWith("D2-01") ? "D2-01-xx" : p.eep}</code>
+            <span>{productText(p).name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Sheet({ product, onError, onBack }: { product: Product; onError: (m: string) => void; onBack?: () => void }) {
   const features = product.exposes.filter((e) => e.key !== "rssi");
   const start = () => request("pairing/start", { product: product.id, timeout: 60 }).catch((e: Error) => onError(e.message));
   return (
     <div className="sheet-body">
+      {onBack && (
+        <button type="button" className="link back" onClick={onBack}>
+          ← {t("add.genericTitle")}
+        </button>
+      )}
       <div className="sheet-head">
-        {product.image ? <img src={product.image} alt={`${product.brand} ${product.model}`} className="photo" /> : <div className="photo placeholder">Photo à fournir</div>}
+        {product.image ? (
+          <img src={product.image} alt={`${product.brand} ${product.model}`} className="photo" />
+        ) : (
+          <div className="photo placeholder">{product.generic ? "EEP" : t("add.photoMissing")}</div>
+        )}
         <div>
           <span className="brand">{product.brand.toUpperCase()}</span>
-          <h2>{product.name}</h2>
+          <h2>{productText(product).name}</h2>
           <strong>{product.model}</strong>
-          <span className={`badge ${product.support}`}>{product.support === "valide" ? "Validé" : "Communauté"}</span>
+          <span className={`badge ${product.support}`}>{supportName(product.support)}</span>
         </div>
       </div>
       <dl className="facts">
         <div>
-          <dt>Profil EEP</dt>
+          <dt>{t("add.profile")}</dt>
           <dd>
             <code>{[product.eep, ...product.extra_eeps].join(" + ")}</code>
           </dd>
         </div>
         <div>
-          <dt>Appairage</dt>
-          <dd>{TEACH_IN[product.teach_in] ?? product.teach_in}</dd>
+          <dt>{t("add.pairing")}</dt>
+          <dd>{teachIn(product.teach_in)}</dd>
         </div>
       </dl>
-      <h3>Ce que vous obtiendrez</h3>
+      <h3>{t("add.features")}</h3>
       <div className="pills">
         {features.map((e) => (
           <span key={e.key} className="pill">
@@ -123,23 +317,22 @@ function Sheet({ product, onError }: { product: Product; onError: (m: string) =>
           </span>
         ))}
       </div>
-      <h3>Procédure d'appairage</h3>
+      <h3>{t("add.procedure")}</h3>
       <ol className="steps">
-        <li>Cliquez sur « Lancer l'appairage » : Ocean2MQTT écoute pendant 60 s.</li>
-        {product.steps.map((s) => (
+        <li>{t("add.step0")}</li>
+        {productText(product).steps.map((s) => (
           <li key={s}>{s}</li>
         ))}
       </ol>
-      {product.support === "communaute" && (
-        <p className="hint">Fiche pas encore testée sur produit réel : si l'appairage échoue, signalez-le sur GitHub.</p>
-      )}
+      {product.support === "communaute" && <p className="hint">{t("add.communityHint")}</p>}
+      {product.generic && <p className="hint">{t("add.genericHint")}</p>}
       <div className="sheet-actions">
         <button type="button" className="primary big" onClick={start}>
-          Lancer l'appairage (60 s)
+          {t("add.start")}
         </button>
         {product.manual && (
           <a href={product.manual} target="_blank" rel="noreferrer">
-            Notice du produit
+            {t("detail.manual")}
           </a>
         )}
       </div>
@@ -156,14 +349,14 @@ function Pairing({ library, onDone, onError }: { library: Product[]; onDone: () 
   if (pairing.status === "timeout") {
     return (
       <div className="pairing">
-        <h2>Aucun produit détecté</h2>
-        <p>Vérifiez la procédure (alimentation, nombre d'appuis) et que le produit est à portée de la clé, puis réessayez.</p>
+        <h2>{t("add.timeoutTitle")}</h2>
+        <p>{t("add.timeoutText")}</p>
         <div className="sheet-actions">
           <button type="button" className="primary" onClick={() => request("pairing/start", { product: pairing.product, timeout: 60 }).catch((e: Error) => onError(e.message))}>
-            Réessayer
+            {t("retry")}
           </button>
           <button type="button" className="secondary" onClick={clearPairing}>
-            Retour à la bibliothèque
+            {t("add.back")}
           </button>
         </div>
       </div>
@@ -177,17 +370,17 @@ function Pairing({ library, onDone, onError }: { library: Product[]; onDone: () 
         <span>{left}</span>
         <small>s</small>
       </div>
-      <h2>En écoute…</h2>
-      <p>{product ? `Faites maintenant la manipulation du ${product.model} :` : "Faites maintenant la manipulation du produit."}</p>
+      <h2>{t("add.listening")}</h2>
+      <p>{product ? t("add.doNow", { model: product.model }) : t("add.doNowGeneric")}</p>
       {product && (
         <ol className="steps">
-          {product.steps.map((s) => (
+          {productText(product).steps.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
       )}
       <button type="button" className="secondary" onClick={() => request("pairing/stop").then(clearPairing)}>
-        Annuler
+        {t("cancel")}
       </button>
     </div>
   );
@@ -216,28 +409,28 @@ function Name({ device, onDone, onError }: { device: Device; onDone: () => void;
       <div className="success-head">
         {device.product?.image && <img src={device.product.image} alt="" className="photo small-photo" />}
         <div>
-          <h2>Produit appairé</h2>
+          <h2>{t("add.paired")}</h2>
           <span className="muted">
-            {device.product?.brand} · {device.product?.name} · {device.id}
+            {device.product?.brand} · {device.product ? productText(device.product).name : ""} · {device.id}
           </span>
         </div>
       </div>
-      {device.product?.after && <p className="hint">{device.product.after}</p>}
+      {device.product && productText(device.product).after && <p className="hint">{productText(device.product).after}</p>}
       <label className="field">
-        Nom du produit
+        {t("add.productName")}
         <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
       </label>
       <label className="field">
-        Pièce (facultatif)
-        <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Salon, Chambre…" />
+        {t("detail.roomOpt")}
+        <input value={room} onChange={(e) => setRoom(e.target.value)} placeholder={t("add.roomHint")} />
       </label>
       <div className="field">
-        <span className="small strong">Topic MQTT</span>
+        <span className="small strong">{t("detail.topic")}</span>
         <code className="topic">ocean2mqtt/{slug || device.id}</code>
       </div>
       <div className="sheet-actions">
         <button type="button" className="primary big" onClick={save}>
-          Terminer
+          {t("add.finish")}
         </button>
       </div>
     </div>

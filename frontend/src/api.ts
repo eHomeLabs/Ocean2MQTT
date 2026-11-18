@@ -1,6 +1,9 @@
 // Connexion WebSocket au service (même API que MQTT : topics + bridge/request/…)
 import { useEffect, useState, useSyncExternalStore } from "react";
-import type { Device, DeviceState, Info, PairingEvent } from "./types";
+import { defaultLang } from "./i18n";
+import type { Device, DeviceState, Info, PairingEvent, RecomLog, Telegram, Unknown } from "./types";
+
+const TELEGRAMS_MAX = 500;
 
 type Message = { topic: string; payload: unknown };
 type Pending = { resolve: (v: unknown) => void; reject: (e: Error) => void };
@@ -14,6 +17,10 @@ type Snapshot = {
   actions: Record<string, { event: string; at: number }>;
   pairing: PairingEvent | null;
   error: string | null;
+  telegrams: Telegram[];
+  unknown: Unknown[];
+  suggestion: Unknown | null;
+  recomLog: RecomLog[];
 };
 
 let snapshot: Snapshot = {
@@ -25,7 +32,12 @@ let snapshot: Snapshot = {
   actions: {},
   pairing: null,
   error: null,
+  telegrams: [],
+  unknown: [],
+  suggestion: null,
+  recomLog: [],
 };
+let paused = false;
 const listeners = new Set<() => void>();
 const pending = new Map<number, Pending>();
 let socket: WebSocket | null = null;
@@ -37,7 +49,16 @@ function set(patch: Partial<Snapshot>) {
 }
 
 function onMessage({ topic, payload }: Message) {
-  if (topic === "bridge/info") return set({ info: payload as Info });
+  if (topic === "bridge/info") {
+    defaultLang((payload as Info).language);
+    return set({ info: payload as Info });
+  }
+  if (topic === "bridge/telegrams") {
+    if (paused) return;
+    const list = snapshot.telegrams.length >= TELEGRAMS_MAX ? snapshot.telegrams.slice(1) : snapshot.telegrams;
+    return set({ telegrams: [...list, payload as Telegram] });
+  }
+  if (topic === "bridge/unknown") return set({ unknown: payload as Unknown[] });
   if (topic === "bridge/devices") return set({ devices: payload as Device[] });
   if (topic === "bridge/state") return;
   if (topic.startsWith("bridge/response/")) {
@@ -53,6 +74,8 @@ function onMessage({ topic, payload }: Message) {
   if (topic === "bridge/event") {
     const ev = payload as { type: string; data: PairingEvent & { message?: string } };
     if (ev.type === "pairing") set({ pairing: ev.data });
+    if (ev.type === "suggestion") set({ suggestion: ev.data as unknown as Unknown });
+    if (ev.type === "recom") set({ recomLog: [...snapshot.recomLog.slice(-199), ev.data as unknown as RecomLog] });
     if (ev.type === "error") set({ error: ev.data.message ?? "Erreur" });
     return;
   }
@@ -73,7 +96,13 @@ export function connect() {
   const url = new URL("api", window.location.href);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   socket = new WebSocket(url);
-  socket.onopen = () => set({ connected: true });
+  socket.onopen = () => {
+    set({ connected: true });
+    // Historique : journal radio, émetteurs inconnus, journal ReCom
+    request<Telegram[]>("telegrams").then((list) => set({ telegrams: list.slice(-TELEGRAMS_MAX) })).catch(() => {});
+    request<Unknown[]>("unknown").then((list) => set({ unknown: list })).catch(() => {});
+    request<RecomLog[]>("recom/log").then((list) => set({ recomLog: list })).catch(() => {});
+  };
   socket.onmessage = (e) => {
     try {
       onMessage(JSON.parse(e.data));
@@ -111,6 +140,23 @@ export function clearError() {
 
 export function clearPairing() {
   set({ pairing: null });
+}
+
+export function clearSuggestion() {
+  set({ suggestion: null });
+}
+
+export function clearTelegrams() {
+  set({ telegrams: [] });
+}
+
+export function pauseTelegrams(value: boolean) {
+  paused = value;
+}
+
+/** Nouveau rendu après un changement de langue. */
+export function refresh() {
+  set({});
 }
 
 export function useStore(): Snapshot {
