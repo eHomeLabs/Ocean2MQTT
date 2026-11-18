@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b9)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b10)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -93,7 +93,11 @@ Ocean2MQTT en Docker : dans NodOcean for HA, appuyez sur **Exporter pour Ocean2M
 
 ### Installation
 
-**Home Assistant OS / Supervised** : add-on Ocean2MQTT (dépôt d'add-ons eHomeLabs, en préparation pour la sortie publique). Il utilise automatiquement l'add-on Mosquitto et s'ouvre depuis la barre latérale.
+**Home Assistant OS / Supervised** : add-on Ocean2MQTT.
+
+[![Ajouter le dépôt à Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FeHomeLabs%2Fhassio-ocean2mqtt)
+
+Cliquez sur le bouton (ou **Paramètres → Applications → Boutique → ⋮ → Dépôts** et ajoutez `https://github.com/eHomeLabs/hassio-ocean2mqtt`), installez **Ocean2MQTT**, choisissez la clé EnOcean dans **Configuration** et démarrez. L'add-on utilise automatiquement Mosquitto et s'ouvre depuis la barre latérale. Guide complet : [wiki](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Installation).
 
 **Docker** (amd64, arm64 — Raspberry Pi 4 / 5 en 64 bits) :
 
@@ -102,7 +106,7 @@ docker run -d --name ocean2mqtt --restart unless-stopped \
   -v $(pwd)/data:/app/data -p 8080:8080 \
   --device /dev/ttyUSB0:/dev/ttyUSB0 \
   -e OCEAN2MQTT_MQTT_HOST=192.168.1.10 \
-  ghcr.io/ehomelabs/ocean2mqtt:edge
+  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b10
 ```
 
 Exemple avec Mosquitto : `docker-compose.example.yml`. Ouvrez ensuite `http://<machine>:8080`.
@@ -192,6 +196,8 @@ Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a w
   <img src="docs/captures/my-devices-en.png" alt="Ocean2MQTT: My devices" width="420">
   <img src="docs/captures/generic-device-en.png" alt="Ocean2MQTT: generic device" width="420">
 </p>
+
+**Home Assistant OS / Supervised**: [![Add the repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FeHomeLabs%2Fhassio-ocean2mqtt) then install **Ocean2MQTT** from the store. Documentation: [wiki](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Home-EN).
 
 **Quick start**: see *Installation* above (Docker, Python, or `python tools/demo.py` for a demo without hardware). Configuration lives in `data/configuration.yaml`; every key can be overridden with `OCEAN2MQTT_<SECTION>_<KEY>` environment variables. MQTT topics and requests are listed in the *MQTT* section above.
 
