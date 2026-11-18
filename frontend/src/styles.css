@@ -258,3 +258,7 @@ input[type="range"] { width: 100%; accent-color: var(--action); min-height: 32px
 .check input { width: 18px; height: 18px; accent-color: var(--action); }
 .banner .button-row { margin-top: 8px; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+a.tile.propose { text-decoration: none; color: inherit; border-style: dashed; }
+.propose-icon { display: grid; place-items: center; font-size: 42px; font-weight: 300; color: var(--action); }
+.propose-link { margin-right: 10px; }

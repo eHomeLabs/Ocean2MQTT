@@ -7,6 +7,15 @@ import type { Device, Product, Unknown } from "./types";
 
 type Props = { onDone: () => void; onError: (m: string) => void; preset?: string | null };
 const GENERIC = "__generic__";
+const CATALOG = "https://ehomelabs.github.io/Ocean2MQTT/";
+
+// Formulaire GitHub « Proposer un nouveau produit EnOcean » (champs préremplis si connus)
+function proposeUrl(eep?: string | null, manufacturer?: number | null): string {
+  const params = new URLSearchParams({ template: "nouveau-produit.yml" });
+  if (eep) params.set("eep", eep);
+  if (manufacturer != null) params.set("fabricant_id", `0x${manufacturer.toString(16).toUpperCase().padStart(3, "0")}`);
+  return `https://github.com/eHomeLabs/Ocean2MQTT/issues/new?${params}`;
+}
 
 export function AddProduct({ onDone, onError, preset }: Props) {
   const [library, setLibrary] = useState<Product[]>([]);
@@ -77,7 +86,12 @@ export function AddProduct({ onDone, onError, preset }: Props) {
           <Chips title={t("add.type")} values={types} value={type} onChange={setType} format={typeName} all={t("add.allTypes")} />
         </div>
         <div className="legend small muted">
-          <span>{t("add.count", { n: items.length })}</span>
+          <span>
+            {t("add.count", { n: items.length })} ·{" "}
+            <a href={CATALOG} target="_blank" rel="noreferrer">
+              {t("add.catalog")}
+            </a>
+          </span>
           <span>
             <span className="badge valide">{t("add.valid")}</span> {t("add.legend")} · <span className="badge communaute">{t("add.community")}</span> {t("add.legendCommunity")}
           </span>
@@ -106,6 +120,14 @@ export function AddProduct({ onDone, onError, preset }: Props) {
               <span className="badge generique">{t("add.generic")}</span>
             </span>
           </button>
+          <a className="tile propose" href={proposeUrl()} target="_blank" rel="noreferrer">
+            <div className="tile-placeholder propose-icon" aria-hidden="true">
+              +
+            </div>
+            <span className="brand">{t("add.proposeBrand").toUpperCase()}</span>
+            <span className="model">{t("add.propose")}</span>
+            <span className="name">{t("add.proposeTile")}</span>
+          </a>
         </div>
         {unknown.length > 0 && <UnknownList unknown={unknown} products={all} onAdd={addKnown} onPick={(id) => setSelected(id)} />}
       </section>
@@ -222,6 +244,11 @@ function UnknownList({ unknown, products, onAdd, onPick }: { unknown: Unknown[];
                     {u.rssi != null && ` · ${-Math.abs(u.rssi)} dBm`}
                   </td>
                   <td className="right">
+                    {!candidates.length && (
+                      <a className="link small propose-link" href={proposeUrl(u.eep, u.manufacturer)} target="_blank" rel="noreferrer">
+                        {t("add.proposeShort")}
+                      </a>
+                    )}
                     {open === u.id ? (
                       <select
                         autoFocus
