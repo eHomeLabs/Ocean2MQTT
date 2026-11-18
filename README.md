@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b10)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b11)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -41,6 +41,8 @@ Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLab
 - **Sécurité du Remote Commissioning** : le protocole EnOcean Remote Management n'est pas chiffré, le code d'un produit passe en clair à la radio lors d'un déverrouillage. Ocean2MQTT ne l'envoie que sur action de l'utilisateur, **demande confirmation avant chaque envoi**, garde le déverrouillage 5 minutes (durée des produits, renouvelé au bout de 4), ne montre jamais le code et le masque dans les journaux. Le Remote Commissioning peut être **désactivé complètement** (`recom.enabled: false` ou option de l'add-on) : aucune commande n'est alors envoyée.
 
 **Migration et sauvegarde**
+- **Clé EnOcean HS ou remplacée** : Ocean2MQTT détecte la nouvelle clé et propose d'y écrire le **Base ID** de l'ancienne, pour que les actionneurs la reconnaissent sans réappairage.
+- **Serveur MQTT et topics modifiables dans l'interface**, avec test de la connexion.
 - **Reprise depuis NodOcean for HA, sans réappairer** : l'add-on détecte NodOcean dans Home Assistant et reprend produits, noms, pièces, adresses d'émission et codes Remote Commissioning. Un assistant rappelle de désactiver NodOcean (une clé ne sert qu'à un seul logiciel).
 - **Fichier d'export NodOcean** (bouton « Exporter pour Ocean2MQTT » de NodOcean for HA 0.8.6) pour Ocean2MQTT en Docker ou sur une autre machine.
 - **Autre clé EnOcean** : reprendre seulement les capteurs (les actionneurs gardent nom, pièce et réglages et sont signalés « à réappairer »), ou partir d'une installation vierge.
@@ -106,7 +108,7 @@ docker run -d --name ocean2mqtt --restart unless-stopped \
   -v $(pwd)/data:/app/data -p 8080:8080 \
   --device /dev/ttyUSB0:/dev/ttyUSB0 \
   -e OCEAN2MQTT_MQTT_HOST=192.168.1.10 \
-  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b10
+  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b11
 ```
 
 Exemple avec Mosquitto : `docker-compose.example.yml`. Ouvrez ensuite `http://<machine>:8080`.
@@ -186,6 +188,7 @@ Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a w
 - **Device settings**: LED, local button, power-on state, auto off / delay off per channel, wired switch type, shutter travel time and calibration, repeater, energy reset, measurement offsets, unavailability timeout.
 - **Remote Commissioning** (ReMan / ReCom): security code chosen at pairing — *automatic* (derived from the device ID and an installation secret: always the same, impossible to guess, recoverable from the backup), *entered* (QR code 11Z… or your own) or *none*; code detection for devices that already have one; ping, read / add / delete paired remotes, read shutter parameters, operation log. The protocol is not encrypted (the code is sent in clear when unlocking): Ocean2MQTT asks for confirmation before each send, and Remote Commissioning can be disabled completely (`recom.enabled: false`).
 - **Live telegram log** with filters and CSV export; list of heard but unpaired devices.
+- **Broken or replaced stick**: write the old **Base ID** into the new stick so actuators recognise it without re-pairing. **MQTT server and topics editable in the interface**, with a connection test.
 - **Migration from NodOcean for HA without re-pairing** (same stick), NodOcean export file import, sensors-only import or fresh install with another stick, stick change detection with one-click re-pairing, backup and restore.
 - **MQTT bridge** with Zigbee2MQTT-like topics and **Home Assistant discovery** (settings become configuration entities).
 - **Web interface** in **French and English**, mobile-friendly, live updates over WebSocket.
