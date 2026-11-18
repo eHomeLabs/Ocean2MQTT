@@ -51,6 +51,11 @@ def device_payload(device: Device) -> dict[str, Any]:
         out["repeater"] = REPEATER_LEVELS[level]
     if device.last_dbm is not None:
         out["rssi"] = device.last_dbm
+    # Réglages (comme Zigbee2MQTT : publiés avec l'état, modifiables par /set)
+    from .settings import settings_values
+
+    for key, value in settings_values(device).items():
+        out.setdefault(key, ("ON" if value else "OFF") if isinstance(value, bool) else value)
     return out
 
 

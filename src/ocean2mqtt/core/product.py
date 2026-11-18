@@ -44,6 +44,7 @@ class Product:
     image: str | None = None  # chemin de la photo, relatif à la fiche
     after: dict[str, str] = field(default_factory=dict)
     variants: tuple[str, ...] = ()
+    generic: bool = False  # produit générique (pas de fiche) : EEP choisi par l'utilisateur
 
     @property
     def is_actuator(self) -> bool:

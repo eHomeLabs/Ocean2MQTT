@@ -44,7 +44,9 @@ def match_teach_in(product: Product, telegram: RadioTelegram) -> tuple[bool, Ute
         ute = parse_ute(telegram)
         if ute is None:
             return False, None
-        if (ute.rorg, ute.func, ute.type_) != (rorg, func, type_):
+        # Générique : le type exact (canaux…) est pris dans la demande UTE
+        expected = (ute.rorg, ute.func) if product.generic else (ute.rorg, ute.func, ute.type_)
+        if expected != ((rorg, func) if product.generic else (rorg, func, type_)):
             _LOGGER.debug("UTE ignoré (EEP %s attendu %s)", ute.eep, product.eep)
             return False, None
         if ute.request_type == 1:  # demande de suppression explicite
@@ -109,7 +111,7 @@ async def wait_for_teach_in(
             PairingResult(
                 device_id=telegram.sender,
                 dbm=telegram.dbm,
-                eep=product.eep,
+                eep=ute.eep if ute else product.eep,
                 manufacturer=ute.manufacturer if ute else None,
             )
         )
