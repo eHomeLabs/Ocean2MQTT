@@ -114,6 +114,9 @@ class Device:
         # Code de sécurité ReCom attribué par l'intégration (None = pas encore).
         self.recom_code: int | None = None
         self.recom_pending = False
+        # auto (dérivé du secret de l'installation), custom (saisi / QR), random
+        # (versions < b8), none (pas de code : fenêtre après mise sous tension)
+        self.recom_mode: str | None = None
         self._code_lock = asyncio.Lock()
         self.on_code_change: Callable[[Device], Awaitable[None]] | None = None
         for ch in range(product.channels):
@@ -377,8 +380,12 @@ class Device:
     def recom_secured(self) -> bool:
         return self.recom_code is not None and not self.recom_pending
 
-    async def unlock_recom(self) -> str:
-        """Persist the candidate before radio transmission; never discard it on timeout."""
+    async def unlock_recom(self, new_code: int | None = None, mode: str | None = None) -> str:
+        """Persist the candidate before radio transmission; never discard it on timeout.
+
+        new_code : code à attribuer si le produit n'en a pas encore (sinon aléatoire).
+        Un candidat déjà en attente est toujours réessayé en priorité.
+        """
         async with self._code_lock:
             if self.sender_offset is None:
                 raise GatewayError(f"{self.title} n'est pas un actionneur")
@@ -390,7 +397,10 @@ class Device:
                 if not self.recom_pending:
                     raise ReComError("Code enregistré refusé ou produit muet", "wrong_code")
             else:
-                await self._store_code(recom.random_code(), pending=True)
+                if new_code is None:
+                    new_code, mode = recom.random_code(), "random"
+                self.recom_mode = mode or "custom"
+                await self._store_code(new_code, pending=True)
             # Retry the same saved candidate if an earlier outcome was uncertain.
             code = self.recom_code
             assert code is not None
@@ -412,17 +422,44 @@ class Device:
                 "no_answer",
             )
 
-    async def _store_code(self, code: int, *, pending: bool = False) -> None:
-        previous = self.recom_code, self.recom_pending
+    async def _store_code(self, code: int | None, *, pending: bool = False,
+                          mode: str | None = None) -> None:
+        previous = self.recom_code, self.recom_pending, self.recom_mode
         self.recom_code, self.recom_pending = code, pending
+        if mode is not None:
+            self.recom_mode = mode
         try:
             if self.on_code_change is not None:
                 await self.on_code_change(self)
         except BaseException:
-            self.recom_code, self.recom_pending = previous
+            self.recom_code, self.recom_pending, self.recom_mode = previous
             raise
-        self.state["recom_secured"] = not pending
+        self.state["recom_secured"] = code is not None and not pending
         self.notify({"recom_secured"})
+
+    async def set_no_code(self) -> None:
+        """Choix « aucun code » : rien n'est envoyé, le produit reste sans code."""
+        async with self._code_lock:
+            if self.recom_code is not None and not self.recom_pending:
+                raise ReComError("Le produit a déjà un code ; un reset usine est nécessaire "
+                                 "pour revenir sans code", "has_code")
+            await self._store_code(None, mode="none")
+
+    async def detect_code(self, candidates: list[tuple[str, int]]) -> str | None:
+        """Essaie les codes connus (un Unlock chacun) ; garde le premier accepté."""
+        async with self._code_lock:
+            if self.sender_offset is None:
+                raise GatewayError(f"{self.title} n'est pas un actionneur")
+            sender = self.gateway.sender_id(self.sender_offset)
+            seen: set[int] = set()
+            for mode, code in candidates:
+                if code in seen:
+                    continue
+                seen.add(code)
+                if await self.gateway.unlock(self.device_id, sender, code):
+                    await self._store_code(code, mode=mode)
+                    return mode
+            return None
 
     async def use_code(self, code: int) -> None:
         """Code connu : vérifie le déverrouillage puis conserve le code."""
@@ -432,7 +469,7 @@ class Device:
             sender = self.gateway.sender_id(self.sender_offset)
             if not await self.gateway.unlock(self.device_id, sender, code):
                 raise ReComError("Code refusé ou produit muet", "wrong_code")
-            await self._store_code(code)
+            await self._store_code(code, mode="custom")
 
     def _value(self, value: int, size: int = 1) -> bytes:
         return recom.gp_enum(value, size) if self.recom_gp else value.to_bytes(size, "big")

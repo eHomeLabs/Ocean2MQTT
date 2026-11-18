@@ -226,6 +226,34 @@ def random_code() -> int:
             return code
 
 
+def new_secret() -> str:
+    """Secret de l'installation (hex) servant à calculer les codes « auto »."""
+    import secrets
+
+    return secrets.token_hex(16)
+
+
+def derive_code(secret: str, device_id: int) -> int:
+    """Code « auto » : HMAC-SHA256(secret de l'installation, ID du produit).
+
+    Toujours le même pour un produit donné et une installation donnée, mais
+    impossible à deviner sans le secret (contrairement à un code tiré de l'ID).
+    """
+    import hashlib
+    import hmac
+
+    digest = hmac.new(bytes.fromhex(secret), int(device_id).to_bytes(4, "big"),
+                      hashlib.sha256).digest()
+    for i in range(0, len(digest) - 3, 4):
+        code = int.from_bytes(digest[i:i + 4], "big")
+        if code not in (0, 0xFFFFFFFF):
+            return code
+    return 0x4E4F444F  # inatteignable en pratique
+
+
+CODE_MODES = ("auto", "custom", "none")
+
+
 def unlock(code: int = 0) -> tuple[int, bytes]:
     return FN_UNLOCK, int(code).to_bytes(4, "big")
 
