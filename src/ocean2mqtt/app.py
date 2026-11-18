@@ -1029,13 +1029,13 @@ class Ocean2MQTT:
         if device_id in self.devices:
             raise RequestError(f"{device_id} est déjà appairé")
         product = self._product(str(data.get("product")))
+        offset = None
         if product.is_actuator:
-            raise RequestError("Un actionneur doit être appairé avec sa procédure "
-                               "(il attend une réponse de la passerelle)")
+            offset = self._known_sender_offset(data.get("sender"), device_id)
         name = str(data.get("name") or "").strip() or (
             f"{product.name(self.config['language'])} {device_id[-4:]}")
         entry = {"id": device_id, "product": product.id, "name": name,
-                 "room": data.get("room") or None, "sender_offset": None, "settings": {},
+                 "room": data.get("room") or None, "sender_offset": offset, "settings": {},
                  "recom_code": None,
                  "paired_at": datetime.now(UTC).isoformat(timespec="seconds")}
         self.store.put(entry)
@@ -1046,7 +1046,34 @@ class Ocean2MQTT:
         self._publish_info()
         result = self.device_dict(device) if device else {"id": device_id}
         self.emit("bridge/event", {"type": "device_joined", "data": result})
+        if device is not None and product.is_actuator and self.gateway_ok:
+            self._task(self._init_actuator(device))
         return result
+
+    def _known_sender_offset(self, raw: Any, device_id: str) -> int:
+        """Adresse d'émission déjà apprise par un actionneur (autre box, même clé)."""
+        if not str(raw or "").strip():
+            raise RequestError("Un actionneur doit être appairé avec sa procédure, ou déclaré "
+                               "avec l'adresse d'émission qu'il a déjà apprise")
+        text = re.sub(r"[\s:-]", "", str(raw)).upper().removeprefix("0X")
+        try:
+            address = str_to_id(text)
+        except ValueError as err:
+            raise RequestError(f"Adresse d'émission invalide : {text}") from err
+        if self.gateway.info is None:
+            raise RequestError("Clé EnOcean non connectée")
+        base = self.gateway.info.base_id
+        offset = address - base
+        if not 0 <= offset < 128:
+            raise RequestError(
+                f"L'adresse {id_to_str(address)} n'appartient pas à cette clé (de "
+                f"{id_to_str(base)} à {id_to_str(base + 127)}) : utilisez la même clé que "
+                "l'autre box, ou donnez-lui son Base ID (Réglages → Clé EnOcean)")
+        for other in self.store.devices.values():
+            if other["id"] != device_id and other.get("sender_offset") == offset:
+                raise RequestError(f"L'adresse {id_to_str(address)} est déjà utilisée pour "
+                                   f"« {other['name']} »")
+        return offset
 
     # -- Remote Commissioning ------------------------------------------------
 
