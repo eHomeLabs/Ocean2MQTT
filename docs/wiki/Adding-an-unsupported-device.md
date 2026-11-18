@@ -25,7 +25,7 @@ An RPS switch (F6-02-01) sends neither its brand nor its reference: use the gene
 
 ## 3. Submit a device sheet
 
-Easiest: [open a "New device" issue](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) with brand, reference, EEP (or the CSV export), pairing procedure, picture (if you may share it) and what already works.
+Easiest: check the **[online catalogue](https://ehomelabs.github.io/Ocean2MQTT/)**, then click **Suggest a new EnOcean device** (in the catalogue, or in Ocean2MQTT: **Add a device** → last tile; for a heard but unknown transmitter, **Suggest this device** pre-fills its profile and manufacturer code). The [form](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) asks for brand, reference, names, type, EEP, pairing steps, picture… Once approved by the maintainer, the sheet is created automatically in a pull request and the device appears in the next version (free GitHub account required).
 
 Contributors: one YAML file `produits/<brand>/<reference>.yaml` + a square transparent PNG picture (400 × 400 px recommended). Keys are in French: see the example and field list on the [French page](Ajouter-un-produit-non-support%C3%A9#pour-les-contributeurs--la-fiche-yaml) and [`produits/schema.json`](https://github.com/eHomeLabs/Ocean2MQTT/blob/main/produits/schema.json). Check with `python -m ocean2mqtt.library` and `pytest`, then open a pull request. New sheets are **Community**; they become **Validated** after a real-device test report.
 

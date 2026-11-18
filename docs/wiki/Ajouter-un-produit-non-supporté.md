@@ -66,14 +66,16 @@ Ocean2MQTT écoute tout ce qui passe à portée de la clé.
 
 Une fiche, c'est **un fichier YAML + une photo**, sans écrire de code. Elle permet de retrouver le produit par sa marque et sa référence, avec sa procédure d'appairage dans la langue de l'utilisateur.
 
-### Le plus simple : ouvrir une demande
+### Le plus simple : le formulaire « Proposer un nouveau produit EnOcean »
 
-[Ouvrir une issue « Nouveau produit »](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) avec :
-- la marque, la référence et le nom du produit ;
-- son profil EEP (ou l'export CSV du journal radio) ;
-- la procédure d'appairage (notice ou lien vers la notice) ;
-- une photo du produit si vous avez le droit de la partager ;
-- ce qui fonctionne déjà en mode générique.
+Vérifiez d'abord que le produit n'est pas déjà dans le **[catalogue en ligne](https://ehomelabs.github.io/Ocean2MQTT/)**, puis cliquez sur **Proposer un nouveau produit EnOcean** (dans le catalogue, ou dans Ocean2MQTT : **Ajouter un produit** → dernière tuile ; pour un émetteur entendu mais inconnu, le lien **Proposer ce produit** préremplit son profil et son code fabricant).
+
+Le [formulaire](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) demande : marque, référence, noms FR / EN, type, profil EEP, code fabricant, mode et procédure d'appairage, nombre de canaux, mesure d'énergie, Remote Commissioning, lien vers la notice, **photo** (glissez l'image dans le champ), remarques et télégrammes. Un compte GitHub gratuit est nécessaire.
+
+Ensuite :
+1. le mainteneur relit la proposition et la **valide** ;
+2. la fiche (YAML + photo) est créée automatiquement dans une *pull request* ;
+3. une fois fusionnée, le produit apparaît dans le catalogue en ligne et dans la bibliothèque d'Ocean2MQTT à la version suivante, en **Communauté** (il passe en **Validé** après un test sur produit réel).
 
 ### Pour les contributeurs : la fiche YAML
 
@@ -146,3 +148,13 @@ Si le profil de votre produit n'est pas dans la liste du mode générique, Ocean
 - si possible la fiche technique du fabricant.
 
 Le décodage d'un profil s'écrit à partir de la spécification EnOcean des EEP ; vos télégrammes réels permettent de le vérifier.
+
+---
+
+## Pour le mainteneur : valider une proposition
+
+1. Ouvrez l'issue « [Produit] … » (étiquette `nouveau produit`) et vérifiez les informations et la photo.
+2. Ajoutez l'étiquette **`accepté`** : l'action « Nouveau produit » crée la fiche `produits/<marque>/<référence>.yaml` et la photo (PNG 400 × 400), contrôle la fiche et ouvre une *pull request* qui ferme l'issue une fois fusionnée. Seul le propriétaire du dépôt peut déclencher cette action.
+3. Relisez la *pull request* (YAML, photo, procédure), corrigez si besoin, puis fusionnez : le catalogue en ligne est mis à jour automatiquement.
+
+Si le formulaire est incomplet, l'action l'indique en commentaire dans l'issue : complétez, retirez puis remettez l'étiquette.

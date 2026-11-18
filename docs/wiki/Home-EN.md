@@ -12,6 +12,8 @@ Ocean2MQTT is a multi-brand **EnOcean ↔ MQTT** gateway, Zigbee2MQTT style. It 
 2. [[Getting started]]: pair a device, name it, find it in Home Assistant.
 3. Device not in the list? → **[[Adding an unsupported device]]**.
 
+**[Online catalogue of compatible devices](https://ehomelabs.github.io/Ocean2MQTT/)** · **[Suggest a new EnOcean device](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml)**
+
 ## More
 
 - [[Remote Commissioning|Remote-Commissioning-EN]]: remote settings of NodOn devices (ReMan / ReCom), security codes.

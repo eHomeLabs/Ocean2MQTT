@@ -12,6 +12,8 @@ Ocean2MQTT est une passerelle **EnOcean ↔ MQTT** multimarque, façon Zigbee2MQ
 2. [[Premiers pas]] : appairer un produit, le renommer, le retrouver dans Home Assistant.
 3. Votre produit n'est pas dans la liste ? → **[[Ajouter un produit non supporté]]**.
 
+**[Catalogue en ligne des produits compatibles](https://ehomelabs.github.io/Ocean2MQTT/)** · **[Proposer un nouveau produit EnOcean](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml)**
+
 ## Pour aller plus loin
 
 - [[Remote Commissioning]] : réglages à distance des produits NodOn (ReMan / ReCom), codes de sécurité.
