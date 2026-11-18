@@ -31,6 +31,7 @@ async def run(config: Config) -> None:
         services.append(WebServer(app))
     if app.mqtt_bridge is not None:
         await app.mqtt_bridge.start()
+        app._publish_info()  # l'interface sait que le serveur MQTT est modifiable
     for service in services:
         await service.start()
     stop = asyncio.Event()

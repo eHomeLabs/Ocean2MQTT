@@ -250,6 +250,7 @@ class Ocean2MQTT:
         out["has_password"] = bool(mqtt.get("password"))
         out["auto"] = self.config.is_auto("mqtt")
         out["can_auto"] = bool(self.config.env.get("mqtt"))
+        out["editable"] = self.mqtt_restart is not None
         out["connected"] = bool(self.mqtt_bridge and self.mqtt_bridge.connected)
         return out
 
@@ -566,7 +567,7 @@ class Ocean2MQTT:
                 "base_id_writes_left": gw.base_id_writes_left if gw else None,
             },
             "mqtt": {"connected": bool(self.mqtt_bridge and self.mqtt_bridge.connected),
-                     "editable": self.mqtt_bridge is not None},
+                     "editable": self.mqtt_restart is not None},
             "language": self.config["language"],
             "recom_enabled": self.recom_enabled,
             "pairing": self.pairing,
