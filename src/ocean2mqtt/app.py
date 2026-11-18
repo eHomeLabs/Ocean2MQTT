@@ -46,6 +46,7 @@ from .core.pairing import wait_for_teach_in
 from .core.product import Product
 from .core.settings import SettingError, apply_setting, describe, is_setting
 from .library import Library, load_library
+from .migration import MigrationError, Source, make_backup, parse_file, read_homeassistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,6 +145,7 @@ class Ocean2MQTT:
             await self.gateway.connect()
             self.gateway_ok = True
             _LOGGER.info("Clé EnOcean prête, Base ID %s", id_to_str(self.gateway.info.base_id))
+            self._check_base_id()
             self._task(self._init_actuators())
         except GatewayError as err:
             self.gateway_ok = False
@@ -163,6 +165,28 @@ class Ocean2MQTT:
         if not self._stopping:
             self._task(self._reconnect_later())
 
+    def _check_base_id(self) -> None:
+        """Clé changée : les actionneurs appairés avec l'ancienne clé ne répondent plus."""
+        current = id_to_str(self.gateway.info.base_id)
+        stored = self.store.meta.get("base_id")
+        if stored and stored != current:
+            names = []
+            for entry in self.store.devices.values():
+                product = self.library.get(entry["product"])
+                if product and product.is_actuator and not entry.get("needs_pairing"):
+                    entry["needs_pairing"] = True
+                    names.append(entry["name"])
+            _LOGGER.warning("Nouvelle clé EnOcean (Base ID %s, avant %s) : %d actionneur(s) à "
+                            "réappairer", current, stored, len(names))
+            self.store.meta["previous_base_id"] = stored
+            self.emit("bridge/event", {"type": "gateway_changed",
+                                       "data": {"base_id": current, "previous": stored,
+                                                "devices": names}})
+        if stored != current:
+            self.store.meta["base_id"] = current
+            self.store.save()
+            self._publish_devices()
+
     async def _init_actuator(self, device: Device) -> None:
         """Comme NodOcean : infos NodOn, rapport automatique des mesures, état."""
         if device.product.brand.lower() == "nodon":
@@ -175,7 +199,8 @@ class Ocean2MQTT:
 
     async def _init_actuators(self) -> None:
         for device in list(self.devices.values()):
-            if device.product.is_actuator and self.gateway_ok:
+            entry = self.store.devices.get(device.id_str, {})
+            if device.product.is_actuator and self.gateway_ok and not entry.get("needs_pairing"):
                 await self._init_actuator(device)
                 await asyncio.sleep(0.3)
 
@@ -287,6 +312,7 @@ class Ocean2MQTT:
             "last_seen": self.last_seen.get(device.id_str),
             "actuator": product.is_actuator,
             "settings": describe(device),
+            "needs_pairing": bool(self.store.devices.get(device.id_str, {}).get("needs_pairing")),
             "recom": self.recom_status(device) if product.recom else None,
         }
 
@@ -419,6 +445,11 @@ class Ocean2MQTT:
             "pairing": self.pairing,
             "config": self.config.public(),
             "devices": len(self.devices),
+            "migration": {
+                "nodocean": [s.summary() for s in self._ha_sources()],
+                "dismissed": bool(self.store.meta.get("migration_dismissed")),
+                "previous_base_id": self.store.meta.get("previous_base_id"),
+            },
         }
 
     # -- Appairage -----------------------------------------------------------
@@ -532,6 +563,23 @@ class Ocean2MQTT:
                     for r in self.gateway.history]
         if command == "device/add":
             return self._add_known(data)
+        if command == "migration/sources":
+            return [s.summary() for s in self._ha_sources()]
+        if command == "migration/preview":
+            source = self._migration_source(data)
+            return self._plan(source, str(data.get("mode") or "same"))
+        if command == "migration/import":
+            source = self._migration_source(data)
+            return await self._import(source, str(data.get("mode") or "same"))
+        if command == "migration/dismiss":
+            self.store.meta["migration_dismissed"] = True
+            self.store.save()
+            self._publish_info()
+            return {"dismissed": True}
+        if command == "backup/create":
+            base = id_to_str(self.gateway.info.base_id) if self.gateway.info else None
+            return make_backup(self.store.devices, base or self.store.meta.get("base_id"),
+                               __version__, self.config.public())
         if command == "device/settings":
             return describe(self._device(data))
         if command == "device/settings/set":
@@ -596,6 +644,89 @@ class Ocean2MQTT:
             self._publish_state(device)
             return device_payload(device)
         raise RequestError(f"Commande inconnue : {command}")
+
+    # -- Migration, sauvegarde, restauration ----------------------------------
+
+    def _ha_sources(self) -> list[Source]:
+        try:
+            return read_homeassistant(self.config["homeassistant"].get("config_dir"))
+        except Exception as err:  # noqa: BLE001 - lecture d'un dossier externe
+            _LOGGER.warning("Lecture de la configuration Home Assistant impossible : %s", err)
+            return []
+
+    def _migration_source(self, data: dict[str, Any]) -> Source:
+        if data.get("file") is not None:
+            try:
+                return parse_file(data["file"])
+            except MigrationError as err:
+                raise RequestError(str(err)) from err
+        sources = self._ha_sources()
+        index = int(data.get("index") or 0)
+        if not sources or index >= len(sources):
+            raise RequestError("NodOcean for HA introuvable dans la configuration de Home "
+                               "Assistant")
+        return sources[index]
+
+    def _plan(self, source: Source, mode: str) -> dict[str, Any]:
+        """Ce que donnera l'import : par produit ok, à réappairer, déjà présent, inconnu."""
+        current = id_to_str(self.gateway.info.base_id) if self.gateway_ok and \
+            self.gateway.info else None
+        mismatch = bool(current and source.base_id and current != source.base_id)
+        used = {e.get("sender_offset") for e in self.store.devices.values()}
+        items = []
+        for entry in source.devices:
+            product = self.library.get(entry["product"])
+            actuator = bool(product and product.is_actuator)
+            if product is None:
+                status = "unknown"
+            elif entry["id"] in self.store.devices:
+                status = "exists"
+            elif actuator and (mode == "new" or mismatch or entry["sender_offset"] is None
+                               or entry["sender_offset"] in used):
+                status = "repair"
+            else:
+                status = "ok"
+            items.append({"id": entry["id"], "name": entry["name"], "room": entry["room"],
+                          "product": entry["product"],
+                          "model": product.model if product else entry["product"],
+                          "brand": product.brand if product else None,
+                          "actuator": actuator, "recom": entry["recom_code"] is not None,
+                          "status": status})
+        return {"source": source.summary(), "mode": mode, "current_base_id": current,
+                "key_mismatch": mismatch, "items": items}
+
+    async def _import(self, source: Source, mode: str) -> dict[str, Any]:
+        plan = self._plan(source, mode)
+        status = {i["id"]: i["status"] for i in plan["items"]}
+        imported = repair = 0
+        for entry in source.devices:
+            if status.get(entry["id"]) not in ("ok", "repair"):
+                continue
+            entry = dict(entry)
+            if status[entry["id"]] == "repair":
+                entry["needs_pairing"] = True
+                entry["sender_offset"] = None
+                repair += 1
+            imported += 1
+            self.store.devices[entry["id"]] = entry
+        if mode == "same" and source.base_id and not plan["key_mismatch"]:
+            self.store.meta["base_id"] = source.base_id
+        if repair and source.base_id:
+            self.store.meta["previous_base_id"] = source.base_id
+        self.store.meta["migration_dismissed"] = True
+        self.store.save()
+        for device_id, st in status.items():
+            if st in ("ok", "repair") and device_id not in self.devices:
+                self._add_device(self.store.devices[device_id])
+                self.unknown.pop(device_id, None)
+        self._publish_devices()
+        self._publish_info()
+        if self.gateway_ok:
+            self._task(self._init_actuators())
+        result = {"imported": imported, "repair": repair,
+                  "skipped": len(plan["items"]) - imported, "source": plan["source"]}
+        self.emit("bridge/event", {"type": "migration", "data": result})
+        return result
 
     async def command(self, device: Device, payload: dict[str, Any]) -> None:
         settings = {k: v for k, v in payload.items() if is_setting(device, k)}

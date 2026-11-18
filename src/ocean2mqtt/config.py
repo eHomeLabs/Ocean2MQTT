@@ -40,6 +40,11 @@ DEFAULTS: dict[str, Any] = {
         "password": None,
         "allow_remote": False,  # par défaut, seules les adresses du réseau local
     },
+    "homeassistant": {
+        # Dossier de configuration de Home Assistant (lecture seule), pour reprendre
+        # les produits de NodOcean for HA. L'add-on le renseigne tout seul.
+        "config_dir": None,
+    },
     "language": "fr",
 }
 
@@ -112,19 +117,22 @@ class DeviceStore:
     def __init__(self, data_dir: Path) -> None:
         self.path = Path(data_dir) / "devices.json"
         self.devices: dict[str, dict[str, Any]] = {}
+        # Base ID de la clé qui a appairé les actionneurs, choix de migration…
+        self.meta: dict[str, Any] = {}
 
     def load(self) -> DeviceStore:
         if self.path.is_file():
             data = json.loads(self.path.read_text(encoding="utf-8"))
             self.devices = {d["id"]: d for d in data.get("devices", [])}
+            self.meta = data.get("meta") or {}
         return self
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(".tmp")
         tmp.write_text(
-            json.dumps({"version": 1, "devices": list(self.devices.values())}, indent=2,
-                       ensure_ascii=False),
+            json.dumps({"version": 1, "meta": self.meta, "devices": list(self.devices.values())},
+                       indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
         tmp.replace(self.path)
@@ -138,7 +146,8 @@ class DeviceStore:
         self.save()
 
     def free_sender_offset(self) -> int:
-        used = {d.get("sender_offset") for d in self.devices.values()}
+        used = {d.get("sender_offset") for d in self.devices.values() if
+                not d.get("needs_pairing")}
         for offset in range(1, 128):
             if offset not in used:
                 return offset
