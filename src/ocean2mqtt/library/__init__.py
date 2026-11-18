@@ -129,6 +129,22 @@ class Library:
         brand, _, eep = product_id.partition("/")
         return generic_product(eep) if brand == GENERIC_BRAND else None
 
+    def compatible(self, product: Product) -> list[Product]:
+        """Fiches interchangeables sans réappairage : même profil EEP, même rôle.
+
+        Utile quand le télégramme ne dit pas quel est le produit (interrupteurs F6,
+        produits repris de NodOcean en générique…). La fiche générique du même EEP est
+        toujours proposée.
+        """
+        out = [p for p in self.products.values()
+               if p.eep == product.eep and p.is_actuator == product.is_actuator
+               and p.id != product.id]
+        out.sort(key=lambda p: (p.brand.lower(), p.model))
+        generic = generic_product(product.eep)
+        if generic is not None and generic.id != product.id:
+            out.append(generic)
+        return out
+
     def generics(self) -> list[Product]:
         return [p for eep in GENERIC_EEPS if (p := generic_product(eep)) is not None]
 
