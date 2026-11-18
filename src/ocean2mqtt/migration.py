@@ -58,6 +58,8 @@ def product_id(model: str) -> str:
     model = model.strip().upper()
     if model == "ASP-2-METERING":
         return "ubiwizz/ubid1501s"
+    if model.startswith("EEP-"):  # produit générique de NodOcean (« EEP-F6-02-01 »)
+        return f"generique/{model[4:].lower()}"
     return f"nodon/{model.lower()}"
 
 
