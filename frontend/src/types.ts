@@ -100,6 +100,7 @@ export type Device = {
   last_seen?: string | null;
   actuator: boolean;
   settings: Setting[];
+  needs_pairing?: boolean;
   recom?: Recom | null;
 };
 
@@ -110,7 +111,24 @@ export type Info = {
   pairing: { product: string; timeout: number; until: number } | null;
   config: Record<string, Record<string, unknown>>;
   devices: number;
+  migration?: { nodocean: MigrationSource[]; dismissed: boolean; previous_base_id?: string | null };
 };
+
+export type MigrationSource = { kind: "nodocean" | "backup"; base_id?: string | null; active?: boolean | null; port?: string | null; title?: string | null; devices: number };
+
+export type MigrationItem = {
+  id: string;
+  name: string;
+  room?: string | null;
+  product: string;
+  model: string;
+  brand?: string | null;
+  actuator: boolean;
+  recom: boolean;
+  status: "ok" | "repair" | "exists" | "unknown";
+};
+
+export type MigrationPlan = { source: MigrationSource; mode: "same" | "new"; current_base_id?: string | null; key_mismatch: boolean; items: MigrationItem[] };
 
 export type PairingEvent = {
   status: "started" | "success" | "timeout" | "stopped";

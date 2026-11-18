@@ -5,6 +5,7 @@ import { DeviceCard } from "./DeviceCard";
 import { DeviceDetail } from "./DeviceDetail";
 import { getLang, setLang, t, type Key, type Lang } from "./i18n";
 import { LogoMark, Wordmark } from "./Logo";
+import { MigrationBanner, MigrationSettings, MigrationWizard, RepairBanner, type MigrationTarget } from "./Migration";
 import { RecomPage } from "./Recom";
 import { TelegramsPage } from "./Telegrams";
 
@@ -23,6 +24,8 @@ export function App() {
   const [page, setPage] = useState<Page>("products");
   const [room, setRoom] = useState("");
   const [open, setOpen] = useState<Open | null>(null);
+  const [migration, setMigration] = useState<MigrationTarget | null>(null);
+  const [preset, setPreset] = useState<string | null>(null);
   const store = useStore();
   const { info, devices, states, availability, actions, connected, error } = store;
   const [localError, setLocalError] = useState<string | null>(null);
@@ -48,7 +51,7 @@ export function App() {
           <Wordmark />
         </div>
         {PAGES.map(([key, text]) => (
-          <button key={key} type="button" className={`nav ${page === key ? "current" : ""}`} aria-current={page === key ? "page" : undefined} onClick={() => setPage(key)}>
+          <button key={key} type="button" className={`nav ${page === key ? "current" : ""}`} aria-current={page === key ? "page" : undefined} onClick={() => { setPreset(null); setPage(key); }}>
             {t(text)}
           </button>
         ))}
@@ -77,6 +80,12 @@ export function App() {
           </div>
         </header>
 
+        {connected && info && !info.gateway.connected && info.migration?.nodocean.some((s) => s.active) && (
+          <div className="alert" role="alert">
+            <span>{t("status.noStickNodocean")}</span>
+          </div>
+        )}
+
         {message && (
           <div className="alert" role="alert">
             <span>{message}</span>
@@ -95,6 +104,8 @@ export function App() {
 
         {page === "products" && (
           <>
+            <MigrationBanner onStart={setMigration} />
+            <RepairBanner />
             <div className="toolbar">
               <label className="inline">
                 {t("products.room")}
@@ -128,24 +139,39 @@ export function App() {
                     action={actions[d.topic]}
                     onError={onError}
                     onOpen={() => setOpen({ id: d.id })}
+                    onRepair={() => {
+                      setPreset(d.product.id);
+                      setPage("add");
+                    }}
                   />
                 ))}
               </div>
             )}
           </>
         )}
-        {page === "add" && <AddProduct onDone={() => setPage("products")} onError={onError} />}
+        {page === "add" && (
+          <AddProduct
+            key={preset ?? "add"}
+            preset={preset}
+            onDone={() => {
+              setPreset(null);
+              setPage("products");
+            }}
+            onError={onError}
+          />
+        )}
         {page === "recom" && <RecomPage onOpen={(d) => setOpen({ id: d.id, tab: "recom" })} />}
         {page === "telegrams" && <TelegramsPage />}
-        {page === "settings" && <AppSettings />}
+        {page === "settings" && <AppSettings onStart={setMigration} onError={onError} />}
       </main>
 
+      {migration && <MigrationWizard target={migration} onClose={() => setMigration(null)} onError={onError} />}
       {openDevice && <DeviceDetail key={openDevice.id} device={openDevice} initialTab={open?.tab} onClose={() => setOpen(null)} onError={onError} />}
     </div>
   );
 }
 
-function AppSettings() {
+function AppSettings({ onStart, onError }: { onStart: (t: MigrationTarget) => void; onError: (m: string) => void }) {
   const { info } = useStore();
   const gw = info?.gateway;
   const mqtt = (info?.config.mqtt ?? {}) as Record<string, unknown>;
@@ -210,6 +236,7 @@ function AppSettings() {
         </dl>
         <p className="small muted">{t("app.configHint")}</p>
       </section>
+      <MigrationSettings onStart={onStart} onError={onError} />
       <section className="card stack">
         <h3>{t("app.about")}</h3>
         <p className="small">

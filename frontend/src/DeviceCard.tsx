@@ -10,9 +10,10 @@ type Props = {
   action?: { event: string; at: number };
   onError: (message: string) => void;
   onOpen: () => void;
+  onRepair?: () => void;
 };
 
-export function DeviceCard({ device, state, available, action, onError, onOpen }: Props) {
+export function DeviceCard({ device, state, available, action, onError, onOpen, onRepair }: Props) {
   const now = useNow(10000);
   const lastSeen = (state.last_seen as string | undefined) ?? device.last_seen;
   const image = device.product.image;
@@ -32,11 +33,24 @@ export function DeviceCard({ device, state, available, action, onError, onOpen }
             {[device.room, `${device.product.brand} ${device.product.model}`, device.product.eep].filter(Boolean).join(" · ")}
           </span>
         </div>
-        <span className={`status ${available ? "ok" : "warn"}`}>
-          <span className="dot" />
-          {available ? t("card.available") : t("card.silent")}
-        </span>
+        {device.needs_pairing ? (
+          <span className="badge communaute">{t("repair.badge")}</span>
+        ) : (
+          <span className={`status ${available ? "ok" : "warn"}`}>
+            <span className="dot" />
+            {available ? t("card.available") : t("card.silent")}
+          </span>
+        )}
       </header>
+
+      {device.needs_pairing && (
+        <div className="callout warn row-title">
+          <span className="small">{t("repair.cardHint")}</span>
+          <button type="button" className="primary" onClick={onRepair}>
+            {t("repair.button")}
+          </button>
+        </div>
+      )}
 
       <DeviceControls device={device} state={state} action={action} onError={onError} />
 

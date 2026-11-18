@@ -217,3 +217,35 @@ input[type="range"] { width: 100%; accent-color: var(--action); min-height: 32px
 .number-form .field + button, .number-form .grow + button { align-self: flex-end; }
 .table button.secondary { white-space: nowrap; }
 .table .badge { margin-left: 6px; }
+
+/* --- Migration, sauvegarde, réappairage --- */
+.banner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border: 2px solid var(--action); margin-bottom: 16px; }
+.banner h3 { margin: 0 0 4px; }
+.banner p { margin: 0; }
+.banner.warn { border-color: #d97706; }
+.callout { background: var(--bg); border-radius: 12px; padding: 12px 14px; margin: 0; }
+.callout h3 { margin: 0 0 6px; }
+.callout p { margin: 0; }
+.callout.warn { background: #fef3c7; color: #78350f; }
+.callout.ok { background: #ccf0ea; color: #0b5d56; }
+.choice { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 14px; cursor: pointer; }
+.choice.selected { border: 2px solid var(--action); }
+.choice input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--action); }
+.choice span { display: flex; flex-direction: column; gap: 2px; }
+.block { display: block; }
+
+/* --- Migration, sauvegarde, réappairage --- */
+.banner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border: 2px solid var(--action); margin-bottom: 16px; }
+.banner h3 { margin: 0 0 4px; }
+.banner p { margin: 0; }
+.banner.warn { border-color: #d97706; }
+.callout { background: var(--bg); border-radius: 12px; padding: 12px 14px; margin: 0; }
+.callout h3 { margin: 0 0 6px; }
+.callout p { margin: 0; }
+.callout.warn { background: #fef3c7; color: #78350f; }
+.callout.ok { background: #ccf0ea; color: #0b5d56; }
+.choice { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line-2); border-radius: 12px; padding: 12px 14px; cursor: pointer; }
+.choice.selected { border: 2px solid var(--action); }
+.choice input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--action); }
+.choice span { display: flex; flex-direction: column; gap: 2px; }
+.block { display: block; }

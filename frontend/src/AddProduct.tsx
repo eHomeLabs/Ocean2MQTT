@@ -4,16 +4,16 @@ import { clearPairing, clearSuggestion, request, useNow, useStore } from "./api"
 import { label, locale, productText, supportName, t, teachIn, typeName } from "./i18n";
 import type { Device, Product, Unknown } from "./types";
 
-type Props = { onDone: () => void; onError: (m: string) => void };
+type Props = { onDone: () => void; onError: (m: string) => void; preset?: string | null };
 const GENERIC = "__generic__";
 
-export function AddProduct({ onDone, onError }: Props) {
+export function AddProduct({ onDone, onError, preset }: Props) {
   const [library, setLibrary] = useState<Product[]>([]);
   const [generics, setGenerics] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [brand, setBrand] = useState("");
   const [type, setType] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(preset ?? null);
   const [added, setAdded] = useState<Device | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
   const { pairing, connected, suggestion, unknown } = useStore();
