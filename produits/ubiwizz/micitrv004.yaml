@@ -20,6 +20,7 @@ reglages:
 - setpoint
 - timeout
 support: communaute
+photo: micitrv004.png
 notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=408
 notes: Autonome (effet Seebeck). Profil bidirectionnel - la consigne (°C) est renvoyée à chaque réveil de
   la vanne. Procédure d'apprentissage et intervalle de réveil à confirmer sur produit réel.

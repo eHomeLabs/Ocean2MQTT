@@ -15,6 +15,7 @@ appairage:
     - 'The detector has no battery and no button: contact with water produces the energy to transmit.'
     - Put the detector's discs in contact with water; the first telegram received pairs the detector.
 support: communaute
+photo: ubid1220211.png
 notice: https://ubiwizz.com/index.php?controller=attachment&id_attachment=415
 notes: Magnéto-résistif, IP43. Vérifier sur produit réel la procédure d'apprentissage (disques
   remplaçables ?) et la valeur émise (0x11 attendu).
