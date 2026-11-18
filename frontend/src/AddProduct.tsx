@@ -52,9 +52,9 @@ export function AddProduct({ onDone, onError, preset }: Props) {
     null;
   const active = pairing && (pairing.status === "started" || pairing.status === "success" || pairing.status === "timeout");
 
-  const addKnown = async (id: string, productId: string) => {
+  const addKnown = async (id: string, productId: string, sender?: string) => {
     try {
-      const device = await request<Device>("device/add", { id, product: productId });
+      const device = await request<Device>("device/add", { id, product: productId, ...(sender ? { sender } : {}) });
       clearSuggestion();
       setAdded(device);
     } catch (e) {
@@ -147,7 +147,7 @@ export function AddProduct({ onDone, onError, preset }: Props) {
         ) : selected === GENERIC ? (
           <GenericPicker generics={generics} onPick={setSelected} />
         ) : product ? (
-          <Sheet product={product} onError={onError} onAddById={(id) => addKnown(id, product.id)} onBack={product.generic ? () => setSelected(GENERIC) : undefined} />
+          <Sheet product={product} onError={onError} onAddById={(id, sender) => addKnown(id, product.id, sender)} onBack={product.generic ? () => setSelected(GENERIC) : undefined} />
         ) : (
           <p className="muted">{t("add.choose")}</p>
         )}
@@ -302,12 +302,16 @@ function GenericPicker({ generics, onPick }: { generics: Product[]; onPick: (id:
   );
 }
 
-function Sheet({ product, onError, onBack, onAddById }: { product: Product; onError: (m: string) => void; onBack?: () => void; onAddById: (id: string) => void }) {
+function Sheet({ product, onError, onBack, onAddById }: { product: Product; onError: (m: string) => void; onBack?: () => void; onAddById: (id: string, sender?: string) => void }) {
   const features = product.exposes.filter((e) => e.key !== "rssi");
   const actuator = product.teach_in.endsWith("bidir");
   const { info } = useStore();
   const remote = actuator && product.recom && info?.recom_enabled !== false;
   const [remoteCode, setRemoteCode] = useState("");
+  const [sender, setSender] = useState("");
+  const cleanSender = sender.trim().toUpperCase().replace(/^0X/, "").replace(/[\s:-]/g, "");
+  const base = info?.gateway.base_id ?? null;
+  const senderOk = /^[0-9A-F]{8}$/.test(cleanSender) && (!base || (parseInt(cleanSender, 16) - parseInt(base, 16) >= 0 && parseInt(cleanSender, 16) - parseInt(base, 16) < 128));
   const [manualId, setManualId] = useState("");
   const cleanId = manualId.trim().toUpperCase().replace(/^0X/, "").replace(/[\s:-]/g, "");
   const start = () => request("pairing/start", { product: product.id, timeout: 60 }).catch((e: Error) => onError(e.message));
@@ -399,8 +403,32 @@ function Sheet({ product, onError, onBack, onAddById }: { product: Product; onEr
             </button>
             <p className="small muted">{t("add.remoteNote")}</p>
           </form>
-        ) : actuator ? (
-          <p className="small muted">{t("add.byIdActuator")}</p>
+        ) : null}
+        {actuator ? (
+          <form
+            className="stack"
+            onSubmit={(e) => {
+              e.preventDefault();
+              onAddById(cleanId, cleanSender);
+            }}
+          >
+            <h4>{t("add.senderTitle")}</h4>
+            <p className="small muted">{t("add.senderHint", { from: base ?? "?", to: base ? (parseInt(base, 16) + 127).toString(16).toUpperCase().padStart(8, "0") : "?" })}</p>
+            {!remote && (
+              <label className="field">
+                {t("add.byIdLabel")}
+                <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="0512ABCD" spellCheck={false} autoComplete="off" />
+              </label>
+            )}
+            <label className="field">
+              {t("add.senderLabel")}
+              <input value={sender} onChange={(e) => setSender(e.target.value)} placeholder={base ?? "FFE56B80"} spellCheck={false} autoComplete="off" />
+            </label>
+            {cleanSender.length === 8 && !senderOk && <p className="small error-text">{t("add.senderOut")}</p>}
+            <button type="submit" className="secondary" disabled={!/^[0-9A-F]{8}$/.test(cleanId) || !senderOk}>
+              {t("add.senderAdd")}
+            </button>
+          </form>
         ) : (
           <form
             className="stack"
