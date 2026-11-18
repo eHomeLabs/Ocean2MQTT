@@ -1,0 +1,43 @@
+name: Nouveau produit / New device
+description: Demander l'ajout d'un produit ou d'un profil EEP / Request a new device or EEP profile
+title: "[Produit] <marque> <référence>"
+labels: ["nouveau produit"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Avant d'ouvrir la demande, essayez le **mode générique** et le **journal radio** : voir [Ajouter un produit non supporté](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Ajouter-un-produit-non-support%C3%A9).
+        Before opening a request, try **generic mode** and the **radio log**: see [Adding an unsupported device](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Adding-an-unsupported-device).
+  - type: input
+    id: produit
+    attributes:
+      label: Marque, référence et nom / Brand, reference and name
+      placeholder: "Ubiwizz UBILD001 — détecteur de fumée"
+    validations:
+      required: true
+  - type: input
+    id: eep
+    attributes:
+      label: Profil EEP / EEP profile
+      placeholder: "F6-05-02 (inconnu / unknown)"
+  - type: input
+    id: notice
+    attributes:
+      label: Notice ou fiche technique / Manual or datasheet (lien / link)
+  - type: textarea
+    id: appairage
+    attributes:
+      label: Procédure d'appairage / Pairing procedure
+  - type: textarea
+    id: generique
+    attributes:
+      label: Ce qui marche déjà en mode générique / What already works in generic mode
+  - type: textarea
+    id: telegrammes
+    attributes:
+      label: Télégrammes / Telegrams
+      description: Export CSV de la page Télégrammes (glissez le fichier ici), avec ce que vous faisiez à chaque télégramme. / CSV export from the Telegrams page, with what you were doing for each telegram.
+  - type: input
+    id: version
+    attributes:
+      label: Version d'Ocean2MQTT / Ocean2MQTT version
