@@ -136,3 +136,31 @@ async def test_recom_api(app: Ocean2MQTT, monkeypatch) -> None:  # noqa: F811
     with pytest.raises(RequestError):
         await app.request("device/recom/status", {"id": stph["id"]})
     await asyncio.sleep(0)
+
+
+MSP2 = 0x05AB0E01
+
+
+async def test_metering_reporting_and_poll(app: Ocean2MQTT, monkeypatch) -> None:  # noqa: F811
+    """Après l'appairage : rapport automatique réglé (CMD 0x5) puis puissance/énergie lues."""
+    import ocean2mqtt.app as app_module
+
+    data = await _pair(app, "nodon/msp-2", 0xD4, "A0 01 46 00 0E 01 D2", MSP2)
+    await asyncio.sleep(2.5)
+    to_plug = [t.payload for t in app.dongle.sent if t.destination == MSP2 and t.rorg == 0xD2]
+    cmds = [p[0] & 0x0F for p in to_plug]
+    assert cmds.count(0x05) == 2  # puissance + énergie
+    assert 0x06 in cmds  # interrogation des mesures
+    # Réponses du produit : 150 W puis 1,25 kWh
+    app.dongle.inject(0xD2, bytes.fromhex("07 60 00 00 00 96"), MSP2)
+    app.dongle.inject(0xD2, bytes.fromhex("07 20 00 00 04 E2"), MSP2)  # 1250 Wh
+    state = app.retained[data["topic"]]
+    assert state["power"] == 150
+    assert state["energy"] == pytest.approx(1.25)
+    # Interrogation périodique
+    monkeypatch.setattr(app_module, "POLL_INTERVAL", 0.05)
+    before = len(app.dongle.sent)
+    task = asyncio.get_running_loop().create_task(app._poll_loop())
+    await asyncio.sleep(1.2)
+    task.cancel()
+    assert any(t.destination == MSP2 for t in app.dongle.sent[before:])
