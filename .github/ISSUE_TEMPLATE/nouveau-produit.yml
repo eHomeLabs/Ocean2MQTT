@@ -1,43 +1,139 @@
-name: Nouveau produit / New device
-description: Demander l'ajout d'un produit ou d'un profil EEP / Request a new device or EEP profile
+name: Proposer un nouveau produit EnOcean / Suggest a new EnOcean device
+description: Fiche complète d'un produit à ajouter à la bibliothèque d'Ocean2MQTT / Full sheet of a device to add to the Ocean2MQTT library
 title: "[Produit] <marque> <référence>"
 labels: ["nouveau produit"]
 body:
   - type: markdown
     attributes:
       value: |
-        Avant d'ouvrir la demande, essayez le **mode générique** et le **journal radio** : voir [Ajouter un produit non supporté](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Ajouter-un-produit-non-support%C3%A9).
-        Before opening a request, try **generic mode** and the **radio log**: see [Adding an unsupported device](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Adding-an-unsupported-device).
+        Merci ! Remplissez ce que vous savez : les champs facultatifs peuvent rester vides. Après validation par le mainteneur, la fiche est créée automatiquement et le produit apparaît dans la bibliothèque à la version suivante.
+        Thanks! Fill in what you know; optional fields may stay empty. Once approved by the maintainer, the sheet is created automatically.
+
+        Produits déjà disponibles / devices already supported : [catalogue](https://ehomelabs.github.io/Ocean2MQTT/). Aide / help : [Ajouter un produit non supporté](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Ajouter-un-produit-non-support%C3%A9).
   - type: input
-    id: produit
+    id: marque
     attributes:
-      label: Marque, référence et nom / Brand, reference and name
-      placeholder: "Ubiwizz UBILD001 — détecteur de fumée"
+      label: Marque / Brand
+      placeholder: "Ubiwizz"
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: Référence / Reference
+      description: Référence commerciale principale (autres références dans « Notes »). / Main commercial reference.
+      placeholder: "UBILD001"
+    validations:
+      required: true
+  - type: input
+    id: nom_fr
+    attributes:
+      label: Nom en français / French name
+      placeholder: "Détecteur de fumée"
+    validations:
+      required: true
+  - type: input
+    id: nom_en
+    attributes:
+      label: Nom en anglais / English name
+      placeholder: "Smoke detector"
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - capteur (sensor)
+        - interrupteur (switch / remote)
+        - actionneur (actuator, relay, dimmer, shutter)
+        - prise (plug)
+        - chauffage (heating)
     validations:
       required: true
   - type: input
     id: eep
     attributes:
       label: Profil EEP / EEP profile
-      placeholder: "F6-05-02 (inconnu / unknown)"
+      description: Format RORG-FUNC-TYPE, ex. A5-02-05. Indiqué dans la notice ou la fiche technique, ou affiché par Ocean2MQTT (émetteurs entendus). / Shown in the manual, datasheet or by Ocean2MQTT (heard transmitters).
+      placeholder: "F6-05-02"
+    validations:
+      required: true
+  - type: input
+    id: eep_supplementaires
+    attributes:
+      label: Autres profils émis / Other profiles sent (facultatif / optional)
+      placeholder: "A5-09-05"
+  - type: input
+    id: fabricant_id
+    attributes:
+      label: Code fabricant EnOcean / EnOcean manufacturer ID (facultatif / optional)
+      description: Affiché par Ocean2MQTT pour les émetteurs entendus (ex. 0x046 = NodOn). / Shown by Ocean2MQTT for heard transmitters.
+      placeholder: "0x046"
+  - type: dropdown
+    id: appairage
+    attributes:
+      label: Mode d'appairage / Pairing mode
+      description: En cas de doute, laissez « je ne sais pas ». / If unsure, choose "I don't know".
+      options:
+        - je ne sais pas / I don't know
+        - rps (appui sur une touche / button press)
+        - 1bs (contact)
+        - 4bs (bouton Learn, télégramme d'apprentissage / Learn button)
+        - 4bs_bidir (avec réponse, ex. tête thermostatique / with answer, e.g. radiator valve)
+        - ute_bidir (demande UTE avec réponse, actionneurs D2 / UTE with answer)
+        - ute_uni (demande UTE sans réponse / UTE without answer)
+    validations:
+      required: true
+  - type: textarea
+    id: etapes_fr
+    attributes:
+      label: Procédure d'appairage en français / Pairing steps in French
+      description: Une étape par ligne. / One step per line.
+      placeholder: |
+        Installez la pile 9 V fournie.
+        Appuyez 2 secondes sur le bouton « Learn » jusqu'au bip.
+    validations:
+      required: true
+  - type: textarea
+    id: etapes_en
+    attributes:
+      label: Procédure d'appairage en anglais / Pairing steps in English (facultatif / optional)
+      description: Une étape par ligne. / One step per line.
+  - type: input
+    id: canaux
+    attributes:
+      label: Nombre de canaux (actionneurs) / Number of channels (actuators) (facultatif / optional)
+      placeholder: "1"
+  - type: checkboxes
+    id: options
+    attributes:
+      label: Fonctions / Features
+      options:
+        - label: Mesure de puissance / énergie (power / energy metering)
+        - label: Remote Commissioning (ReMan / ReCom)
   - type: input
     id: notice
     attributes:
-      label: Notice ou fiche technique / Manual or datasheet (lien / link)
+      label: Lien vers la notice ou la fiche technique / Manual or datasheet link
+      placeholder: "https://…"
   - type: textarea
-    id: appairage
+    id: photo
     attributes:
-      label: Procédure d'appairage / Pairing procedure
+      label: Photo du produit / Device picture
+      description: Glissez une image ici (fond blanc ou transparent de préférence). Uniquement une photo que vous avez le droit de partager. / Drop an image here (white or transparent background preferred). Only a picture you are allowed to share.
   - type: textarea
-    id: generique
+    id: description
     attributes:
-      label: Ce qui marche déjà en mode générique / What already works in generic mode
+      label: Ce qui fonctionne déjà, remarques / What already works, notes
+      description: Mode générique, autres références, valeurs particulières… / Generic mode, other references, special values…
   - type: textarea
     id: telegrammes
     attributes:
-      label: Télégrammes / Telegrams
-      description: Export CSV de la page Télégrammes (glissez le fichier ici), avec ce que vous faisiez à chaque télégramme. / CSV export from the Telegrams page, with what you were doing for each telegram.
-  - type: input
-    id: version
+      label: Télégrammes / Telegrams (facultatif / optional)
+      description: Export CSV de la page Télégrammes, avec ce que vous faisiez à chaque télégramme. / CSV export of the Telegrams page, with what you did for each one.
+  - type: checkboxes
+    id: accord
     attributes:
-      label: Version d'Ocean2MQTT / Ocean2MQTT version
+      label: Licence
+      options:
+        - label: J'accepte que ces informations et la photo soient publiées sous licence MIT dans Ocean2MQTT. / I agree that this information and picture are published under the MIT licence in Ocean2MQTT.
+          required: true
