@@ -161,3 +161,31 @@ async def test_add_by_enocean_id(app: Ocean2MQTT) -> None:  # noqa: F811
             await app.request("device/add", {"id": bad, "product": "generique/F6-02-01"})
     with pytest.raises(RequestError, match="actionneur"):
         await app.request("device/add", {"id": "05999999", "product": "nodon/sin-2-1-01"})
+
+
+async def test_remote_pairing_recom(app: Ocean2MQTT) -> None:  # noqa: F811
+    """Actionneur NodOn appairé à distance : Remote Learn puis demande UTE habituelle."""
+    from ocean2mqtt.core import recom
+
+    seen: list[int] = []
+    app.dongle.on_send = lambda tg: seen.append(tg.destination)
+    with pytest.raises(RequestError, match="appairage à distance"):
+        await app.request("pairing/remote", {"product": "nodon/stph-2", "id": "0181A2B3"})
+    result = await app.request("pairing/remote", {"product": "nodon/sin-2-2-01",
+                                                  "id": "05 11 22 33"})
+    assert result["id"] == "05112233"
+    assert RELAY in seen  # commande ReMan envoyée au module
+    log = await app.request("recom/log", {})
+    assert log[-1]["action"] == "remote_learn" and log[-1]["ok"]
+    # Un autre module qui s'annonce au même moment est ignoré
+    app.dongle.inject(0xD4, bytes.fromhex("A0 02 46 00 12 01 D2"), 0x05999999)
+    await asyncio.sleep(0.05)
+    assert "05999999" not in app.devices
+    app.dongle.inject(0xD4, bytes.fromhex("A0 02 46 00 12 01 D2"), RELAY)
+    for _ in range(50):
+        await asyncio.sleep(0.02)
+        if "05112233" in app.devices:
+            break
+    assert app.store.devices["05112233"]["sender_offset"] is not None
+    assert recom.FN_REMOTE_SET_LEARN == 0x220
+    await asyncio.sleep(1.2)
