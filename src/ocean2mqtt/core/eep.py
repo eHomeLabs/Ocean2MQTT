@@ -443,6 +443,18 @@ def decode_f60501(t: RadioTelegram) -> dict[str, Any] | None:
     return {"water_leak": t.payload[0] == 0x11}
 
 
+def decode_f60502(t: RadioTelegram) -> dict[str, Any] | None:
+    """Détecteur de fumée (F6-05-02) : 0x10 = alarme, 0x00 = repos, 0x30 = pile faible."""
+    if t.rorg != RORG_RPS or len(t.payload) != 1:
+        return None
+    value = t.payload[0]
+    if value == 0x30:
+        return {"battery_low": True}
+    if value in (0x00, 0x10):
+        return {"smoke": value == 0x10}
+    return None
+
+
 HANDLE_POSITIONS = {0xC0: "open", 0xE0: "open", 0xF0: "closed", 0xD0: "tilt"}
 
 
@@ -506,6 +518,7 @@ DECODERS = {
     "F6-02-01": decode_f60201,
     "F6-04-01": decode_f60401,
     "F6-05-01": decode_f60501,
+    "F6-05-02": decode_f60502,
     "F6-10-00": decode_f610,
     "F6-10-01": decode_f610,
     "D2-03-0A": decode_d2030a,

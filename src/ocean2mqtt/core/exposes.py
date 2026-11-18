@@ -100,6 +100,11 @@ def exposes(product: Product) -> list[Expose]:
         out.append(Expose("card", "binary_sensor", device_class="presence"))
     if eep == "F6-05-01":
         out.append(Expose("water_leak", "binary_sensor", device_class="moisture"))
+    if eep == "F6-05-02":
+        out += [
+            Expose("smoke", "binary_sensor", device_class="smoke"),
+            Expose("battery_low", "binary_sensor", device_class="battery", category="diagnostic"),
+        ]
     if eep.startswith("F6-10"):
         out.append(Expose("handle", "enum", device_class="enum", options=HANDLE_POSITIONS))
     if eep == "D2-03-0A":

@@ -441,7 +441,8 @@ class Device:
         """Choix « aucun code » : rien n'est envoyé, le produit reste sans code."""
         async with self._code_lock:
             if self.recom_code is not None and not self.recom_pending:
-                raise ReComError("Le produit a déjà un code ; un reset usine est nécessaire "
+                raise ReComError("Le produit a déjà un code ; reset usine nécessaire (NodOn : "
+                                 "appui ~8 s sur le bouton, relâcher, puis appui bref) "
                                  "pour revenir sans code", "has_code")
             await self._store_code(None, mode="none")
 

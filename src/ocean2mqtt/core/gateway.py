@@ -36,8 +36,9 @@ _LOGGER = logging.getLogger(__name__)
 TelegramCallback = Callable[[RadioTelegram], None]
 ReManCallback = Callable[[recom.ReManMessage], None]
 
-# Déverrouillage ReCom renouvelé avant la fin de la fenêtre de 15 min des produits
-UNLOCK_RENEW = 10 * 60  # s
+# Un produit déverrouillé le reste 5 min (spec Remote Management, confirmé par NodOn) :
+# on renvoie le code un peu avant
+UNLOCK_RENEW = 4 * 60  # s
 
 # ESP3 : paquet REMOTE_MAN_COMMAND (la clé peut remonter les messages ReMan ainsi)
 PACKET_REMOTE_MAN_COMMAND = 0x07
@@ -606,7 +607,7 @@ class Gateway:
         return recom.parse_query_status(answer[0].data)
 
     async def _ensure_unlocked(self, device_id: int, sender: int, code: int) -> None:
-        """Déverrouille le produit si besoin (renouvelé toutes les 10 min)."""
+        """Déverrouille le produit si besoin (renouvelé toutes les 4 min)."""
         last = self._unlocked.get(device_id)
         if last is not None and time.monotonic() - last < UNLOCK_RENEW:
             return

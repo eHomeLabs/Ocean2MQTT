@@ -11,7 +11,7 @@ _OFF = {"OFF", "0", "FALSE"}
 # Clés de l'état reprises telles quelles dans le JSON
 _COPY = (
     "power", "energy", "illuminance", "voltage", "battery", "firmware", "motion", "card",
-    "co2", "voc", "water_leak", "handle", "valve_position", "window_open", "battery_low",
+    "co2", "voc", "water_leak", "smoke", "handle", "valve_position", "window_open", "battery_low",
     "setpoint",
 )  # fmt: skip
 
