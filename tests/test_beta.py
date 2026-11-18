@@ -210,7 +210,8 @@ async def test_nodocean_import_same_key(app: Ocean2MQTT, tmp_path) -> None:  # n
                       "05AA0002": "unknown"}
     assert not plan["key_mismatch"]
     result = await app.request("migration/import", {"mode": "same"})
-    assert result == {"imported": 3, "repair": 0, "skipped": 1, "source": plan["source"]}
+    assert result == {"imported": 3, "repair": 0, "codes": 0, "skipped": 1,
+                      "source": plan["source"]}
     fp = app.store.devices["051E575A"]
     assert fp["sender_offset"] == 3 and fp["recom_code"] == 0x1234ABCD and fp["room"] == "Salon"
     assert app.store.devices["05AA0001"]["product"] == "ubiwizz/ubid1501s"
@@ -273,3 +274,21 @@ async def test_gateway_change_flags_actuators(app: Ocean2MQTT) -> None:  # noqa:
     assert devices["051E575A"]["needs_pairing"] and not devices["0181A2B3"]["needs_pairing"]
     assert app.info()["migration"]["previous_base_id"] == "FF000080"
     assert any(t == "bridge/event" and p["type"] == "gateway_changed" for t, p in app.events)
+
+
+async def test_import_recovers_recom_code_of_existing(app: Ocean2MQTT, tmp_path) -> None:  # noqa: F811
+    """Produit réappairé dans Ocean2MQTT avant la reprise : seul le code ReCom est repris."""
+    base = app.info()["gateway"]["base_id"]
+    await _pair(app, "nodon/sin-2-fp-01", 0xD4, "A0 01 46 00 0C 01 D2", 0x051E575A)
+    entry = app.store.devices["051E575A"]
+    entry["recom_code"], entry["recom_pending"] = 0x0BADC0DE, True  # candidat jamais confirmé
+    app.devices["051E575A"].recom_code = 0x0BADC0DE
+    app.config.data["homeassistant"]["config_dir"] = str(_ha_config(tmp_path, base))
+    plan = await app.request("migration/preview", {"mode": "same"})
+    assert {i["id"]: i["status"] for i in plan["items"]}["051E575A"] == "code"
+    result = await app.request("migration/import", {"mode": "same"})
+    assert result["codes"] == 1 and result["imported"] == 2
+    assert app.store.devices["051E575A"]["recom_code"] == 0x1234ABCD
+    assert not app.store.devices["051E575A"]["recom_pending"]
+    assert app.devices["051E575A"].recom_code == 0x1234ABCD
+    assert app.store.devices["051E575A"]["name"] != "Radiateur salon"  # nom gardé
