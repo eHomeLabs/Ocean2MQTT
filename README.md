@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b13)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b14)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -110,7 +110,7 @@ docker run -d --name ocean2mqtt --restart unless-stopped \
   -v $(pwd)/data:/app/data -p 8080:8080 \
   --device /dev/ttyUSB0:/dev/ttyUSB0 \
   -e OCEAN2MQTT_MQTT_HOST=192.168.1.10 \
-  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b13
+  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b14
 ```
 
 Exemple avec Mosquitto : `docker-compose.example.yml`. Ouvrez ensuite `http://<machine>:8080`.
