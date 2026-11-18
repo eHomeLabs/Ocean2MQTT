@@ -12,6 +12,22 @@
 - Rapprochez le produit de la clé pour l'appairage.
 - Regardez la page **Télégrammes** : si rien n'arrive, le produit n'émet pas (pile, portée) ; si des télégrammes arrivent, voir [[Ajouter un produit non supporté]].
 
+## Clé EnOcean HS ou remplacée : ne pas tout réappairer
+
+Les actionneurs (modules, prises, volets) ont appris l'**adresse d'émission** de la clé, calculée à partir de son **Base ID**. Avec une nouvelle clé, ils ne la reconnaissent plus… sauf si vous lui donnez le Base ID de l'ancienne.
+
+1. Branchez la nouvelle clé et démarrez Ocean2MQTT : il détecte le changement et affiche « Nouvelle clé EnOcean détectée ».
+2. Cliquez sur **Reprendre le Base ID … sur cette clé** (ou **Réglages → Clé EnOcean → Changer le Base ID** et saisissez l'ancien Base ID).
+3. Confirmez : les actionneurs répondent à nouveau, sans réappairage.
+
+L'ancien Base ID est mémorisé par Ocean2MQTT ; il figure aussi dans vos **sauvegardes** et dans l'**export NodOcean**. Pensez-y si la machine elle-même est perdue.
+
+⚠️ À savoir :
+- le Base ID d'une clé ne peut être changé qu'un **nombre limité de fois** (10, affiché dans Réglages), sans remise à zéro possible ;
+- il doit être compris entre `FF800000` et `FFFFFF80`, par pas de `80` ;
+- **n'utilisez jamais deux clés avec le même Base ID** en même temps : jetez ou mettez de côté l'ancienne ;
+- l'**identifiant de la puce** (Chip ID) ne peut pas être copié : seuls les appairages par Base ID (ceux d'Ocean2MQTT et de NodOcean) sont repris.
+
 ## Un actionneur ne répond plus
 - A-t-il été appairé avec une autre clé ? Ocean2MQTT signale « à réappairer » quand la clé a changé.
 - Coupez et remettez le courant du module ; Ocean2MQTT interroge les actionneurs toutes les 60 secondes.

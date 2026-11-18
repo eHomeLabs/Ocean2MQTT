@@ -60,6 +60,8 @@ Le fichier `data/configuration.yaml` est créé au premier lancement. Chaque ré
 | `OCEAN2MQTT_RECOM_ENABLED` | `false` pour désactiver le Remote Commissioning |
 | `OCEAN2MQTT_FRONTEND_PASSWORD` | Mot de passe de l'interface web |
 
+Le **serveur MQTT** et les **topics** se modifient aussi dans l'interface (**Réglages → Serveur MQTT → Modifier**, avec un bouton pour tester la connexion). Une valeur enregistrée dans l'interface l'emporte sur la variable d'environnement ou le réglage automatique de l'add-on ; « Revenir au serveur automatique » annule ce choix.
+
 L'interface web n'accepte que les adresses du réseau local (`frontend.allow_remote` pour changer).
 
 ## Essayer sans clé

@@ -39,4 +39,6 @@ Python 3.12+: download the `.whl` file of the latest [release](https://github.co
 
 `data/configuration.yaml` is created on first start. Every key can be set with `OCEAN2MQTT_<SECTION>_<KEY>` environment variables (`OCEAN2MQTT_SERIAL_PORT`, `OCEAN2MQTT_MQTT_HOST`, `OCEAN2MQTT_RECOM_ENABLED`, `OCEAN2MQTT_FRONTEND_PASSWORD`…).
 
+The **MQTT server** and **topics** can also be changed in the interface (**Settings → MQTT server → Edit**, with a connection test). Values saved there take precedence over environment variables or the add-on's automatic server; "Back to the automatic server" undoes it.
+
 Demo without hardware: `python tools/demo.py`.
