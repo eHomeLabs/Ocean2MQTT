@@ -305,6 +305,9 @@ function GenericPicker({ generics, onPick }: { generics: Product[]; onPick: (id:
 function Sheet({ product, onError, onBack, onAddById }: { product: Product; onError: (m: string) => void; onBack?: () => void; onAddById: (id: string) => void }) {
   const features = product.exposes.filter((e) => e.key !== "rssi");
   const actuator = product.teach_in.endsWith("bidir");
+  const { info } = useStore();
+  const remote = actuator && product.recom && info?.recom_enabled !== false;
+  const [remoteCode, setRemoteCode] = useState("");
   const [manualId, setManualId] = useState("");
   const cleanId = manualId.trim().toUpperCase().replace(/^0X/, "").replace(/[\s:-]/g, "");
   const start = () => request("pairing/start", { product: product.id, timeout: 60 }).catch((e: Error) => onError(e.message));
@@ -369,7 +372,34 @@ function Sheet({ product, onError, onBack, onAddById }: { product: Product; onEr
       </div>
       <details className="manual-id">
         <summary>{t("add.byIdTitle")}</summary>
-        {actuator ? (
+        {remote ? (
+          <form
+            className="stack"
+            onSubmit={(e) => {
+              e.preventDefault();
+              request("pairing/remote", { product: product.id, id: cleanId, code: remoteCode.trim() }).catch((err: Error) => onError(err.message));
+            }}
+          >
+            <p className="small">{t("add.remoteIntro")}</p>
+            <ol className="steps small">
+              <li>{t("add.remoteStep1")}</li>
+              <li>{t("add.remoteStep2")}</li>
+              <li>{t("add.remoteStep3")}</li>
+            </ol>
+            <label className="field">
+              {t("add.byIdLabel")}
+              <input value={manualId} onChange={(e) => setManualId(e.target.value)} placeholder="0512ABCD" spellCheck={false} autoComplete="off" />
+            </label>
+            <label className="field">
+              {t("add.remoteCode")}
+              <input value={remoteCode} onChange={(e) => setRemoteCode(e.target.value)} placeholder={t("recom.codeHint")} spellCheck={false} autoComplete="off" />
+            </label>
+            <button type="submit" className="secondary" disabled={!/^[0-9A-F]{8}$/.test(cleanId)}>
+              {t("add.remoteStart")}
+            </button>
+            <p className="small muted">{t("add.remoteNote")}</p>
+          </form>
+        ) : actuator ? (
           <p className="small muted">{t("add.byIdActuator")}</p>
         ) : (
           <form
