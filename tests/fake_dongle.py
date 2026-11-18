@@ -7,6 +7,8 @@ import asyncio
 from ocean2mqtt.core.esp3 import (
     CO_RD_IDBASE,
     CO_RD_VERSION,
+    CO_WR_IDBASE,
+    CO_WR_RESET,
     PACKET_COMMON_COMMAND,
     PACKET_RADIO_ERP1,
     PACKET_REMOTE_MAN_COMMAND,
@@ -30,6 +32,7 @@ class FakeDongle(asyncio.Transport):
         self.closed = False
         self.on_send = None
         self.base_id = BASE_ID
+        self.base_id_writes_left = 10
         # Paquets ESP3 REMOTE_MAN_COMMAND acceptés (sinon RET_NOT_SUPPORTED)
         self.reman_esp3 = False
         self.reman_packets: list[Packet] = []
@@ -45,7 +48,17 @@ class FakeDongle(asyncio.Transport):
         for packet in self._parser.feed(data):
             if packet.packet_type == PACKET_COMMON_COMMAND:
                 if packet.data[0] == CO_RD_IDBASE:
-                    self._reply(b"\x00" + self.base_id.to_bytes(4, "big") + b"\x0a")
+                    self._reply(b"\x00" + self.base_id.to_bytes(4, "big")
+                                + bytes([self.base_id_writes_left]))
+                elif packet.data[0] == CO_WR_IDBASE:
+                    if not self.base_id_writes_left:
+                        self._reply(b"\x91")
+                    else:
+                        self.base_id = int.from_bytes(packet.data[1:5], "big")
+                        self.base_id_writes_left -= 1
+                        self._reply(b"\x00")
+                elif packet.data[0] == CO_WR_RESET:
+                    self._reply(b"\x00")
                 elif packet.data[0] == CO_RD_VERSION:
                     desc = b"GATEWAYCTRL".ljust(16, b"\x00")
                     self._reply(
