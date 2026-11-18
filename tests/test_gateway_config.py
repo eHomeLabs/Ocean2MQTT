@@ -121,8 +121,9 @@ async def test_mqtt_restart_moves_base_topic(app: Ocean2MQTT) -> None:  # noqa: 
         await asyncio.sleep(0.4)
         assert received.get("ocean2mqtt/bridge/state") == "online"
         await app.request("config/mqtt/set", {"base_topic": "maison"})
-        for _ in range(100):
-            if received.get("maison/bridge/state") == "online":
+        for _ in range(200):  # deux clients : l'ordre d'arrivée n'est pas garanti
+            if (received.get("maison/bridge/state") == "online"
+                    and received.get("ocean2mqtt/bridge/state") == ""):
                 break
             await asyncio.sleep(0.05)
         assert received["maison/bridge/state"] == "online"
