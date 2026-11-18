@@ -40,6 +40,11 @@ DEFAULTS: dict[str, Any] = {
         "password": None,
         "allow_remote": False,  # par défaut, seules les adresses du réseau local
     },
+    "recom": {
+        # Remote Commissioning (ReMan) : le code de sécurité passe en clair à la radio
+        # lors d'un déverrouillage. false = aucune commande ReMan n'est jamais envoyée.
+        "enabled": True,
+    },
     "homeassistant": {
         # Dossier de configuration de Home Assistant (lecture seule), pour reprendre
         # les produits de NodOcean for HA. L'add-on le renseigne tout seul.

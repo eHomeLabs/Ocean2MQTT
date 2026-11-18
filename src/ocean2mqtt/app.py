@@ -74,6 +74,7 @@ class Ocean2MQTT:
         self.library = library or load_library()
         self.store = DeviceStore(config.data_dir).load()
         self.gateway = Gateway(config["serial"]["port"])
+        self.gateway.reman_enabled = bool(config["recom"].get("enabled", True))
         self.gateway_ok = False
         self.devices: dict[str, Device] = {}  # identifiant EnOcean -> produit
         self.last_seen: dict[str, str] = {}
@@ -313,7 +314,8 @@ class Ocean2MQTT:
             "actuator": product.is_actuator,
             "settings": describe(device),
             "needs_pairing": bool(self.store.devices.get(device.id_str, {}).get("needs_pairing")),
-            "recom": self.recom_status(device) if product.recom else None,
+            "recom": self.recom_status(device) if product.recom and self.recom_enabled
+            else None,
         }
 
     def recom_status(self, device: Device) -> dict[str, Any]:
@@ -323,6 +325,9 @@ class Ocean2MQTT:
             "secured": device.recom_secured,
             "pending": device.recom_pending,
             "has_code": device.recom_code is not None,
+            # Session encore ouverte : la prochaine opération ne renverra pas le code
+            "session_until": round(time.time() + left) if (
+                left := self.gateway.unlocked_for(device.device_id)) else 0,
             "links": device.state.get("links"),
             "links_max": device.state.get("links_max"),
             "link_types": list(types),
@@ -442,6 +447,7 @@ class Ocean2MQTT:
                 "app_version": gw.app_version if gw else None,
             },
             "language": self.config["language"],
+            "recom_enabled": self.recom_enabled,
             "pairing": self.pairing,
             "config": self.config.public(),
             "devices": len(self.devices),
@@ -806,8 +812,15 @@ class Ocean2MQTT:
 
     # -- Remote Commissioning ------------------------------------------------
 
+    @property
+    def recom_enabled(self) -> bool:
+        return bool(self.config["recom"].get("enabled", True))
+
     async def _recom_request(self, action: str, data: dict[str, Any]) -> Any:
         device = self._device(data)
+        if not self.recom_enabled:
+            raise RequestError("Remote Commissioning désactivé dans la configuration "
+                               "(recom.enabled)")
         if not device.product.recom:
             raise RequestError(f"{device.title} ne gère pas le Remote Commissioning")
         if not self.gateway_ok:
