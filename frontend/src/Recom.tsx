@@ -214,6 +214,7 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
                 {busy === "detect" ? t("loading") : t("recom.detect")}
               </button>
             </div>
+            <p className="muted">{t("recom.reset")}</p>
           </div>
         </details>
         <p className="small muted">{t("recom.warning")}</p>
