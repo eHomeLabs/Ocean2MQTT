@@ -114,6 +114,8 @@ class Gateway:
         self._reman_lock = asyncio.Lock()
         self._reman_seq = 0
         self._unlocked: dict[int, float] = {}
+        # Remote Management autorisé (désactivable : le code part en clair à la radio)
+        self.reman_enabled = True
         # Voie d'émission ReMan : "esp3" (paquet REMOTE_MAN_COMMAND, la clé découpe
         # et adresse elle-même les télégrammes, comme DolphinView) ou "raw"
         # (télégrammes SYS_EX C5 construits ici). None = pas encore trouvée.
@@ -426,6 +428,8 @@ class Gateway:
         télégrammes et émet avec son propre identifiant ; "raw" : télégrammes
         SYS_EX chaînés construits ici, émis avec l'identifiant `sender`.
         """
+        if not self.reman_enabled:
+            raise ReComError("Remote Commissioning désactivé dans la configuration", "disabled")
         secret = function in (recom.FN_UNLOCK, recom.FN_LOCK, recom.FN_SET_CODE)
         if path == "esp3":
             # Le code de sécurité n'apparaît jamais dans le journal ni les diagnostics.
@@ -646,6 +650,13 @@ class Gateway:
             except ReComError:
                 return False
             return True
+
+    def unlocked_for(self, device_id: int) -> int:
+        """Secondes restantes de la session déverrouillée (0 : le code sera renvoyé)."""
+        last = self._unlocked.get(device_id)
+        if last is None:
+            return 0
+        return max(0, int(UNLOCK_RENEW - (time.monotonic() - last)))
 
     def forget_unlock(self, device_id: int) -> None:
         self._unlocked.pop(device_id, None)

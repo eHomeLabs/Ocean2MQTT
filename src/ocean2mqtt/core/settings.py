@@ -66,13 +66,14 @@ def settings_for(device: Device) -> list[Setting]:
     if "delay_off" in has:
         out += _channels(device, "delay_off")
     if "roller_shutter" in has:
-        out += [
-            Setting("travel_time", "numeric", min=eep.TRAVEL_TIME_MIN, max=eep.TRAVEL_TIME_MAX,
-                    step=0.1, unit="s"),
-            Setting("rs_switch_type", "enum", "recom", options=tuple(RS_SWITCH_TYPES),
-                    readable=True),
-            Setting("calibration", "action", "recom", options=tuple(RS_CALIBRATION)),
-        ]
+        out.append(Setting("travel_time", "numeric", min=eep.TRAVEL_TIME_MIN,
+                           max=eep.TRAVEL_TIME_MAX, step=0.1, unit="s"))
+        if device.gateway.reman_enabled:  # réglages par Remote Commissioning
+            out += [
+                Setting("rs_switch_type", "enum", "recom", options=tuple(RS_SWITCH_TYPES),
+                        readable=True),
+                Setting("calibration", "action", "recom", options=tuple(RS_CALIBRATION)),
+            ]
     if product.is_actuator and product.brand.lower() == "nodon":
         out.append(Setting("repeater", "enum", options=tuple(REPEATER_LEVELS), readable=True))
     if product.metering:
