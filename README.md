@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b6)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b7)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -44,6 +44,7 @@ Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLab
 - **Reprise depuis NodOcean for HA, sans réappairer** : l'add-on détecte NodOcean dans Home Assistant et reprend produits, noms, pièces, adresses d'émission et codes Remote Commissioning. Un assistant rappelle de désactiver NodOcean (une clé ne sert qu'à un seul logiciel).
 - **Fichier d'export NodOcean** (bouton « Exporter pour Ocean2MQTT » de NodOcean for HA 0.8.6) pour Ocean2MQTT en Docker ou sur une autre machine.
 - **Autre clé EnOcean** : reprendre seulement les capteurs (les actionneurs gardent nom, pièce et réglages et sont signalés « à réappairer »), ou partir d'une installation vierge.
+- **Produits génériques de NodOcean** : à la reprise, choix de la fiche du vrai produit (même profil EEP). **Changer de fiche** reste possible ensuite depuis la fiche d'un produit, sans réappairage.
 - **Changement de clé détecté** automatiquement, avec un bouton « Réappairer » sur chaque actionneur concerné.
 - **Sauvegarde / restauration** de tous les produits appairés dans un fichier JSON.
 
@@ -144,6 +145,7 @@ Requêtes `bridge/request/…` :
 | `backup/create` | Sauvegarde (restauration : `migration/import` avec `{"file": …}`) |
 | `unknown`, `unknown/clear`, `device/add` | Émetteurs inconnus, ajout en un clic (`{"id": "0181A2B3", "product": "nodon/stph-2"}`) |
 | `device/rename`, `device/remove`, `device/set`, `device/get` | Gestion et commande d'un produit |
+| `device/compatible`, `device/change_product` | Fiches de même profil EEP, changement de fiche (`{"id": "…", "product": "nodon/cws-2-1"}`) |
 | `device/settings`, `device/settings/set` | Réglages (`{"id": "…", "key": "led", "value": false}`) |
 | `device/recom/<action>`, `recom/log` | Remote Commissioning : `status`, `ping`, `unlock`, `code`, `links`, `links/add`, `links/delete`, `config` |
 | `telegrams` | Derniers télégrammes |
