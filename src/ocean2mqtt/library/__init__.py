@@ -9,7 +9,99 @@ from pathlib import Path
 import yaml
 
 from ..core.eep import supported
-from ..core.product import Product
+from ..core.product import (
+    TEACH_1BS,
+    TEACH_4BS,
+    TEACH_4BS_BIDIR,
+    TEACH_RPS,
+    TEACH_UTE_BIDIR,
+    Product,
+)
+
+GENERIC_BRAND = "generique"
+
+# Profils proposés en mode générique : EEP -> (type, mode d'appairage, nom FR, nom EN)
+GENERIC_EEPS: dict[str, tuple[str, str, str, str]] = {
+    "F6-02-01": ("interrupteur", TEACH_RPS, "Interrupteur 2 boutons (rocker)",
+                 "2-rocker switch"),
+    "F6-04-01": ("capteur", TEACH_RPS, "Interrupteur à carte", "Key card switch"),
+    "F6-05-01": ("capteur", TEACH_RPS, "Détecteur de fuite d'eau", "Water leak sensor"),
+    "F6-10-00": ("capteur", TEACH_RPS, "Poignée de fenêtre", "Window handle"),
+    "D5-00-01": ("capteur", TEACH_1BS, "Contact d'ouverture", "Contact sensor"),
+    "A5-02-05": ("capteur", TEACH_4BS, "Capteur de température (0-40 °C)",
+                 "Temperature sensor (0-40 °C)"),
+    "A5-04-01": ("capteur", TEACH_4BS, "Capteur de température et d'humidité",
+                 "Temperature and humidity sensor"),
+    "A5-06-01": ("capteur", TEACH_4BS, "Capteur de luminosité", "Light sensor"),
+    "A5-07-03": ("capteur", TEACH_4BS, "Détecteur de mouvement et luminosité",
+                 "Motion and light sensor"),
+    "A5-09-04": ("capteur", TEACH_4BS, "Capteur CO2, humidité, température",
+                 "CO2, humidity, temperature sensor"),
+    "A5-09-05": ("capteur", TEACH_4BS, "Capteur de COV", "VOC sensor"),
+    "A5-20-01": ("actionneur", TEACH_4BS_BIDIR, "Tête thermostatique",
+                 "Thermostatic radiator valve"),
+    "D2-01-00": ("actionneur", TEACH_UTE_BIDIR, "Actionneur on/off (D2-01, tous types)",
+                 "On/off actuator (D2-01, any type)"),
+    "D2-05-00": ("actionneur", TEACH_UTE_BIDIR, "Volet roulant (D2-05)",
+                 "Roller shutter (D2-05)"),
+}
+
+_STEPS = {
+    TEACH_RPS: (
+        "Appuyez sur un bouton du produit (ou basculez la poignée).",
+        "Press a button on the product (or turn the handle).",
+    ),
+    TEACH_1BS: (
+        "Appuyez sur le bouton d'appairage (LRN) du produit.",
+        "Press the product's learn (LRN) button.",
+    ),
+    TEACH_4BS: (
+        ("Appuyez sur le bouton d'appairage (LRN) pour que le produit envoie son "
+         "télégramme d'apprentissage."),
+        "Press the learn (LRN) button so that the product sends its teach-in telegram.",
+    ),
+    TEACH_4BS_BIDIR: (
+        ("Lancez l'appairage sur le produit (voir sa notice) : Ocean2MQTT répond "
+         "automatiquement."),
+        "Start pairing on the product (see its manual): Ocean2MQTT answers automatically.",
+    ),
+    TEACH_UTE_BIDIR: (
+        ("Mettez le produit en mode appairage (voir sa notice) : il envoie une demande UTE "
+         "et Ocean2MQTT répond automatiquement."),
+        ("Put the product in pairing mode (see its manual): it sends a UTE request and "
+         "Ocean2MQTT answers automatically."),
+    ),
+}
+
+# Nombre de canaux des actionneurs D2-01 selon le type
+_D201_CHANNELS = {0x10: 2, 0x11: 2, 0x12: 2, 0x13: 4, 0x14: 8}
+
+
+def generic_product(eep: str) -> Product | None:
+    """Produit générique pour un EEP (« D2-01-12 »…), None si le profil n'est pas géré."""
+    eep = eep.upper()
+    key = "D2-01-00" if eep.startswith("D2-01") else eep
+    if key not in GENERIC_EEPS or not supported(eep):
+        return None
+    type_, mode, fr, en = GENERIC_EEPS[key]
+    channels = _D201_CHANNELS.get(int(eep[6:], 16), 1) if eep.startswith("D2-01") else 1
+    if eep.startswith("D2-01") and eep != key:
+        fr, en = f"Actionneur on/off {eep}", f"On/off actuator {eep}"
+    step_fr, step_en = _STEPS[mode]
+    return Product(
+        id=f"{GENERIC_BRAND}/{eep.lower()}",
+        brand="Générique",
+        model=eep,
+        eep=eep,
+        teach_in=mode,
+        names={"fr": fr, "en": en},
+        pairing_steps={"fr": (step_fr,), "en": (step_en,)},
+        type=type_,
+        channels=channels,
+        support="generique",
+        generic=True,
+        settings=frozenset({"timeout"}) if type_ != "actionneur" else frozenset(),
+    )
 
 
 class LibraryError(Exception):
@@ -29,6 +121,16 @@ def default_root() -> Path:
 class Library:
     root: Path
     products: dict[str, Product]
+
+    def get(self, product_id: str) -> Product | None:
+        """Fiche de la bibliothèque, ou produit générique « generique/<eep> »."""
+        if product_id in self.products:
+            return self.products[product_id]
+        brand, _, eep = product_id.partition("/")
+        return generic_product(eep) if brand == GENERIC_BRAND else None
+
+    def generics(self) -> list[Product]:
+        return [p for eep in GENERIC_EEPS if (p := generic_product(eep)) is not None]
 
     def by_brand(self, brand: str) -> list[Product]:
         return [p for p in self.products.values() if p.brand.lower() == brand.lower()]
