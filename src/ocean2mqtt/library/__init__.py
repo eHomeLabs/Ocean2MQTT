@@ -26,6 +26,7 @@ GENERIC_EEPS: dict[str, tuple[str, str, str, str]] = {
                  "2-rocker switch"),
     "F6-04-01": ("capteur", TEACH_RPS, "Interrupteur à carte", "Key card switch"),
     "F6-05-01": ("capteur", TEACH_RPS, "Détecteur de fuite d'eau", "Water leak sensor"),
+    "F6-05-02": ("capteur", TEACH_RPS, "Détecteur de fumée", "Smoke detector"),
     "F6-10-00": ("capteur", TEACH_RPS, "Poignée de fenêtre", "Window handle"),
     "D5-00-01": ("capteur", TEACH_1BS, "Contact d'ouverture", "Contact sensor"),
     "A5-02-05": ("capteur", TEACH_4BS, "Capteur de température (0-40 °C)",
