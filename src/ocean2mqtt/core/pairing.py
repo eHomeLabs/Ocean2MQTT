@@ -75,14 +75,20 @@ async def wait_for_teach_in(
     sender_offset: int | None,
     timeout: float,
     exclude: set[int],
+    only: int | None = None,
 ) -> PairingResult | None:
-    """Attend l'appairage du produit ; répond aux UTE bidirectionnels."""
+    """Attend l'appairage du produit ; répond aux UTE bidirectionnels.
+
+    only : n'accepte que cet émetteur (appairage à distance d'un produit précis).
+    """
     loop = asyncio.get_running_loop()
     future: asyncio.Future[PairingResult] = loop.create_future()
     pending_responses: set[asyncio.Task] = set()
 
     def _on_telegram(telegram: RadioTelegram) -> None:
         if future.done() or telegram.sender in exclude:
+            return
+        if only is not None and telegram.sender != only:
             return
         ok, ute = match_teach_in(product, telegram)
         if not ok:
