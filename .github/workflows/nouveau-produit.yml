@@ -1,0 +1,70 @@
+name: Nouveau produit
+
+# Le mainteneur valide une proposition « Proposer un nouveau produit EnOcean » en
+# ajoutant l'étiquette « accepté » : la fiche (YAML + photo) est créée et proposée
+# dans une pull request, à relire et fusionner.
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  fiche:
+    if: github.event.label.name == 'accepté' && github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Installation
+        run: pip install -e . pillow jsonschema
+      - name: Création de la fiche
+        id: fiche
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ toJson(github.event.issue) }}
+        run: |
+          printf '%s' "$ISSUE" > "$RUNNER_TEMP/issue.json"
+          set +e
+          out=$(python tools/issue_to_product.py "$RUNNER_TEMP/issue.json")
+          code=$?
+          set -e
+          echo "$out"
+          {
+            echo "message<<EOF"
+            echo "$out"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          if [ $code -ne 0 ]; then exit 1; fi
+          python -m ocean2mqtt.library produits
+      - name: Pull request
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: produit/issue-${{ github.event.issue.number }}
+          commit-message: "Fiche produit : ${{ github.event.issue.title }} (#${{ github.event.issue.number }})"
+          title: "Fiche produit : ${{ github.event.issue.title }}"
+          body: |
+            Fiche créée automatiquement depuis #${{ github.event.issue.number }}.
+            Vérifiez le YAML et la photo, puis fusionnez : le produit sera dans la prochaine version et dans le catalogue.
+
+            Closes #${{ github.event.issue.number }}
+          labels: nouveau produit
+      - name: Réponse dans l'issue
+        if: steps.pr.outputs.pull-request-url
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Merci ! Proposition acceptée : la fiche est en préparation dans ${{ steps.pr.outputs.pull-request-url }}. / Thanks! Accepted, the sheet is being prepared."
+      - name: Formulaire incomplet
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MESSAGE: ${{ steps.fiche.outputs.message }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "La fiche n'a pas pu être créée automatiquement : ${MESSAGE:-voir le journal de l'action}. Complétez l'issue puis retirez et remettez l'étiquette « accepté »."
