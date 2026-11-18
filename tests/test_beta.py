@@ -164,3 +164,112 @@ async def test_metering_reporting_and_poll(app: Ocean2MQTT, monkeypatch) -> None
     await asyncio.sleep(1.2)
     task.cancel()
     assert any(t.destination == MSP2 for t in app.dongle.sent[before:])
+
+
+# -- Migration NodOcean, sauvegarde, changement de clé --------------------------
+
+
+def _ha_config(tmp_path, base_id: str, disabled: bool = False):
+    """Configuration Home Assistant minimale avec NodOcean for HA (3 produits)."""
+    storage = tmp_path / "ha" / ".storage"
+    storage.mkdir(parents=True)
+    entries = {"entries": [
+        {"entry_id": "abc", "domain": "mqtt", "data": {}},
+        {"entry_id": "e1", "domain": "nodon_enocean", "unique_id": base_id,
+         "title": f"Clé EnOcean {base_id}", "data": {"device": "/dev/ttyUSB0"},
+         "disabled_by": "user" if disabled else None,
+         "subentries": [
+             {"subentry_type": "device", "title": "Radiateur salon",
+              "data": {"device_id": "051E575A", "model": "SIN-2-FP-01", "sender_offset": 3}},
+             {"subentry_type": "device", "title": "Sonde chambre",
+              "data": {"device_id": "0181A2B3", "model": "STPH-2", "sender_offset": None}},
+             {"subentry_type": "device", "title": "Prise Ubiwizz",
+              "data": {"device_id": "05AA0001", "model": "ASP-2-METERING", "sender_offset": 4}},
+             {"subentry_type": "device", "title": "Inconnu",
+              "data": {"device_id": "05AA0002", "model": "XYZ-9", "sender_offset": 5}},
+         ]},
+    ]}
+    (storage / "core.config_entries").write_text(json.dumps({"data": entries}))
+    (storage / "nodon_enocean.recom_codes.e1").write_text(json.dumps(
+        {"data": {"051E575A": "1234ABCD"}}))
+    (storage / "core.area_registry").write_text(json.dumps(
+        {"data": {"areas": [{"id": "salon", "name": "Salon"}]}}))
+    (storage / "core.device_registry").write_text(json.dumps({"data": {"devices": [
+        {"identifiers": [["nodon_enocean", "051E575A"]], "area_id": "salon"}]}}))
+    return tmp_path / "ha"
+
+
+async def test_nodocean_import_same_key(app: Ocean2MQTT, tmp_path) -> None:  # noqa: F811
+    base = app.info()["gateway"]["base_id"]
+    app.config.data["homeassistant"]["config_dir"] = str(_ha_config(tmp_path, base))
+    info = app.info()["migration"]["nodocean"][0]
+    assert info["devices"] == 4 and info["active"] is True and info["base_id"] == base
+    plan = await app.request("migration/preview", {"mode": "same"})
+    status = {i["id"]: i["status"] for i in plan["items"]}
+    assert status == {"051E575A": "ok", "0181A2B3": "ok", "05AA0001": "ok",
+                      "05AA0002": "unknown"}
+    assert not plan["key_mismatch"]
+    result = await app.request("migration/import", {"mode": "same"})
+    assert result == {"imported": 3, "repair": 0, "skipped": 1, "source": plan["source"]}
+    fp = app.store.devices["051E575A"]
+    assert fp["sender_offset"] == 3 and fp["recom_code"] == 0x1234ABCD and fp["room"] == "Salon"
+    assert app.store.devices["05AA0001"]["product"] == "ubiwizz/ubid1501s"
+    assert app.devices["051E575A"].recom_secured
+    # Le radiateur répond tout de suite : commande envoyée avec Base ID + 3
+    await app.request("device/set", {"id": "051E575A", "payload": {"mode": "eco"}})
+    sent = app.dongle.sent[-1]
+    assert sent.destination == 0x051E575A and sent.sender == app.gateway.sender_id(3)
+    # Un second import ne duplique rien
+    again = await app.request("migration/preview", {"mode": "same"})
+    assert {i["status"] for i in again["items"]} == {"exists", "unknown"}
+
+
+async def test_nodocean_import_new_key(app: Ocean2MQTT, tmp_path) -> None:  # noqa: F811
+    app.config.data["homeassistant"]["config_dir"] = str(_ha_config(tmp_path, "FF000080"))
+    plan = await app.request("migration/preview", {"mode": "same"})
+    assert plan["key_mismatch"]  # la clé branchée n'est pas celle de NodOcean
+    assert {i["id"]: i["status"] for i in plan["items"]}["051E575A"] == "repair"
+    result = await app.request("migration/import", {"mode": "new"})
+    assert result["imported"] == 3 and result["repair"] == 2
+    devices = {d["id"]: d for d in await app.request("devices")}
+    assert devices["051E575A"]["needs_pairing"] and not devices["0181A2B3"]["needs_pairing"]
+    # Réappairage du radiateur : nom, pièce et code ReCom gardés, drapeau effacé
+    data = await _pair(app, "nodon/sin-2-fp-01", 0xD4, "A0 01 46 00 0C 01 D2", 0x051E575A)
+    assert data["name"] == "Radiateur salon" and not data["needs_pairing"]
+    assert app.store.devices["051E575A"]["recom_code"] == 0x1234ABCD
+
+
+async def test_export_file_and_backup_restore(app: Ocean2MQTT, tmp_path) -> None:  # noqa: F811
+    base = app.info()["gateway"]["base_id"]
+    export = {"format": "ocean2mqtt-import", "version": 1, "source": "NodOcean for HA 0.8.6",
+              "gateway": {"base_id": base, "port": "/dev/ttyUSB0"},
+              "devices": [{"id": "051E575A", "model": "SIN-2-FP-01", "name": "Radiateur",
+                           "area": "Salon", "sender_offset": 3, "recom_code": "1234ABCD"}]}
+    plan = await app.request("migration/preview", {"file": export, "mode": "same"})
+    assert plan["items"][0]["status"] == "ok"
+    await app.request("migration/import", {"file": json.dumps(export), "mode": "same"})
+    backup = await app.request("backup/create")
+    assert backup["format"] == "ocean2mqtt-backup" and backup["devices"][0]["recom_code"] == \
+        "1234ABCD"
+    # Restauration sur une installation vierge
+    other = Ocean2MQTT(app.config)
+    other.store.devices.clear()
+    other.gateway = app.gateway
+    other.gateway_ok = True
+    result = await other.request("migration/import", {"file": backup, "mode": "same"})
+    assert result["imported"] == 1 and other.store.devices["051E575A"]["recom_code"] == \
+        0x1234ABCD
+    with pytest.raises(RequestError, match="Format inconnu"):
+        await app.request("migration/preview", {"file": {"hello": 1}})
+
+
+async def test_gateway_change_flags_actuators(app: Ocean2MQTT) -> None:  # noqa: F811
+    await _pair(app, "nodon/sin-2-fp-01", 0xD4, "A0 01 46 00 0C 01 D2", 0x051E575A)
+    await _pair(app, "nodon/stph-2", 0xA5, _4bs_teach(0x04, 0x01), STPH)
+    assert app.store.meta["base_id"] == app.info()["gateway"]["base_id"]
+    app.store.meta["base_id"] = "FF000080"  # appairés avec une autre clé
+    app._check_base_id()
+    devices = {d["id"]: d for d in await app.request("devices")}
+    assert devices["051E575A"]["needs_pairing"] and not devices["0181A2B3"]["needs_pairing"]
+    assert app.info()["migration"]["previous_base_id"] == "FF000080"
+    assert any(t == "bridge/event" and p["type"] == "gateway_changed" for t, p in app.events)
