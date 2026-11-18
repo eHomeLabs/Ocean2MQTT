@@ -292,3 +292,26 @@ async def test_import_recovers_recom_code_of_existing(app: Ocean2MQTT, tmp_path)
     assert not app.store.devices["051E575A"]["recom_pending"]
     assert app.devices["051E575A"].recom_code == 0x1234ABCD
     assert app.store.devices["051E575A"]["name"] != "Radiateur salon"  # nom gardé
+
+
+async def test_recom_disabled(app: Ocean2MQTT) -> None:  # noqa: F811
+    """recom.enabled = false : aucune commande ReMan, pas de réglages ReCom ni d'onglet."""
+    rs = await _pair(app, "nodon/sin-2-rs-01", 0xD4, "A0 01 46 00 00 05 D2", 0x05A1B2C3)
+    keys = {s["key"] for s in rs["settings"]}
+    assert {"rs_switch_type", "calibration"} <= keys and rs["recom"]["session_until"] == 0
+    app.config.data["recom"]["enabled"] = False
+    app.gateway.reman_enabled = False
+    assert app.info()["recom_enabled"] is False
+    devices = {d["id"]: d for d in await app.request("devices")}
+    rs = devices["05A1B2C3"]
+    assert rs["recom"] is None
+    assert not {"rs_switch_type", "calibration"} & {s["key"] for s in rs["settings"]}
+    assert "travel_time" in {s["key"] for s in rs["settings"]}
+    before = len(app.dongle.sent)
+    with pytest.raises(RequestError, match="désactivé"):
+        await app.request("device/recom/unlock", {"id": "05A1B2C3"})
+    with pytest.raises(RequestError):
+        await app.request("device/set", {"id": "05A1B2C3", "payload": {"calibration": "classic"}})
+    # Garde au plus bas niveau : rien n'est émis, même en appelant la clé directement
+    assert not await app.gateway.unlock(0x05A1B2C3, app.gateway.sender_id(1), 0x1234)
+    assert len(app.dongle.sent) == before
