@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b8)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b9)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -38,7 +38,7 @@ Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLab
 **Réglages et Remote Commissioning**
 - **Réglages des produits** : LED, bouton local, télécommandes appairées en direct, détection de coupure, état au retour du courant, extinction automatique ou retardée par canal, type d'interrupteur filaire, temps de course et calibration du volet, répéteur, remise à zéro de l'énergie. Réglages appliqués par Ocean2MQTT : nombre de boutons, corrections de température et d'humidité, délai d'indisponibilité.
 - **Remote Commissioning** (ReMan / ReCom) des produits qui le gèrent. **Code de sécurité choisi à l'appairage** : *automatique* (calculé à partir de l'ID du produit et d'un secret propre à l'installation : toujours le même, impossible à deviner, retrouvable avec la sauvegarde), *saisi* (QR code 11Z… ou code au choix) ou *aucun* (réglages à distance seulement juste après une mise sous tension). **Détection du code** d'un produit qui en a déjà un (code enregistré, code automatique, code saisi), test Ping, lecture / ajout / suppression des télécommandes appairées, lecture des paramètres du volet, journal des opérations.
-- **Sécurité du Remote Commissioning** : le protocole EnOcean Remote Management n'est pas chiffré, le code d'un produit passe en clair à la radio lors d'un déverrouillage. Ocean2MQTT ne l'envoie que sur action de l'utilisateur, **demande confirmation avant chaque envoi**, garde le déverrouillage 10 minutes, ne montre jamais le code et le masque dans les journaux. Le Remote Commissioning peut être **désactivé complètement** (`recom.enabled: false` ou option de l'add-on) : aucune commande n'est alors envoyée.
+- **Sécurité du Remote Commissioning** : le protocole EnOcean Remote Management n'est pas chiffré, le code d'un produit passe en clair à la radio lors d'un déverrouillage. Ocean2MQTT ne l'envoie que sur action de l'utilisateur, **demande confirmation avant chaque envoi**, garde le déverrouillage 5 minutes (durée des produits, renouvelé au bout de 4), ne montre jamais le code et le masque dans les journaux. Le Remote Commissioning peut être **désactivé complètement** (`recom.enabled: false` ou option de l'add-on) : aucune commande n'est alors envoyée.
 
 **Migration et sauvegarde**
 - **Reprise depuis NodOcean for HA, sans réappairer** : l'add-on détecte NodOcean dans Home Assistant et reprend produits, noms, pièces, adresses d'émission et codes Remote Commissioning. Un assistant rappelle de désactiver NodOcean (une clé ne sert qu'à un seul logiciel).
@@ -78,7 +78,7 @@ Clés prises en charge : clés ESP3 en USB ou série (USB300, USB500, TCM310 / E
 | --- | --- | --- |
 | NodOn | ASP-2, CCS-2, CFS-2, CRC-2, CWS-2-1, MSP-2, PIR-2, SDO-2, SIN-2-1-01, SIN-2-2-01, SIN-2-FP-01, SIN-2-RS-01, STP-2, STPH-2, SWO-2, TSB-2 | Validé |
 | Ubiwizz | UBID1501S (prise avec mesure) | Validé |
-| Ubiwizz | MICITRV004 (tête thermostatique), SERFAH60 (luminosité), UBI10804192 (poignée), UBILD023 (CO2 / COV), UBID1220211 (fuite d'eau) | Communauté |
+| Ubiwizz | MICITRV004 (tête thermostatique), SERFAH60 (luminosité), UBI10804192 (poignée), UBILD023 (CO2 / COV), UBILD001 (détecteur de fumée), UBID1220211 (fuite d'eau) | Communauté |
 | Toutes | Mode générique : F6-02-01, F6-04-01, F6-05-01, F6-10-00, D5-00-01, A5-02-05, A5-04-01, A5-06-01, A5-07-03, A5-09-04, A5-09-05, A5-20-01, D2-01-xx, D2-05-00 | Générique |
 
 Votre produit n'est pas dans la liste ? Essayez le mode générique, puis proposez sa fiche (voir *Contribuer*).
