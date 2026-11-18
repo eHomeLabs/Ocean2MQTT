@@ -76,6 +76,56 @@ async def main(port: int, data: Path, empty: bool) -> None:
 
     app._task(watch_pairing())
 
+    # Remote Commissioning simulé (la clé de démo ne répond pas aux messages ReMan)
+    async def ping(*_args) -> bool:
+        await asyncio.sleep(0.3)
+        return True
+
+    app.gateway.ping = ping
+    for device in app.devices.values():
+        if not device.product.recom:
+            continue
+
+        def fake(device=device):
+            links = [{"index": 0, "id": "FEFC1234", "eep": "F6-02-01", "channel": 0},
+                     {"index": 1, "id": "0029ABCD", "eep": "D5-00-01", "channel": 255}]
+
+            async def read_links():
+                await asyncio.sleep(0.4)
+                device.state["links"], device.state["links_max"] = list(links), 22
+                device.notify({"links"})
+                return links
+
+            async def unlock():
+                await asyncio.sleep(0.4)
+                device.recom_code, device.recom_pending = 0x1234ABCD, False
+                return "assigned"
+
+            async def add_link(link_id, link_type):
+                links.append({"index": len(links), "id": f"{link_id:08X}", "eep": "F6-02-01"})
+                return await read_links() and len(links) - 1
+
+            async def delete_link(index):
+                links[:] = [x for x in links if x["index"] != index]
+                await read_links()
+
+            device.read_links, device.unlock_recom = read_links, unlock
+            device.add_link, device.delete_link = add_link, delete_link
+
+        fake()
+
+    # Émetteurs du voisinage pas encore appairés (suggestion automatique)
+    async def neighbours() -> None:
+        await asyncio.sleep(2)
+        dongle.inject(0xD5, bytes([0x00]), 0x0193E1F2, dbm=72)  # contact : teach-in 1BS
+        dongle.inject(0xA5, bytes.fromhex("24 20 46 80"), 0x0195C0FE, dbm=66)  # A5-09-04
+        while True:
+            await asyncio.sleep(20)
+            dongle.inject(0xF6, bytes([0x10]), 0xFEF0A1B2, dbm=80)
+
+    if not empty:
+        app._task(neighbours())
+
     async def life() -> None:
         while True:
             hum = random.randint(130, 150)
