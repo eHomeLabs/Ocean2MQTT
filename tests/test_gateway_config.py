@@ -189,3 +189,24 @@ async def test_remote_pairing_recom(app: Ocean2MQTT) -> None:  # noqa: F811
     assert app.store.devices["05112233"]["sender_offset"] is not None
     assert recom.FN_REMOTE_SET_LEARN == 0x220
     await asyncio.sleep(1.2)
+
+
+async def test_declare_actuator_with_known_sender(app: Ocean2MQTT) -> None:  # noqa: F811
+    """Actionneur appairé par une autre box avec la même clé : adresse d'émission reprise."""
+    base = app.gateway.info.base_id
+    device = await app.request("device/add", {"id": "05112233", "product": "nodon/sin-2-2-01",
+                                              "sender": f"0x{base + 5:08X}"})
+    assert device["actuator"] and app.store.devices["05112233"]["sender_offset"] == 5
+    await asyncio.sleep(0.1)
+    # Les commandes partent avec cette adresse
+    await app.request("device/set", {"id": "05112233", "payload": {"state_l1": "ON"}})
+    await asyncio.sleep(0.05)
+    sent = [tg for tg in app.dongle.sent if tg.destination == RELAY]
+    assert sent and sent[-1].sender == base + 5
+    with pytest.raises(RequestError, match="déjà utilisée"):
+        await app.request("device/add", {"id": "05445566", "product": "nodon/sin-2-2-01",
+                                         "sender": f"{base + 5:08X}"})
+    with pytest.raises(RequestError, match="n'appartient pas"):
+        await app.request("device/add", {"id": "05445566", "product": "nodon/sin-2-2-01",
+                                         "sender": "FFE56B80"})
+    await asyncio.sleep(1.5)
