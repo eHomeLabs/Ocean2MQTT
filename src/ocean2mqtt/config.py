@@ -77,32 +77,70 @@ def _env_overrides() -> dict:
     return out
 
 
+# Clés réglées depuis l'interface : elles l'emportent sur les variables d'environnement
+# (ex. serveur MQTT trouvé automatiquement par l'add-on). Liste « section.clé ».
+UI_KEY = "ui_overrides"
+
+
 class Config:
     def __init__(self, data_dir: Path) -> None:
         self.data_dir = Path(data_dir)
         self.path = self.data_dir / "configuration.yaml"
+        self.file: dict[str, Any] = deepcopy(DEFAULTS)  # contenu du fichier (sans l'env)
+        self.env: dict[str, Any] = {}
         self.data: dict[str, Any] = deepcopy(DEFAULTS)
 
     def load(self) -> Config:
         self.data_dir.mkdir(parents=True, exist_ok=True)
         if self.path.is_file():
             content = yaml.safe_load(self.path.read_text(encoding="utf-8")) or {}
-            self.data = _merge(DEFAULTS, content)
+            self.file = _merge(DEFAULTS, content)
         else:
             self.save()
             _LOGGER.info("Configuration créée : %s", self.path)
-        self.data = _merge(self.data, _env_overrides())
+        self.env = _env_overrides()
+        self._rebuild()
         return self
 
+    def _ui_keys(self) -> list[str]:
+        return list(self.file.get(UI_KEY) or [])
+
+    def _rebuild(self) -> None:
+        env = deepcopy(self.env)
+        for item in self._ui_keys():
+            section, _, key = item.partition(".")
+            env.get(section, {}).pop(key, None)
+        data = _merge(self.file, env)
+        data.pop(UI_KEY, None)
+        self.data = data
+
     def save(self) -> None:
+        """Écrit le fichier, sans les valeurs venues de l'environnement."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
-            yaml.safe_dump(self.data, allow_unicode=True, sort_keys=False), encoding="utf-8"
+            yaml.safe_dump(self.file, allow_unicode=True, sort_keys=False), encoding="utf-8"
         )
 
-    def update(self, section: str, values: dict[str, Any]) -> None:
-        self.data[section] = _merge(self.data.get(section, {}), values)
+    def update(self, section: str, values: dict[str, Any], ui: bool = False) -> None:
+        self.file[section] = _merge(self.file.get(section, {}), values)
+        if ui:
+            keys = set(self._ui_keys()) | {f"{section}.{k}" for k in values}
+            self.file[UI_KEY] = sorted(keys)
         self.save()
+        self._rebuild()
+
+    def reset_ui(self, section: str) -> None:
+        """Revient aux valeurs de l'environnement (réglage automatique) pour une section."""
+        self.file[UI_KEY] = [k for k in self._ui_keys() if not k.startswith(section + ".")]
+        if not self.file[UI_KEY]:
+            self.file.pop(UI_KEY)
+        self.save()
+        self._rebuild()
+
+    def is_auto(self, section: str) -> bool:
+        """Réglages venus de l'environnement (add-on) et non remplacés dans l'interface."""
+        ui = {k.partition(".")[2] for k in self._ui_keys() if k.startswith(section + ".")}
+        return bool(set(self.env.get(section, {})) - ui)
 
     def __getitem__(self, section: str) -> Any:
         return self.data[section]
@@ -110,6 +148,7 @@ class Config:
     def public(self) -> dict[str, Any]:
         """Configuration sans les mots de passe (pour l'interface et bridge/info)."""
         data = deepcopy(self.data)
+        data.pop(UI_KEY, None)
         for section in ("mqtt", "frontend"):
             if data.get(section, {}).get("password"):
                 data[section]["password"] = "********"

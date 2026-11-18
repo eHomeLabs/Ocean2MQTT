@@ -91,6 +91,9 @@ class Ocean2MQTT:
         self._stopping = False
         # Émetteurs entendus mais pas appairés (id -> infos), suggestion automatique
         self.unknown: dict[str, dict[str, Any]] = {}
+        # Pont MQTT en cours et relance après un changement de réglages (__main__)
+        self.mqtt_bridge: Any = None
+        self.mqtt_restart: Callable[[], Any] | None = None
         self.recom_log: deque[dict[str, Any]] = deque(maxlen=RECOM_LOG_MAX)
 
     # -- Diffusion -----------------------------------------------------------
@@ -200,6 +203,114 @@ class Ocean2MQTT:
             await device.configure_reporting()
             await asyncio.sleep(0.2)
         await device.refresh()
+
+    async def _write_base_id(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Écrit un Base ID dans la clé (ex. celui d'une clé HS : pas de réappairage)."""
+        if not self.gateway_ok or self.gateway.info is None:
+            raise RequestError("Clé EnOcean non connectée")
+        try:
+            value = str_to_id(str(data.get("base_id") or ""))
+        except ValueError as err:
+            raise RequestError("Base ID invalide (8 caractères hexadécimaux)") from err
+        if value == self.gateway.info.base_id:
+            raise RequestError("La clé a déjà ce Base ID")
+        try:
+            info = await self.gateway.write_base_id(value)
+        except GatewayError as err:
+            raise RequestError(str(err)) from err
+        new = id_to_str(info.base_id)
+        restored = []
+        if new == self.store.meta.get("previous_base_id"):
+            # Ancien Base ID repris : les actionneurs appairés avec lui répondent à nouveau
+            for entry in self.store.devices.values():
+                if entry.get("needs_pairing") and entry.get("sender_offset") is not None:
+                    entry.pop("needs_pairing", None)
+                    restored.append(entry["name"])
+            self.store.meta.pop("previous_base_id", None)
+            self.store.meta["base_id"] = new
+            self.store.save()
+        else:
+            # Autre Base ID : les actionneurs appairés avec l'ancien sont à réappairer
+            self._check_base_id()
+        _LOGGER.warning("Base ID de la clé changé en %s (%s écriture(s) restante(s))", new,
+                        info.base_id_writes_left)
+        self._publish_info()
+        self._publish_devices()
+        self._task(self._init_actuators())
+        return {"base_id": new, "writes_left": info.base_id_writes_left, "restored": restored}
+
+    # -- Serveur MQTT (modifiable depuis l'interface) -------------------------
+
+    MQTT_EDITABLE = ("host", "port", "username", "password", "base_topic", "topic_name",
+                     "discovery", "discovery_prefix", "tls")
+
+    def mqtt_settings(self) -> dict[str, Any]:
+        mqtt = self.config["mqtt"]
+        out = {k: mqtt.get(k) for k in self.MQTT_EDITABLE if k != "password"}
+        out["has_password"] = bool(mqtt.get("password"))
+        out["auto"] = self.config.is_auto("mqtt")
+        out["can_auto"] = bool(self.config.env.get("mqtt"))
+        out["connected"] = bool(self.mqtt_bridge and self.mqtt_bridge.connected)
+        return out
+
+    def _mqtt_values(self, data: dict[str, Any]) -> dict[str, Any]:
+        values: dict[str, Any] = {}
+        for key in self.MQTT_EDITABLE:
+            if key not in data:
+                continue
+            value = data[key]
+            if key == "password" and value in (None, ""):
+                continue  # mot de passe inchangé
+            if key == "port":
+                try:
+                    value = int(value)
+                except (TypeError, ValueError) as err:
+                    raise RequestError("Port MQTT invalide") from err
+                if not 1 <= value <= 65535:
+                    raise RequestError("Port MQTT invalide")
+            elif key in ("discovery", "tls"):
+                value = bool(value)
+            elif key == "topic_name":
+                if value not in ("name", "id"):
+                    raise RequestError("Nom des topics : name ou id")
+            else:
+                value = str(value).strip() if value is not None else None
+                if key in ("base_topic", "discovery_prefix"):
+                    value = (value or "").strip("/")
+                    if not value or any(c in value for c in "#+ "):
+                        raise RequestError("Topic invalide (sans espace, # ni +)")
+                if key == "host" and not value:
+                    raise RequestError("Adresse du serveur MQTT obligatoire")
+                if key == "username" and not value:
+                    value = None
+            values[key] = value
+        if data.get("clear_password"):
+            values["password"] = None
+        return values
+
+    async def _test_mqtt(self, data: dict[str, Any]) -> dict[str, Any]:
+        from .mqtt import test_connection
+
+        settings = {**self.config["mqtt"], **self._mqtt_values(data)}
+        error = await test_connection(settings)
+        if error:
+            raise RequestError(f"Connexion MQTT impossible : {error}")
+        return {"ok": True}
+
+    async def _set_mqtt(self, data: dict[str, Any]) -> dict[str, Any]:
+        if data.get("auto"):
+            # Retour au réglage automatique (add-on : Mosquitto du Supervisor)
+            self.config.reset_ui("mqtt")
+        else:
+            values = self._mqtt_values(data)
+            if not data.get("skip_test"):
+                await self._test_mqtt(data)
+            self.config.update("mqtt", values, ui=True)
+        if self.mqtt_restart is not None:
+            await self.mqtt_restart()
+        self._publish_devices()
+        self._publish_info()
+        return self.mqtt_settings()
 
     async def _init_actuators(self) -> None:
         for device in list(self.devices.values()):
@@ -452,7 +563,10 @@ class Ocean2MQTT:
                 "base_id": id_to_str(gw.base_id) if gw else None,
                 "chip_id": id_to_str(gw.chip_id) if gw and gw.chip_id else None,
                 "app_version": gw.app_version if gw else None,
+                "base_id_writes_left": gw.base_id_writes_left if gw else None,
             },
+            "mqtt": {"connected": bool(self.mqtt_bridge and self.mqtt_bridge.connected),
+                     "editable": self.mqtt_bridge is not None},
             "language": self.config["language"],
             "recom_enabled": self.recom_enabled,
             "pairing": self.pairing,
@@ -560,6 +674,14 @@ class Ocean2MQTT:
             return self.info()
         if command == "devices":
             return [self.device_dict(d) for d in self.devices.values()]
+        if command == "gateway/base_id":
+            return await self._write_base_id(data)
+        if command == "config/mqtt":
+            return self.mqtt_settings()
+        if command == "config/mqtt/test":
+            return await self._test_mqtt(data)
+        if command == "config/mqtt/set":
+            return await self._set_mqtt(data)
         if command == "library":
             products = self.library.search(data["search"]) if data.get("search") else list(
                 self.library.products.values())

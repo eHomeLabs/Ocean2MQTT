@@ -205,6 +205,55 @@ def _new_client(settings: dict[str, Any], client_id: str) -> mqtt.Client:
     return client
 
 
+async def test_connection(settings: dict[str, Any], timeout: float = 5.0) -> str | None:
+    """Essaie de se connecter au serveur MQTT ; None si OK, sinon le message d'erreur."""
+    import paho.mqtt.client as mqtt
+
+    loop = asyncio.get_running_loop()
+    done: asyncio.Future[str | None] = loop.create_future()
+
+    def _result(value: str | None) -> None:
+        if not done.done():
+            done.set_result(value)
+
+    def _on_connect(_c, _u, _f, reason_code, _p) -> None:
+        loop.call_soon_threadsafe(
+            _result, str(reason_code) if reason_code.is_failure else None)
+
+    try:
+        client = await loop.run_in_executor(None, _new_client, settings, "ocean2mqtt-test")
+    except (OSError, ValueError) as err:
+        return str(err)
+    client.on_connect = _on_connect
+    try:
+        await loop.run_in_executor(None, client.connect, settings["host"],
+                                   int(settings["port"]), 10)
+    except (OSError, ValueError, mqtt.WebsocketConnectionError) as err:
+        return str(err) or err.__class__.__name__
+    client.loop_start()
+    try:
+        return await asyncio.wait_for(done, timeout)
+    except TimeoutError:
+        return "pas de réponse du serveur"
+    finally:
+        client.disconnect()
+        client.loop_stop()
+
+
+async def restart_bridge(app: Ocean2MQTT) -> None:
+    """Nouveaux réglages MQTT : relance le pont (et nettoie l'ancien topic de base)."""
+    old = app.mqtt_bridge
+    new = MqttBridge(app)
+    if old is not None:
+        changed = (old.base, old.prefix, bool(old.settings.get("discovery"))) != (
+            new.base, new.prefix, bool(new.settings.get("discovery")))
+        same_server = (old.settings.get("host"), old.settings.get("port")) == (
+            new.settings.get("host"), new.settings.get("port"))
+        await old.stop(clear=changed and same_server)
+    app.mqtt_bridge = new
+    await new.start()
+
+
 class MqttBridge:
     def __init__(self, app: Ocean2MQTT) -> None:
         self.app = app
@@ -241,15 +290,26 @@ class MqttBridge:
             _LOGGER.warning("MQTT : %s", err)
         client.loop_start()
 
-    async def stop(self) -> None:
+    async def stop(self, clear: bool = False) -> None:
+        """Arrêt ; clear : efface les messages retenus (changement de topic ou de découverte)."""
         for unsub in self._unsubs:
             unsub()
+        self._unsubs = []
         client, self._client = self._client, None
         if client is None:
             return
 
         def _stop() -> None:
-            if self.connected:
+            if self.connected and clear:
+                topics = list(self._discovery) + [self._t(t) for t in self.app.retained]
+                for topic in topics:
+                    client.publish(topic, "", qos=1, retain=True)
+                info = client.publish(self._t("bridge/state"), "", qos=1, retain=True)
+                try:
+                    info.wait_for_publish(timeout=3)
+                except (RuntimeError, ValueError):
+                    pass
+            elif self.connected:
                 info = client.publish(self._t("bridge/state"), "offline", qos=1, retain=True)
                 try:
                     info.wait_for_publish(timeout=2)
