@@ -14,6 +14,7 @@ import logging
 import random
 import shutil
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
@@ -100,6 +101,7 @@ async def main(port: int, data: Path, empty: bool) -> None:
             async def unlock():
                 await asyncio.sleep(0.4)
                 device.recom_code, device.recom_pending = 0x1234ABCD, False
+                app.gateway._unlocked[device.device_id] = time.monotonic()  # session ouverte
                 return "assigned"
 
             async def add_link(link_id, link_type):
