@@ -47,6 +47,15 @@ async def main(port: int, data: Path, empty: bool) -> None:
     dongle.attach(app.gateway)
     app.gateway.connect = lambda: app.gateway.connect_transport(dongle)
     await app.start()
+    # Serveur MQTT simulé : réglages modifiables dans l'interface (enregistrés sans test)
+    from types import SimpleNamespace
+
+    app.mqtt_bridge = SimpleNamespace(connected=True)
+
+    async def no_restart() -> None:
+        return None
+
+    app.mqtt_restart = no_restart
     web = WebServer(app)
     await web.start()
 
