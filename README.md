@@ -8,7 +8,7 @@
 
 ---
 
-> 🧪 **Version bêta (0.2.0b7)** — à tester, pas encore pour une installation en production.
+> 🧪 **Version bêta (0.2.0b8)** — à tester, pas encore pour une installation en production.
 > **Beta release** — for testing, not yet for production use.
 
 <p align="center">
@@ -37,7 +37,7 @@ Ocean2MQTT s'appuie sur le code de [NodOcean for HA](https://github.com/eHomeLab
 
 **Réglages et Remote Commissioning**
 - **Réglages des produits** : LED, bouton local, télécommandes appairées en direct, détection de coupure, état au retour du courant, extinction automatique ou retardée par canal, type d'interrupteur filaire, temps de course et calibration du volet, répéteur, remise à zéro de l'énergie. Réglages appliqués par Ocean2MQTT : nombre de boutons, corrections de température et d'humidité, délai d'indisponibilité.
-- **Remote Commissioning** (ReMan / ReCom) des produits qui le gèrent : déverrouillage avec un code propre à chaque produit, saisie du code du QR code, test Ping, lecture / ajout / suppression des télécommandes appairées, lecture des paramètres du volet, journal des opérations.
+- **Remote Commissioning** (ReMan / ReCom) des produits qui le gèrent. **Code de sécurité choisi à l'appairage** : *automatique* (calculé à partir de l'ID du produit et d'un secret propre à l'installation : toujours le même, impossible à deviner, retrouvable avec la sauvegarde), *saisi* (QR code 11Z… ou code au choix) ou *aucun* (réglages à distance seulement juste après une mise sous tension). **Détection du code** d'un produit qui en a déjà un (code enregistré, code automatique, code saisi), test Ping, lecture / ajout / suppression des télécommandes appairées, lecture des paramètres du volet, journal des opérations.
 - **Sécurité du Remote Commissioning** : le protocole EnOcean Remote Management n'est pas chiffré, le code d'un produit passe en clair à la radio lors d'un déverrouillage. Ocean2MQTT ne l'envoie que sur action de l'utilisateur, **demande confirmation avant chaque envoi**, garde le déverrouillage 10 minutes, ne montre jamais le code et le masque dans les journaux. Le Remote Commissioning peut être **désactivé complètement** (`recom.enabled: false` ou option de l'add-on) : aucune commande n'est alors envoyée.
 
 **Migration et sauvegarde**
@@ -147,7 +147,7 @@ Requêtes `bridge/request/…` :
 | `device/rename`, `device/remove`, `device/set`, `device/get` | Gestion et commande d'un produit |
 | `device/compatible`, `device/change_product` | Fiches de même profil EEP, changement de fiche (`{"id": "…", "product": "nodon/cws-2-1"}`) |
 | `device/settings`, `device/settings/set` | Réglages (`{"id": "…", "key": "led", "value": false}`) |
-| `device/recom/<action>`, `recom/log` | Remote Commissioning : `status`, `ping`, `unlock`, `code`, `links`, `links/add`, `links/delete`, `config` |
+| `device/recom/<action>`, `recom/log` | Remote Commissioning : `status`, `ping`, `assign` (`mode`: `auto`, `custom`, `none`), `detect`, `unlock`, `code`, `links`, `links/add`, `links/delete`, `config` |
 | `telegrams` | Derniers télégrammes |
 
 La découverte automatique Home Assistant est activée par défaut (préfixe `homeassistant`).
@@ -180,7 +180,7 @@ Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a w
 - **My devices**: controls (on/off, channels, pilot wire mode, roller shutter, valve setpoint) and measurements (temperature, humidity, power, energy, light, CO2, VOC, contact, water leak, window handle…), last button action, availability and signal quality.
 - **Power and energy**: automatic measurement reporting is configured on metering devices, and actuators are polled every 60 s.
 - **Device settings**: LED, local button, power-on state, auto off / delay off per channel, wired switch type, shutter travel time and calibration, repeater, energy reset, measurement offsets, unavailability timeout.
-- **Remote Commissioning** (ReMan / ReCom): unlock with a per-device code, QR code entry, ping, read / add / delete paired remotes, read shutter parameters, operation log. The protocol is not encrypted (the code is sent in clear when unlocking): Ocean2MQTT asks for confirmation before each send, and Remote Commissioning can be disabled completely (`recom.enabled: false`).
+- **Remote Commissioning** (ReMan / ReCom): security code chosen at pairing — *automatic* (derived from the device ID and an installation secret: always the same, impossible to guess, recoverable from the backup), *entered* (QR code 11Z… or your own) or *none*; code detection for devices that already have one; ping, read / add / delete paired remotes, read shutter parameters, operation log. The protocol is not encrypted (the code is sent in clear when unlocking): Ocean2MQTT asks for confirmation before each send, and Remote Commissioning can be disabled completely (`recom.enabled: false`).
 - **Live telegram log** with filters and CSV export; list of heard but unpaired devices.
 - **Migration from NodOcean for HA without re-pairing** (same stick), NodOcean export file import, sensors-only import or fresh install with another stick, stick change detection with one-click re-pairing, backup and restore.
 - **MQTT bridge** with Zigbee2MQTT-like topics and **Home Assistant discovery** (settings become configuration entities).
