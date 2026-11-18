@@ -32,6 +32,13 @@ def test_a50905_voc() -> None:
     assert eep.decode_a50905(t(0xA5, "04 D2 00 08")) == {"voc": 12.34}
 
 
+def test_f60502_smoke() -> None:
+    assert eep.decode_f60502(t(0xF6, "10")) == {"smoke": True}
+    assert eep.decode_f60502(t(0xF6, "00")) == {"smoke": False}
+    assert eep.decode_f60502(t(0xF6, "30")) == {"battery_low": True}
+    assert eep.decode_f60502(t(0xF6, "50")) is None
+
+
 def test_f60501_water_leak() -> None:
     assert eep.decode_f60501(t(0xF6, "11")) == {"water_leak": True}
     assert eep.decode_f60501(t(0xF6, "00")) == {"water_leak": False}
