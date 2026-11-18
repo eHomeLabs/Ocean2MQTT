@@ -146,3 +146,18 @@ async def test_other_base_id_flags_actuators(app: Ocean2MQTT) -> None:  # noqa: 
     result = await app.request("gateway/base_id", {"base_id": old})
     assert len(result["restored"]) == 1 and "needs_pairing" not in app.store.devices["05112233"]
     await asyncio.sleep(0)
+
+
+async def test_add_by_enocean_id(app: Ocean2MQTT) -> None:  # noqa: F811
+    """Produit ajouté par son identifiant, sans télégramme d'apprentissage."""
+    device = await app.request("device/add", {"id": " 0x0199aabb", "product": "generique/F6-02-01"})
+    assert device["id"] == "0199AABB"
+    app.dongle.inject(0xF6, bytes([0x30]), 0x0199AABB, status=0x30)
+    await asyncio.sleep(0.05)
+    assert "0199AABB" in app.last_seen  # reconnu dès son premier télégramme
+    base = app.gateway.info.base_id
+    for bad in ("00000000", "FFFFFFFF", f"{base + 5:08X}"):
+        with pytest.raises(RequestError, match="réservée"):
+            await app.request("device/add", {"id": bad, "product": "generique/F6-02-01"})
+    with pytest.raises(RequestError, match="actionneur"):
+        await app.request("device/add", {"id": "05999999", "product": "nodon/sin-2-1-01"})
