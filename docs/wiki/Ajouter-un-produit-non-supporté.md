@@ -19,7 +19,7 @@ La plupart des produits EnOcean respectent un **profil EEP** (EnOcean Equipment 
 
 1. **Ajouter un produit** → tuile **Générique**.
 2. Choisissez le profil EEP du produit (il figure souvent dans sa notice ou sa fiche technique, ou sur le site de la marque).
-3. Lancez l'appairage et mettez le produit en mode apprentissage (voir sa notice).
+3. Lancez l'appairage et mettez le produit en mode apprentissage (voir sa notice). Pas d'accès à son bouton ? Pour un capteur ou un interrupteur, **« Ajouter avec l'identifiant EnOcean »** sous le bouton d'appairage.
 
 Profils proposés en mode générique :
 

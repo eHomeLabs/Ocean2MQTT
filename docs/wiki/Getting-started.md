@@ -10,6 +10,8 @@
 
 The device appears in **My devices** and in Home Assistant under **Settings → Devices & services → MQTT**.
 
+**No access to the learn button?** For a **sensor or switch**, open its sheet and use **"Add with the EnOcean ID"** (8 hex characters, on the label, box or QR code, or in the Telegrams page). Not possible for an actuator, which must learn Ocean2MQTT's address through its pairing procedure.
+
 Ocean2MQTT listens all the time: when an unknown device sends its teach-in, a **"This device looks like"** banner suggests matching sheets; sensors and switches are then added in one click.
 
 Device sheet tabs: **Control**, **Settings** (LED, power-on state, auto-off… also through MQTT `/set`), **Remote Commissioning**, **Telegrams**, **Information** (ID, topic, EEP, manual, **change sheet** without re-pairing, rename, remove).

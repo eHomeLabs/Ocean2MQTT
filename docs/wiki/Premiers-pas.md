@@ -12,6 +12,12 @@
 
 Le produit apparaît dans **Mes produits** et, dans Home Assistant, dans **Paramètres → Appareils et services → MQTT**.
 
+### Sans accès au bouton d'apprentissage : par l'identifiant EnOcean
+
+Pour un **capteur ou un interrupteur** (produit déjà installé, bouton inaccessible…), ouvrez sa fiche puis **« Pas d'accès au bouton d'apprentissage ? Ajouter avec l'identifiant EnOcean »** : saisissez son identifiant (8 caractères hexadécimaux, ex. `0512ABCD`, sur l'étiquette, l'emballage ou le QR code du produit, ou dans la page **Télégrammes** s'il a déjà émis). Il est reconnu dès son télégramme suivant.
+
+Impossible pour un **actionneur** : il doit apprendre l'adresse d'Ocean2MQTT, ce que fait sa procédure d'appairage.
+
 ### Capteurs et interrupteurs déjà entendus
 
 Ocean2MQTT écoute en permanence. Quand un émetteur inconnu envoie sa demande d'appairage, un bandeau **« Ce produit ressemble à »** propose les fiches qui correspondent (code fabricant + profil EEP). Les capteurs et interrupteurs s'ajoutent alors en un clic.
