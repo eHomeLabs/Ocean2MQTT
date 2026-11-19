@@ -33,6 +33,7 @@ DEMO = [
     (0x01A3C4D5, "nodon/msp-2", "Lave-linge", "Cuisine", (0xD4, "A0 01 46 00 0E 01 D2")),
     (0x05B2C3D4, "nodon/sin-2-2-01", "Éclairage entrée", "Entrée", (0xD4, "A0 02 46 00 12 01 D2")),
     (0x002C3D4E, "nodon/cws-2-1", "Interrupteur salon", "Salon", (0xF6, "30")),
+    (0x01FA6060, "eltako/faft60", "Sonde jardin", "Jardin", (0xA5, "10 10 0D 80")),
 ]
 
 
