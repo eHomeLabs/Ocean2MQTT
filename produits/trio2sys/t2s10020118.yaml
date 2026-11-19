@@ -1,0 +1,29 @@
+ref: T2S10020118
+marque: Trio2sys
+nom:
+  fr: Récepteur modulaire 1 canal 16 A
+  en: 1-channel 16 A DIN rail receiver
+type: actionneur
+eep: D2-01-01
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Le récepteur doit être sous tension.
+    - 'Appuyez sur la touche LRN du récepteur pour le mettre en mode appairage (voir sa notice) : il envoie
+      sa demande d''appairage et Ocean2MQTT répond automatiquement.'
+    en:
+    - The receiver must be powered.
+    - 'Press the receiver''s LRN key to put it in pairing mode (see its manual): it sends its teach-in
+      request and Ocean2MQTT answers automatically.'
+variantes:
+- '10020118'
+recom: true
+reglages:
+- power_on_state
+- local_control
+notice: https://www.enocean-alliance.org/product/trio2sys-din-rail-receiver-1-channel-enocean-16a/
+notes: Rail DIN, 16 A, répéteur, retour d'état et Remote Commissioning. Fiche créée d'après la fiche produit
+  de l'EnOcean Alliance ; à confirmer sur produit réel.
+support: communaute
+photo: t2s10020118.png

@@ -1,0 +1,28 @@
+ref: T2S10020110
+marque: Trio2sys
+nom:
+  fr: Récepteur modulaire LED 4 canaux avec mesure
+  en: 4-channel modular LED receiver with metering
+type: actionneur
+eep: D2-01-00
+canaux: 4
+mesure: true
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Le récepteur doit être sous tension.
+    - 'Appuyez sur la touche LRN du récepteur pour le mettre en mode appairage (voir sa notice) : il envoie
+      sa demande d''appairage et Ocean2MQTT répond automatiquement.'
+    en:
+    - The receiver must be powered.
+    - 'Press the receiver''s LRN key to put it in pairing mode (see its manual): it sends its teach-in
+      request and Ocean2MQTT answers automatically.'
+variantes:
+- '10020110'
+notice: https://www.enocean-alliance.org/product/trio2sys-4-channel-modular-led-receiver-with-enocean-metering/
+notes: 'Rail DIN, 4 × 1,5 A, répéteur et retour d''état. Profil annoncé D2-01-00 : le type exact est pris
+  dans la demande d''appairage. Fiche créée d''après la fiche produit de l''EnOcean Alliance ; à confirmer
+  sur produit réel.'
+support: communaute
+photo: t2s10020110.png
