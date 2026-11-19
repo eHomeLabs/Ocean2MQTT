@@ -1,0 +1,21 @@
+ref: 60_CO2_SLR_TMP_HUM_868
+marque: Pressac
+nom:
+  fr: Capteur CO2, température et humidité
+  en: CO2, temperature and humidity sensor
+type: capteur
+eep: A5-09-04
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - 'Appuyez sur le bouton LRN du produit : il envoie son télégramme d''apprentissage.'
+    en:
+    - 'Press the product''s LRN button: it sends its teach-in telegram.'
+notice: https://www.pressac.com/wp-content/uploads/datasheet_pressac_co2-temp-humidity-3.pdf
+notes: CO2 0-2550 ppm, température 0-51 °C, humidité 0-100 % ; mesure toutes les 5 min (solaire). Fiche
+  créée d'après la fiche produit de l'EnOcean Alliance ; à confirmer sur produit réel.
+reglages:
+- timeout
+support: communaute
+photo: 60_co2_slr_tmp_hum_868.png
