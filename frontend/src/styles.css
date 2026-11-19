@@ -317,3 +317,4 @@ a.button.secondary { display: inline-flex; align-items: center; align-self: flex
 .icon-btn.remove:hover { border-color: var(--warn); }
 .list-columns input[type="checkbox"] { width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--action); }
 .device-list td { padding-top: 7px; padding-bottom: 7px; }
+.link-name { margin-left: 8px; }

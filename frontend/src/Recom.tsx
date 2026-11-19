@@ -119,7 +119,7 @@ function RecomLogTable({ entries }: { entries: { time: string; name: string; act
 }
 
 export function RecomPanel({ device, onError }: { device: Device; onError: (m: string) => void }) {
-  const { recomLog, info } = useStore();
+  const { recomLog, info, devices } = useStore();
   const recom = device.recom!;
   const [busy, setBusy] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -242,6 +242,10 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
                     <td className="muted">#{l.index}</td>
                     <td>
                       <code>{l.id}</code>
+                      {(() => {
+                        const mine = devices.find((d) => d.id.toUpperCase() === l.id.toUpperCase());
+                        return mine ? <span className="muted small link-name"> {mine.name}</span> : null;
+                      })()}
                       {isGatewayId(l.id) && (
                         <span className="badge valide gw-badge" title={t("recom.gatewayLinkHint")}>
                           Gateway Control
@@ -292,6 +296,17 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
             {t("recom.linkAddBtn")}
           </button>
         </form>
+        <MyRemotes
+          device={device}
+          devices={devices}
+          accepted={recom.link_types}
+          linked={(links ?? []).map((l) => l.id.toUpperCase())}
+          value={linkId.trim().toUpperCase()}
+          onPick={(id, type) => {
+            setLinkId(id);
+            setLinkType(type);
+          }}
+        />
       </section>
 
       {isShutter && (
@@ -337,4 +352,59 @@ function gatewayIdMatcher(info: Info | null | undefined): (id: string) => boolea
     const value = parseInt(up, 16);
     return !Number.isNaN(value) && ranges.some((b) => value >= b && value < b + 128);
   };
+}
+
+/** Type de lien ReCom correspondant au profil d'un de mes produits (émetteur). */
+export function linkTypeFor(eep: string): string | null {
+  if (eep.startsWith("F6-02")) return "rocker_a";
+  if (eep === "F6-04-01") return "key_card";
+  if (eep.startsWith("F6-10")) return "window_handle";
+  if (eep === "D5-00-01") return "contact";
+  if (eep.startsWith("A5-07")) return "motion";
+  if (eep === "D2-03-0A") return "soft_button";
+  return null;
+}
+
+/** Choisir l'émetteur parmi mes produits appairés plutôt que de saisir son identifiant. */
+function MyRemotes({ device, devices, accepted, linked, value, onPick }: {
+  device: Device;
+  devices: Device[];
+  accepted: string[];
+  linked: string[];
+  value: string;
+  onPick: (id: string, type: string) => void;
+}) {
+  const candidates = devices
+    .filter((d) => d.id !== device.id && !d.actuator)
+    .map((d) => ({ d, type: linkTypeFor(d.product.eep) }))
+    .filter((c): c is { d: Device; type: string } => c.type !== null)
+    .sort((a, b) => a.d.name.localeCompare(b.d.name));
+  if (!candidates.length) return null;
+  const current = candidates.find((c) => c.d.id === value)?.d.id ?? "";
+  return (
+    <label className="field">
+      {t("recom.linkPick")}
+      <select
+        value={current}
+        onChange={(e) => {
+          const c = candidates.find((x) => x.d.id === e.target.value);
+          if (c) onPick(c.d.id, c.type);
+        }}
+      >
+        <option value="">{t("recom.linkPickNone")}</option>
+        {candidates.map(({ d, type }) => {
+          const ok = accepted.includes(type);
+          const already = linked.includes(d.id.toUpperCase());
+          return (
+            <option key={d.id} value={d.id} disabled={!ok}>
+              {d.name}
+              {d.room ? ` (${d.room})` : ""} — {d.product.brand} {d.product.model} · {d.id}
+              {already ? ` · ${t("recom.linkPickAlready")}` : ""}
+              {!ok ? ` · ${t("recom.linkPickRefused")}` : ""}
+            </option>
+          );
+        })}
+      </select>
+    </label>
+  );
 }
