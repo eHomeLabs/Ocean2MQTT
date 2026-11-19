@@ -33,6 +33,8 @@ GENERIC_EEPS: dict[str, tuple[str, str, str, str]] = {
                  "Temperature sensor (0-40 °C)"),
     "A5-04-01": ("capteur", TEACH_4BS, "Capteur de température et d'humidité",
                  "Temperature and humidity sensor"),
+    "A5-04-02": ("capteur", TEACH_4BS, "Capteur de température (-20 à +60 °C) et d'humidité",
+                 "Temperature (-20 to +60 °C) and humidity sensor"),
     "A5-06-01": ("capteur", TEACH_4BS, "Capteur de luminosité", "Light sensor"),
     "A5-07-03": ("capteur", TEACH_4BS, "Détecteur de mouvement et luminosité",
                  "Motion and light sensor"),
