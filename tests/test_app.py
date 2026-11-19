@@ -17,6 +17,14 @@ STPH = 0x0181A2B3
 VALVE = 0x01A0B0C0
 
 
+async def _stop_broker(broker) -> None:
+    """Arrêt du broker de test borné : amqtt attend parfois sans fin la fin des sessions."""
+    try:
+        await asyncio.wait_for(broker.shutdown(), 5)
+    except TimeoutError:
+        pass
+
+
 def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -224,10 +232,10 @@ async def test_mqtt_bridge_end_to_end(app: Ocean2MQTT) -> None:
         assert response["status"] == "ok" and response["transaction"] == 1
         assert response["data"][0]["id"] == "051E575A"
     finally:
-        client.loop_stop()
         client.disconnect()
-        await bridge.stop()
-        await broker.shutdown()
+        await asyncio.get_running_loop().run_in_executor(None, client.loop_stop)
+        await asyncio.wait_for(bridge.stop(), 10)
+        await _stop_broker(broker)
 
 
 def test_moved_sheet_ids_are_migrated(tmp_path) -> None:

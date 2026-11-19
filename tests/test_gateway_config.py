@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from test_app import _free_port, _pair, app  # noqa: F401 (fixture)
+from test_app import _free_port, _pair, _stop_broker, app  # noqa: F401 (fixture)
 
 from ocean2mqtt.app import Ocean2MQTT, RequestError
 from ocean2mqtt.config import Config
@@ -87,7 +87,7 @@ async def test_mqtt_settings_from_interface(app: Ocean2MQTT) -> None:  # noqa: F
         mq = await app.request("config/mqtt", {})
         assert mq["base_topic"] == "maison" and mq["editable"]
     finally:
-        await broker.shutdown()
+        await _stop_broker(broker)
 
 
 async def test_mqtt_restart_moves_base_topic(app: Ocean2MQTT) -> None:  # noqa: F811
@@ -130,10 +130,10 @@ async def test_mqtt_restart_moves_base_topic(app: Ocean2MQTT) -> None:  # noqa: 
         assert received["ocean2mqtt/bridge/state"] == ""  # ancien topic nettoyé
         assert (await app.request("info", {}))["mqtt"]["connected"]
     finally:
-        client.loop_stop()
         client.disconnect()
-        await app.mqtt_bridge.stop()
-        await broker.shutdown()
+        await loop.run_in_executor(None, client.loop_stop)
+        await asyncio.wait_for(app.mqtt_bridge.stop(), 10)
+        await _stop_broker(broker)
 
 
 async def test_other_base_id_flags_actuators(app: Ocean2MQTT) -> None:  # noqa: F811
