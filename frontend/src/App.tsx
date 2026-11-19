@@ -3,6 +3,7 @@ import { AddProduct } from "./AddProduct";
 import { clearError, refresh, request, useStore } from "./api";
 import { DeviceCard } from "./DeviceCard";
 import { DeviceDetail } from "./DeviceDetail";
+import { DeviceList } from "./DeviceList";
 import { getLang, setLang, t, type Key, type Lang } from "./i18n";
 import { BaseIdSection, MqttSection } from "./Gateway";
 import { LogoMark, Wordmark } from "./Logo";
@@ -24,6 +25,21 @@ const PAGES: [Page, Key][] = [
 export function App() {
   const [page, setPage] = useState<Page>("products");
   const [room, setRoom] = useState("");
+  const [view, setView] = useState<"cards" | "list">(() => {
+    try {
+      return localStorage.getItem("o2m-products-view") === "list" ? "list" : "cards";
+    } catch {
+      return "cards";
+    }
+  });
+  const changeView = (v: "cards" | "list") => {
+    setView(v);
+    try {
+      localStorage.setItem("o2m-products-view", v);
+    } catch {
+      /* pas grave */
+    }
+  };
   const [open, setOpen] = useState<Open | null>(null);
   const [migration, setMigration] = useState<MigrationTarget | null>(null);
   const [preset, setPreset] = useState<string | null>(null);
@@ -117,6 +133,14 @@ export function App() {
                   ))}
                 </select>
               </label>
+              <div className="segmented two view-switch" role="group" aria-label={t("list.list")}>
+                {(["cards", "list"] as const).map((v) => (
+                  <button key={v} type="button" aria-pressed={view === v} className={view === v ? "active" : ""} onClick={() => changeView(v)}>
+                    {t(v === "cards" ? "list.cards" : "list.list")}
+                  </button>
+                ))}
+              </div>
+              <span className="spacer" />
               <button type="button" className="primary" onClick={() => setPage("add")}>
                 {t("products.add")}
               </button>
@@ -129,6 +153,8 @@ export function App() {
                   {t("nav.add")}
                 </button>
               </div>
+            ) : view === "list" ? (
+              <DeviceList devices={shown} states={states} availability={availability} onOpen={(d, tab) => setOpen({ id: d.id, tab })} onError={onError} />
             ) : (
               <div className="grid">
                 {shown.map((d) => (
