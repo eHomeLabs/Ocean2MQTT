@@ -1,0 +1,25 @@
+ref: FHD60SB
+marque: Eltako
+nom:
+  fr: Capteur de luminosité et crépusculaire
+  en: Brightness and twilight sensor
+type: capteur
+eep: A5-06-01
+decodeur: eltako_brightness
+fabricant_id: 13
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - 'Tenez l''aimant fourni contre le repère ■ du capteur : il envoie son télégramme d''apprentissage
+      (mode FAH).'
+    en:
+    - 'Hold the supplied magnet against the ■ mark of the sensor: it sends its teach-in telegram (FAH
+      mode).'
+notice: https://www.eltako.com/fileadmin/downloads/fr/_bedienung/FHD60SB_30000462-1_fr.pdf
+notes: 'Format A5-06-01 propre à Eltako : 0 à 100 lx (DB3, si DB2 = 0) et 300 à 30 000 lx (DB2). Fiche
+  créée d''après la fiche produit de l''EnOcean Alliance ; à confirmer sur produit réel.'
+reglages:
+- timeout
+support: communaute
+photo: fhd60sb.png

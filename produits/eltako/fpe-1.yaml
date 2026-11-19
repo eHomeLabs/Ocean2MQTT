@@ -1,0 +1,22 @@
+ref: FPE-1
+marque: Eltako
+nom:
+  fr: Interrupteur de position sans pile (levier)
+  en: Battery-free position switch (lever)
+type: interrupteur
+eep: F6-01-01
+fabricant_id: 13
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - 'Appuyez sur le levier : le premier télégramme sert à l''appairage.'
+    en:
+    - 'Press the lever: the first telegram is used for pairing.'
+notice: https://www.eltako.com/fileadmin/downloads/en/_datasheets/Datasheet_FPE-1.pdf
+notes: Appui = 0x10, relâchement = 0x00 (comme un bouton-poussoir). Fiche créée d'après la fiche produit
+  de l'EnOcean Alliance ; à confirmer sur produit réel.
+reglages:
+- timeout
+support: communaute
+photo: fpe-1.png
