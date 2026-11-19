@@ -105,8 +105,10 @@ async def main(port: int, data: Path, empty: bool) -> None:
             continue
 
         def fake(device=device):
-            links = [{"index": 0, "id": "FEFC1234", "eep": "F6-02-01", "channel": 0},
-                     {"index": 1, "id": "0029ABCD", "eep": "D5-00-01", "channel": 255}]
+            base = app.gateway.info.base_id if app.gateway.info else 0xFF800000
+            links = [{"index": 0, "id": f"{base + 2:08X}", "eep": "A5-38-08", "channel": 0},
+                     {"index": 1, "id": "FEFC1234", "eep": "F6-02-01", "channel": 0},
+                     {"index": 2, "id": "0029ABCD", "eep": "D5-00-01", "channel": 255}]
 
             async def read_links():
                 await asyncio.sleep(0.4)
