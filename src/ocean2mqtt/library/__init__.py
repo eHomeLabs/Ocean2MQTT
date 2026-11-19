@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -253,10 +254,12 @@ def check_file(path: Path, root: Path, validator=None) -> list[str]:
         errors.append(f"{where} : {err.message}")
     if errors:
         return errors
-    if path.stem != data["ref"].lower().replace(" ", "-"):
-        errors.append(f"le fichier doit s'appeler {data['ref'].lower().replace(' ', '-')}.yaml")
-    if path.parent.name != data["marque"].lower():
-        errors.append(f"la fiche doit être rangée dans produits/{data['marque'].lower()}/")
+    # L'identifiant de la fiche (dossier/fichier) sert aux produits déjà appairés : il ne
+    # doit pas changer quand on corrige la marque ou la référence. On vérifie seulement
+    # qu'il est bien formé (minuscules, chiffres, - _ .).
+    for part, what in ((path.parent.name, "dossier"), (path.stem, "nom de fichier")):
+        if not re.fullmatch(r"[a-z0-9][a-z0-9_.-]*", part):
+            errors.append(f"{what} invalide : « {part} » (minuscules, chiffres, - _ .)")
     for code in [data.get("decodeur") or data["eep"], *data.get("eep_supplementaires", [])]:
         if not supported(code):
             errors.append(f"aucun décodeur pour {code}")
