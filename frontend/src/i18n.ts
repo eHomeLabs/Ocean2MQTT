@@ -748,6 +748,10 @@ const KEYS: Record<Lang, Record<string, string>> = {
     calibration: "Calibration", repeater: "Répéteur", energy_reset: "Remise à zéro de l'énergie",
     buttons: "Nombre de boutons", temperature_offset: "Correction de température",
     humidity_offset: "Correction d'humidité", timeout: "Indisponible après (0 = jamais)",
+    occupancy_button: "Bouton de présence", wake: "Réveil (WA0)", input_0: "Entrée 0",
+    input_1: "Entrée 1", input_2: "Entrée 2", input_3: "Entrée 3",
+    acceleration_status: "Accélération (état)", acceleration_x: "Accélération X",
+    acceleration_y: "Accélération Y", acceleration_z: "Accélération Z",
   },
   en: {
     temperature: "Temperature", humidity: "Humidity", power: "Power", energy: "Energy",
@@ -763,6 +767,10 @@ const KEYS: Record<Lang, Record<string, string>> = {
     repeater: "Repeater", energy_reset: "Reset energy", buttons: "Number of buttons",
     temperature_offset: "Temperature offset", humidity_offset: "Humidity offset",
     timeout: "Unavailable after (0 = never)",
+    occupancy_button: "Occupancy button", wake: "Wake (WA0)", input_0: "Input 0",
+    input_1: "Input 1", input_2: "Input 2", input_3: "Input 3",
+    acceleration_status: "Acceleration (status)", acceleration_x: "Acceleration X",
+    acceleration_y: "Acceleration Y", acceleration_z: "Acceleration Z",
   },
 };
 
@@ -783,6 +791,7 @@ const OPTIONS: Record<Lang, Record<string, string>> = {
     "links/add": "Ajout de lien", "links/delete": "Suppression de lien", config: "Lecture des paramètres",
     assigned: "code attribué", unlocked: "déverrouillé", assign: "Attribution du code", detect: "Détection du code", remote_learn: "Appairage à distance",
     "code auto": "code automatique trouvé", "code custom": "code saisi trouvé", "code random": "code aléatoire trouvé", "sans code": "sans code",
+    periodic: "Périodique", threshold_1: "Seuil 1 dépassé", threshold_2: "Seuil 2 dépassé",
   },
   en: {
     off: "Off", comfort: "Comfort", eco: "Eco", frost_protection: "Frost protection", comfort_1: "Comfort -1",
@@ -790,6 +799,7 @@ const OPTIONS: Record<Lang, Record<string, string>> = {
     left_up: "Left up", left_down: "Left down", right_up: "Right up", right_down: "Right down",
     release: "Released", press: "Press", single: "Single press", double: "Double press", long: "Long press",
     long_release: "Long press released", previous: "As before", on: "On",
+    periodic: "Periodic", threshold_1: "Threshold 1 exceeded", threshold_2: "Threshold 2 exceeded",
     auto: "Automatic", switch: "Switch", switch_2_state: "2-state switch", push_button: "Push button",
     level_1: "Level 1", level_2: "Level 2", classic: "Classic", complex: "Complex", stop: "Stop",
     reset: "Reset", type_1: "Type 1", type_2: "Type 2", type_3: "Type 3", type_4: "Type 4",

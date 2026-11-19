@@ -289,3 +289,4 @@ a.tile.propose { text-decoration: none; color: inherit; border-style: dashed; }
 @media (max-width: 640px) { .tg-filters .tg-search { grid-column: auto; } .tg-count { grid-column: auto; justify-content: flex-start; } }
 .settings-page { max-width: 900px; }
 .gw-badge { margin-left: 8px; vertical-align: middle; }
+.model { overflow-wrap: anywhere; }
