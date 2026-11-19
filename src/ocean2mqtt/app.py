@@ -45,7 +45,7 @@ from .core.gateway import Gateway, GatewayError, ReComError
 from .core.pairing import wait_for_teach_in
 from .core.product import Product
 from .core.settings import SettingError, apply_setting, describe, is_setting
-from .library import Library, load_library
+from .library import ALIASES, Library, load_library
 from .migration import MigrationError, Source, make_backup, parse_file, read_homeassistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,6 +75,7 @@ class Ocean2MQTT:
         self.config = config
         self.library = library or load_library()
         self.store = DeviceStore(config.data_dir).load()
+        self._migrate_product_ids()
         if not self.store.meta.get("recom_secret"):
             self.store.meta["recom_secret"] = recom.new_secret()
             self.store.save()
@@ -127,6 +128,17 @@ class Ocean2MQTT:
         return task
 
     # -- Cycle de vie --------------------------------------------------------
+
+    def _migrate_product_ids(self) -> None:
+        """Fiches déplacées (marque d'origine) : met à jour les produits déjà appairés."""
+        changed = False
+        for entry in self.store.devices.values():
+            if (new := ALIASES.get(entry.get("product", ""))) is not None:
+                _LOGGER.info("%s : fiche %s renommée en %s", entry.get("name"), entry["product"], new)
+                entry["product"] = new
+                changed = True
+        if changed:
+            self.store.save()
 
     async def start(self) -> None:
         self.gateway.on_disconnect = self._on_gateway_lost
