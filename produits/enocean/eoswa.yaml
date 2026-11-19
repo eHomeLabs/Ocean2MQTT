@@ -1,0 +1,27 @@
+ref: EOSWA
+marque: EnOcean
+nom:
+  fr: Détecteur de présence mural
+  en: Wall-mounted occupancy sensor
+type: capteur
+eep: A5-07-01
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - 'Appuyez une fois sur le bouton de liaison (« Menu ») du détecteur : la LED verte clignote et le
+      télégramme d''apprentissage est envoyé.'
+    en:
+    - 'Press the detector''s link ("Menu") button once: the green LED blinks and the teach-in telegram
+      is sent.'
+variantes:
+- EOSWA
+- EOSWU
+- EOSWJ
+notice: https://www.enocean-alliance.org/product/eoswa-eoswu-eoswj-wall-mounted-occupancy-sensor-868-902-928-mhz/
+notes: Autonome (cellule solaire). Présence et tension du stockage d'énergie (A5-07-01). Fiche créée d'après
+  la fiche produit de l'EnOcean Alliance ; à confirmer sur produit réel.
+reglages:
+- timeout
+support: communaute
+photo: eoswa.png

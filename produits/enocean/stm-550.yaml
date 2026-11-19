@@ -1,0 +1,25 @@
+ref: STM 550
+marque: EnOcean
+nom:
+  fr: Multicapteur (module)
+  en: Multisensor module
+type: capteur
+eep: D2-14-41
+appairage:
+  mode: ute_uni
+  etapes:
+    fr:
+    - 'Appuyez sur le bouton LRN du module : il envoie sa demande d''appairage (D2-14-41, profil par défaut).'
+    en:
+    - 'Press the module''s LRN button: it sends its teach-in request (D2-14-41, default profile).'
+variantes:
+- STM 550
+- EMSIA
+notice: https://www.enocean-alliance.org/product/stm-550-stm-550u-stm-550j-multisensor-module-868-902-928-mhz/
+notes: 'Température, humidité, luminosité, accélération et contact magnétique. Le profil se change par
+  NFC : seul le D2-14-41 (par défaut) est décrit ici. Fiche créée d''après la fiche produit de l''EnOcean
+  Alliance ; à confirmer sur produit réel.'
+reglages:
+- timeout
+support: communaute
+photo: stm-550.png

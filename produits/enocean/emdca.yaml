@@ -1,0 +1,26 @@
+ref: EMDCA
+marque: EnOcean
+nom:
+  fr: Détecteur de mouvement et luminosité (Easyfit)
+  en: Motion detector with illumination sensor (Easyfit)
+type: capteur
+eep: A5-07-03
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - 'Appuyez une fois sur le bouton LRN : la LED clignote et le télégramme d''apprentissage est envoyé.'
+    en:
+    - 'Press the LRN button once: the LED blinks and the teach-in telegram is sent.'
+variantes:
+- EMDCA
+- EMDCU
+- EMDCJ
+notice: https://www.enocean-alliance.org/product/emdca-motion-detector-with-illumination-sensor/
+notes: Profil par défaut A5-07-03 ; A5-07-01 et A5-08-01/02/03 sélectionnables par NFC (utilisez alors
+  le profil générique correspondant). Fiche créée d'après la fiche produit de l'EnOcean Alliance ; à confirmer
+  sur produit réel.
+reglages:
+- timeout
+support: communaute
+photo: emdca.png
