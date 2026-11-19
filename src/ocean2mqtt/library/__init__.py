@@ -15,6 +15,7 @@ from ..core.product import (
     TEACH_4BS_BIDIR,
     TEACH_RPS,
     TEACH_UTE_BIDIR,
+    TEACH_UTE_UNI,
     Product,
 )
 
@@ -22,6 +23,8 @@ GENERIC_BRAND = "generique"
 
 # Profils proposés en mode générique : EEP -> (type, mode d'appairage, nom FR, nom EN)
 GENERIC_EEPS: dict[str, tuple[str, str, str, str]] = {
+    "F6-01-01": ("interrupteur", TEACH_RPS, "Bouton-poussoir (1 contact)",
+                 "Push button (single contact)"),
     "F6-02-01": ("interrupteur", TEACH_RPS, "Interrupteur 2 boutons (rocker)",
                  "2-rocker switch"),
     "F6-04-01": ("capteur", TEACH_RPS, "Interrupteur à carte", "Key card switch"),
@@ -36,11 +39,27 @@ GENERIC_EEPS: dict[str, tuple[str, str, str, str]] = {
     "A5-04-02": ("capteur", TEACH_4BS, "Capteur de température (-20 à +60 °C) et d'humidité",
                  "Temperature (-20 to +60 °C) and humidity sensor"),
     "A5-06-01": ("capteur", TEACH_4BS, "Capteur de luminosité", "Light sensor"),
+    "A5-07-01": ("capteur", TEACH_4BS, "Détecteur de présence (PIR)",
+                 "Occupancy sensor (PIR)"),
     "A5-07-03": ("capteur", TEACH_4BS, "Détecteur de mouvement et luminosité",
                  "Motion and light sensor"),
+    "A5-08-01": ("capteur", TEACH_4BS,
+                 "Capteur présence, luminosité (0-510 lx), température (0-51 °C)",
+                 "Occupancy, light (0-510 lx), temperature (0-51 °C) sensor"),
+    "A5-08-02": ("capteur", TEACH_4BS,
+                 "Capteur présence, luminosité (0-1020 lx), température (0-51 °C)",
+                 "Occupancy, light (0-1020 lx), temperature (0-51 °C) sensor"),
+    "A5-08-03": ("capteur", TEACH_4BS,
+                 "Capteur présence, luminosité (0-1530 lx), température (-30 à +50 °C)",
+                 "Occupancy, light (0-1530 lx), temperature (-30 to +50 °C) sensor"),
     "A5-09-04": ("capteur", TEACH_4BS, "Capteur CO2, humidité, température",
                  "CO2, humidity, temperature sensor"),
     "A5-09-05": ("capteur", TEACH_4BS, "Capteur de COV", "VOC sensor"),
+    "A5-30-03": ("capteur", TEACH_4BS, "Entrées numériques et température (A5-30-03)",
+                 "Digital inputs and temperature (A5-30-03)"),
+    "D2-14-41": ("capteur", TEACH_UTE_UNI,
+                 "Multicapteur : température, humidité, luminosité, accélération, contact",
+                 "Multisensor: temperature, humidity, light, acceleration, contact"),
     "A5-20-01": ("actionneur", TEACH_4BS_BIDIR, "Tête thermostatique",
                  "Thermostatic radiator valve"),
     "D2-01-00": ("actionneur", TEACH_UTE_BIDIR, "Actionneur on/off (D2-01, tous types)",
@@ -67,6 +86,11 @@ _STEPS = {
         ("Lancez l'appairage sur le produit (voir sa notice) : Ocean2MQTT répond "
          "automatiquement."),
         "Start pairing on the product (see its manual): Ocean2MQTT answers automatically.",
+    ),
+    TEACH_UTE_UNI: (
+        ("Appuyez sur le bouton d'appairage (LRN) : le produit envoie sa demande "
+         "d'appairage (UTE)."),
+        "Press the learn (LRN) button: the product sends its UTE teach-in request.",
     ),
     TEACH_UTE_BIDIR: (
         ("Mettez le produit en mode appairage (voir sa notice) : il envoie une demande UTE "
