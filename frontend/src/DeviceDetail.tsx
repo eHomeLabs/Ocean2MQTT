@@ -258,6 +258,7 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
           </div>
         </>
       )}
+      {p.support === "communaute" && <ConfirmWorks device={device} />}
       <h3>{t("detail.rename")}</h3>
       <label className="field">
         {t("detail.name")}
@@ -276,6 +277,38 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
           {t("save")}
         </button>
       </div>
+    </div>
+  );
+}
+
+const REPO = "https://github.com/eHomeLabs/Ocean2MQTT";
+
+/** Produit « Communauté » : retour de test prérempli sur GitHub (validé ensuite par le mainteneur). */
+function ConfirmWorks({ device }: { device: Device }) {
+  const { info, states, telegrams } = useStore();
+  const p = device.product;
+  const state = states[device.topic] ?? device.state;
+  const recent = telegrams
+    .filter((tg) => tg.sender === device.id && !tg.duplicate)
+    .slice(-10)
+    .map((tg) => `${new Date(tg.time * 1000).toISOString().slice(11, 19)} ${tg.dir} ${tg.rorg} ${tg.data} ${tg.status}${tg.dbm != null ? ` ${tg.dbm} dBm` : ""}`)
+    .join("\n");
+  const params = new URLSearchParams({
+    template: "retour-test.yml",
+    title: `[Retour de test] ${p.brand} ${p.model}`,
+    fiche: p.id,
+    version: info?.version ?? "",
+    eep: [p.eep, ...p.extra_eeps].join(" + "),
+    valeurs: JSON.stringify(state, null, 2).slice(0, 2000),
+    telegrammes: recent || t("confirm.noTelegrams"),
+  });
+  return (
+    <div className="confirm-works">
+      <h3>{t("confirm.title")}</h3>
+      <p className="small muted">{t("confirm.text")}</p>
+      <a className="button secondary" href={`${REPO}/issues/new?${params}`} target="_blank" rel="noreferrer">
+        {t("confirm.button")}
+      </a>
     </div>
   );
 }
