@@ -1,0 +1,21 @@
+ref: SRG02
+marque: Thermokon
+nom:
+  fr: Poignée de fenêtre
+  en: Window handle
+type: capteur
+eep: F6-10-00
+appairage:
+  mode: rps
+  etapes:
+    fr:
+    - 'Tournez la poignée : le premier télégramme sert à l''appairage.'
+    en:
+    - 'Turn the handle: the first telegram is used for pairing.'
+notice: https://www.thermokon.de/direct/en-gb/categories/srg02?filter_articles=1
+notes: Gamme EasySens. Positions fermée, ouverte et oscillo-battante. Fiche créée d'après la fiche produit de l'EnOcean
+  Alliance ; à confirmer sur produit réel.
+reglages:
+- timeout
+support: communaute
+photo: srg02.png
