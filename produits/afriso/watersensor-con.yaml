@@ -1,0 +1,26 @@
+ref: WaterSensor con
+marque: AFRISO
+nom:
+  fr: Détecteur d'eau (conductivité)
+  en: Conductivity water sensor
+type: capteur
+eep: A5-30-03
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Retirez le capteur de sa sonde, puis ôtez le capot avec un tournevis.
+    - 'Appuyez sur la touche LRN avec un objet non conducteur : le télégramme d''apprentissage est envoyé.'
+    en:
+    - Remove the sensor from its probe, then lift the cover with a screwdriver.
+    - 'Press the LRN key with a non-conductive object: the teach-in telegram is sent.'
+variantes:
+- '78146'
+notice: https://www.afriso.com/en/PM/Domestic-technology/Product-range-AFRISO-smart-home/Conductivity-water-sensor-WaterSensor-con
+notes: 'Envoie la température et l''état des entrées (A5-30-03). L''entrée qui signale l''eau reste à
+  identifier : test avec un doigt mouillé sous le capteur (notice §6.2). Fiche créée d''après la fiche
+  produit de l''EnOcean Alliance ; à confirmer sur produit réel.'
+reglages:
+- timeout
+support: communaute
+photo: watersensor-con.png
