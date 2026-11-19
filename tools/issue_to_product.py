@@ -149,15 +149,30 @@ def build(fields: dict[str, str]) -> tuple[str, dict]:
     return f"{slug(brand)}/{slug(ref)}", sheet
 
 
+def _download(url: str, token: str | None) -> bytes:
+    """Pièce jointe GitHub : github.com redirige vers un stockage externe qui refuse un
+    jeton d'accès (HTTP 400). Le jeton n'est donc jamais transmis après la redirection,
+    et on réessaie sans jeton si besoin (dépôt public)."""
+    attempts = [token, None] if token and url.startswith("https://github.com/") else [None]
+    last: Exception | None = None
+    for auth in attempts:
+        request = urllib.request.Request(url, headers={"User-Agent": "ocean2mqtt-bot"})
+        if auth:
+            request.add_unredirected_header("Authorization", f"Bearer {auth}")
+        try:
+            with urllib.request.urlopen(request, timeout=30) as resp:
+                return resp.read()
+        except Exception as err:  # noqa: BLE001
+            last = err
+    assert last is not None
+    raise last
+
+
 def save_photo(url: str, path: Path, token: str | None = None) -> None:
     """Télécharge la photo et l'enregistre en PNG carré 400 × 400, fond conservé."""
     from PIL import Image
 
-    request = urllib.request.Request(url, headers={"User-Agent": "ocean2mqtt-bot"})
-    if token and url.startswith("https://github.com/"):
-        request.add_header("Authorization", f"Bearer {token}")
-    with urllib.request.urlopen(request, timeout=30) as resp:
-        image = Image.open(io.BytesIO(resp.read())).convert("RGBA")
+    image = Image.open(io.BytesIO(_download(url, token))).convert("RGBA")
     side = max(image.size)
     square = Image.new("RGBA", (side, side), (255, 255, 255, 0))
     square.paste(image, ((side - image.width) // 2, (side - image.height) // 2))
