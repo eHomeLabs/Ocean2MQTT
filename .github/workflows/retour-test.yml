@@ -1,0 +1,86 @@
+name: Retour de test
+
+# Le mainteneur valide un retour « Confirmer qu'un produit fonctionne » en ajoutant
+# l'étiquette « validé » : la fiche passe de « Communauté » à « Validé » dans une
+# pull request, à relire et fusionner.
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  valider:
+    if: github.event.label.name == 'validé' && github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Installation
+        run: pip install -e . jsonschema
+      - name: Fiche validée
+        id: fiche
+        env:
+          ISSUE: ${{ toJson(github.event.issue) }}
+        run: |
+          printf '%s' "$ISSUE" > "$RUNNER_TEMP/issue.json"
+          set +e
+          out=$(python tools/validate_product.py "$RUNNER_TEMP/issue.json")
+          code=$?
+          if [ $code -eq 0 ]; then
+            check=$(python -m ocean2mqtt.library produits 2>&1)
+            code=$?
+            out="$out"$'\n'"$check"
+          fi
+          set -e
+          echo "$out"
+          {
+            echo "fiche=$(printf '%s' "$out" | head -n 1)"
+            echo "message<<EOF"
+            echo "$out"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          if [ $code -ne 0 ]; then exit 1; fi
+      - name: Pull request
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: validation/issue-${{ github.event.issue.number }}
+          commit-message: "Fiche validée : ${{ steps.fiche.outputs.fiche }} (#${{ github.event.issue.number }})"
+          title: "Fiche validée : ${{ steps.fiche.outputs.fiche }}"
+          body: |
+            Fiche passée de « Communauté » à « Validé » d'après le retour de test #${{ github.event.issue.number }}.
+            Vérifiez la note ajoutée, puis fusionnez : le produit sera « Validé » dans le catalogue et à la prochaine version.
+
+            Closes #${{ github.event.issue.number }}
+          labels: validé
+      - name: Réponse dans l'issue
+        if: steps.pr.outputs.pull-request-url
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Merci pour ce retour ! La fiche passe en « Validé » : ${{ steps.pr.outputs.pull-request-url }}. / Thanks! The device sheet is being marked as validated."
+      - name: Retour inexploitable
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MESSAGE: ${{ steps.fiche.outputs.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "La fiche n'a pas pu être passée en « Validé ». / The device sheet could not be marked as validated."
+            echo
+            echo '```'
+            printf '%s\n' "${MESSAGE:-(pas de message)}"
+            echo '```'
+            echo
+            echo "Journal / Log : $RUN_URL"
+            echo
+            echo "Corrigez l'issue, puis retirez et remettez l'étiquette « validé »."
+          } > "$RUNNER_TEMP/comment.md"
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body-file "$RUNNER_TEMP/comment.md"
