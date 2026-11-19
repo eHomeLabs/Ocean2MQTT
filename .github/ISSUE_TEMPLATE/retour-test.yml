@@ -1,0 +1,62 @@
+name: Confirmer qu'un produit fonctionne / Confirm a device works
+description: Retour de test d'un produit « Communauté » sur votre installation / Test report for a "Community" device
+title: "[Retour de test] <marque> <référence>"
+labels: ["retour de test"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci ! Ce formulaire est prérempli quand il est ouvert depuis Ocean2MQTT (fiche du produit → Informations → « Confirmer que ce produit fonctionne »). Après vérification par le mainteneur, la fiche passe de « Communauté » à « Validé ».
+        Thanks! This form is prefilled when opened from Ocean2MQTT. Once checked by the maintainer, the device sheet moves from "Community" to "Validated".
+  - type: input
+    id: fiche
+    attributes:
+      label: Fiche / Device sheet
+      description: Identifiant de la fiche dans la bibliothèque (marque/référence). / Library sheet id.
+      placeholder: "eltako/faft60"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version d'Ocean2MQTT / Ocean2MQTT version
+      placeholder: "0.2.0b22"
+  - type: input
+    id: eep
+    attributes:
+      label: Profil EEP / EEP profile
+      placeholder: "A5-04-02"
+  - type: checkboxes
+    id: fonctions
+    attributes:
+      label: Ce qui fonctionne / What works
+      description: Cochez ce que vous avez vérifié. / Tick what you checked.
+      options:
+        - label: Appairage / Pairing
+        - label: Mesures et états (valeurs cohérentes) / Measurements and states (plausible values)
+        - label: Commandes (marche/arrêt, volet, fil pilote…) / Commands
+        - label: Réglages / Settings
+        - label: Remote Commissioning
+  - type: textarea
+    id: valeurs
+    attributes:
+      label: Dernières valeurs reçues / Last received values
+      description: Rempli automatiquement depuis Ocean2MQTT. / Filled in by Ocean2MQTT.
+      render: json
+  - type: textarea
+    id: telegrammes
+    attributes:
+      label: Télégrammes / Telegrams
+      description: Quelques télégrammes du produit (page Télégrammes). / A few telegrams of the device.
+      render: text
+  - type: textarea
+    id: remarques
+    attributes:
+      label: Remarques, ce qui ne fonctionne pas / Notes, what does not work
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: J'ai testé ce produit moi-même avec Ocean2MQTT. / I tested this device myself with Ocean2MQTT.
+          required: true
