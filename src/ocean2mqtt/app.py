@@ -681,6 +681,8 @@ class Ocean2MQTT:
             return await self._write_base_id(data)
         if command == "config/mqtt":
             return self.mqtt_settings()
+        if command == "config/recom/set":
+            return self._set_recom(bool(data.get("enabled")))
         if command == "config/mqtt/test":
             return await self._test_mqtt(data)
         if command == "config/mqtt/set":
@@ -1080,6 +1082,16 @@ class Ocean2MQTT:
     @property
     def recom_enabled(self) -> bool:
         return bool(self.config["recom"].get("enabled", True))
+
+    def _set_recom(self, enabled: bool) -> dict[str, Any]:
+        """Active / désactive le Remote Commissioning depuis l'interface (prioritaire)."""
+        self.config.update("recom", {"enabled": enabled}, ui=True)
+        self.gateway.reman_enabled = enabled
+        _LOGGER.warning("Remote Commissioning %s depuis l'interface",
+                        "activé" if enabled else "désactivé")
+        self._publish_info()
+        self._publish_devices()  # réglages du groupe « recom » ajoutés ou retirés (+ découverte)
+        return {"enabled": enabled}
 
     def auto_code(self, device: Device) -> int:
         return recom.derive_code(self.store.meta["recom_secret"], device.device_id)
