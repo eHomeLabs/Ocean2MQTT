@@ -1,0 +1,28 @@
+ref: FAH60
+marque: Eltako
+nom:
+  fr: Sonde de luminosité extérieure
+  en: Outdoor light sensor
+type: capteur
+eep: A5-06-01
+decodeur: eltako_brightness
+fabricant_id: 13
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Si la sonde est neuve, exposez-la quelques minutes à la lumière pour charger ses cellules solaires.
+    - 'Mettez la sonde en mode apprentissage (voir sa notice) : elle envoie un télégramme d''apprentissage.'
+    en:
+    - If the sensor is new, leave it in the light for a few minutes to charge its solar cells.
+    - 'Put the sensor in learn mode (see its manual): it sends a teach-in telegram.'
+reglages:
+- timeout
+support: communaute
+photo: fah60.png
+notice: https://ubiwizz.com/l-offre-produits-ubiwizz/11598-sonde-de-luminosit%C3%A9-%C3%A0-usage-ext%C3%A9rieur.html
+notes: 'Alimentation solaire, IP54. Format A5-06-01 propre à Eltako : 0 à 100 lx (DB3, si DB2 = 0) et
+  300 à 30 000 lx (DB2). Procédure d''apprentissage à confirmer sur produit réel.'
+variantes:
+- FAH60
+- SERFAH60
