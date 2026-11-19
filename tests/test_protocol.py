@@ -242,3 +242,68 @@ def test_asp_metering_and_profile_isolation() -> None:
     assert "ASP-2-1-01" in metering.variants
     assert not match_teach_in(metering, t(0xD4, "A0 01 46 00 0A 01 D2"))[0]
 
+
+
+# --- Profils ajoutés en 0.2.0b22 ---------------------------------------------
+
+
+def test_a50701() -> None:
+    assert eep.decode_a50701(t(0xA5, "C8 00 FF 09")) == {"motion": True, "voltage": 4.0}
+    assert eep.decode_a50701(t(0xA5, "C8 00 00 08")) == {"motion": False}
+
+
+def test_a508() -> None:
+    # Eltako FBH : DB0 0x0D = mouvement, 0x0F = pas de mouvement
+    on = eep.find_decoder("A5-08-01")(t(0xA5, "FF 80 80 0D"))
+    assert on["motion"] is True and on["illuminance"] == 256 and on["temperature"] == 25.6
+    assert on["voltage"] == 5.1 and on["occupancy_button"] is False
+    off = eep.find_decoder("A5-08-01")(t(0xA5, "FF 80 80 0F"))
+    assert off["motion"] is False
+    assert eep.find_decoder("A5-08-03")(t(0xA5, "00 FF 00 0F"))["temperature"] == -30.0
+    assert eep.find_decoder("A5-08-02")(t(0xA5, "00 FF 00 0F"))["illuminance"] == 1020
+
+
+def test_a53003() -> None:
+    state = eep.decode_a53003(t(0xA5, "00 FF 11 08"))
+    assert state["temperature"] == 0.0 and state["wake"] is True
+    assert state["input_0"] is True and state["input_1"] is False
+    assert eep.decode_a53003(t(0xA5, "00 00 00 08"))["temperature"] == 40.0
+
+
+def test_f60101() -> None:
+    assert eep.decode_f60101(t(0xF6, "10")) == {"event": "press"}
+    assert eep.decode_f60101(t(0xF6, "00")) == {"event": "release"}
+
+
+def _d21441(tmp, hum, ill, sta, x, y, z, closed) -> str:
+    bits = 0
+    for value, size in ((tmp, 10), (hum, 8), (ill, 17), (sta, 2), (x, 10), (y, 10), (z, 10),
+                        (closed, 1)):
+        bits = (bits << size) | value
+    return (bits << 4).to_bytes(9, "big").hex()
+
+
+def test_d21441() -> None:
+    state = eep.decode_d21441(t(0xD2, _d21441(625, 90, 350, 0, 500, 500, 700, 1)))
+    assert state == {
+        "temperature": 22.5, "humidity": 45.0, "illuminance": 350,
+        "acceleration_status": "periodic",
+        "acceleration_x": 0.0, "acceleration_y": 0.0, "acceleration_z": 1.0,
+        "open": False,
+    }  # fmt: skip
+    assert eep.decode_d21441(t(0xD2, _d21441(0, 0, 0, 1, 0, 0, 0, 0)))["open"] is True
+
+
+def test_eltako_brightness() -> None:
+    dec = eep.find_decoder("eltako_brightness")
+    assert dec(t(0xA5, "32 00 00 09")) == {"illuminance": 50}
+    assert dec(t(0xA5, "00 FF 00 09")) == {"illuminance": 30000}
+
+
+def test_d201_untyped_multichannel_sheet_accepts_any_d201() -> None:
+    from ocean2mqtt.library import load_library
+
+    trio = load_library().get("trio2sys/t2s10020110")
+    assert trio is not None and trio.channels == 4 and trio.metering
+    assert match_teach_in(trio, t(0xD4, "A0 04 46 00 12 01 D2"))[0]  # D2-01-12
+    assert not match_teach_in(trio, t(0xD4, "A0 04 46 00 05 05 D2"))[0]  # D2-05

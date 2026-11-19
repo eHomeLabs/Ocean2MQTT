@@ -37,8 +37,8 @@ def test_products_loaded() -> None:
 
 def test_search() -> None:
     lib = load_library()
-    assert [p.model for p in lib.search("fil pilote")] == ["SIN-2-FP-01"]
-    assert {p.model for p in lib.search("D2-01-0C")} == {"SIN-2-FP-01"}
+    assert [p.model for p in lib.search("fil pilote")] == ["SIN-2-FP-01", "UBICH009"]
+    assert {p.model for p in lib.search("D2-01-0C")} == {"SIN-2-FP-01", "UBICH009"}
     assert {p.model for p in lib.search("ubiwizz co2")} == {"UBILD023"}
     assert {p.brand for p in lib.by_brand("ubiwizz")} == {"Ubiwizz"}
 

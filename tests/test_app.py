@@ -132,7 +132,7 @@ async def test_valve_pairing_and_setpoint(app: Ocean2MQTT) -> None:
 
 async def test_library_and_errors(app: Ocean2MQTT) -> None:
     products = await app.request("library", {"search": "fil pilote"})
-    assert [p["model"] for p in products] == ["SIN-2-FP-01"]
+    assert [p["model"] for p in products] == ["SIN-2-FP-01", "UBICH009"]
     assert products[0]["image"] == "produits/nodon/sin-2-fp-01.png"
     assert any(e["key"] == "mode" and e["access"] == "rw" for e in products[0]["exposes"])
     with pytest.raises(RequestError):
