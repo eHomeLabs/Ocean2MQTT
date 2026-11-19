@@ -1,0 +1,24 @@
+ref: UBICH009
+marque: Ubiwizz
+nom:
+  fr: Récepteur de chauffage fil pilote
+  en: Pilot wire heating receiver
+type: chauffage
+eep: D2-01-0C
+mesure: true
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Le récepteur doit être sous tension.
+    - 'Mettez-le en mode appairage (voir sa notice) : il envoie sa demande d''appairage et Ocean2MQTT
+      répond automatiquement.'
+    en:
+    - The receiver must be powered.
+    - 'Put it in pairing mode (see its manual): it sends its teach-in request and Ocean2MQTT answers automatically.'
+notice: https://www.enocean-alliance.org/product/pilot-wire-heating-receiver/
+notes: Fabricant Decelect. 6 ordres fil pilote, mesure de puissance, 3600 W, veilleuse. Profil D2-01-0C
+  (fiche produit Decelect). Fiche créée d'après la fiche produit de l'EnOcean Alliance ; à confirmer sur
+  produit réel.
+support: communaute
+photo: ubich009.png
