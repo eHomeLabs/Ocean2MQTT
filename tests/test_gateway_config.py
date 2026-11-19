@@ -211,3 +211,18 @@ async def test_declare_actuator_with_known_sender(app: Ocean2MQTT) -> None:  # n
         await app.request("device/add", {"id": "05445566", "product": "nodon/sin-2-2-01",
                                          "sender": "FFE56B80"})
     await asyncio.sleep(1.5)
+
+
+async def test_recom_toggle_from_interface(app: Ocean2MQTT, monkeypatch) -> None:  # noqa: F811
+    monkeypatch.setenv("OCEAN2MQTT_RECOM_ENABLED", "true")
+    app.config.env = {"recom": {"enabled": True}}
+    assert (await app.request("config/recom/set", {"enabled": False})) == {"enabled": False}
+    assert not app.recom_enabled and not app.gateway.reman_enabled
+    assert (await app.request("info", {}))["recom_enabled"] is False
+    with pytest.raises(RequestError, match="désactivé"):
+        await app.request("pairing/remote", {"product": "nodon/sin-2-2-01", "id": "05112233"})
+    # Le choix de l'interface l'emporte sur l'option de l'add-on, même après relecture
+    again = Config(app.config.data_dir).load()
+    assert again["recom"]["enabled"] is False
+    await app.request("config/recom/set", {"enabled": True})
+    assert app.recom_enabled and app.gateway.reman_enabled
