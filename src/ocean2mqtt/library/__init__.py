@@ -21,6 +21,14 @@ from ..core.product import (
 
 GENERIC_BRAND = "generique"
 
+# Anciennes références de fiches, pour retrouver les produits déjà appairés après un
+# déplacement de fiche (marque d'origine au lieu de la marque distributeur).
+ALIASES = {
+    "ubiwizz/serfah60": "eltako/fah60",
+    "ubiwizz/ubid1220211": "afriso/55080",
+    "ubiwizz/micitrv004": "micropelt/micitrv004",
+}
+
 # Profils proposés en mode générique : EEP -> (type, mode d'appairage, nom FR, nom EN)
 GENERIC_EEPS: dict[str, tuple[str, str, str, str]] = {
     "F6-01-01": ("interrupteur", TEACH_RPS, "Bouton-poussoir (1 contact)",
@@ -151,6 +159,7 @@ class Library:
 
     def get(self, product_id: str) -> Product | None:
         """Fiche de la bibliothèque, ou produit générique « generique/<eep> »."""
+        product_id = ALIASES.get(product_id, product_id)
         if product_id in self.products:
             return self.products[product_id]
         brand, _, eep = product_id.partition("/")
