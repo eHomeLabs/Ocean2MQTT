@@ -512,6 +512,119 @@ def teach_in_4bs_response(t: RadioTelegram) -> bytes:
     return bytes([p[0], p[1], p[2], 0xF0])
 
 
+# --- A5-07-01 : détecteur de présence (PIR) ------------------------------------
+
+
+def decode_a50701(t: RadioTelegram) -> dict[str, Any] | None:
+    """DB3 tension (si DB0.0), DB1 ≥ 128 = mouvement."""
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    supply, _db2, pir, db0 = t.payload
+    state: dict[str, Any] = {"motion": pir >= 128}
+    if db0 & 0x01 and supply <= 250:
+        state["voltage"] = round(supply * 5 / 250, 2)
+    return state
+
+
+# --- A5-08-01/02/03 : luminosité, température, présence -------------------------
+# DB3 tension 0..5,1 V, DB2 luminosité, DB1 température, DB0.1 PIRS (0 = mouvement),
+# DB0.0 bouton de présence (0 = appuyé).
+
+_A508_RANGES = {
+    "A5-08-01": (510, 0, 51),
+    "A5-08-02": (1020, 0, 51),
+    "A5-08-03": (1530, -30, 50),
+}
+
+
+def _decode_a508(t: RadioTelegram, lux_max: float, t_min: float, t_max: float):
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    supply, ill, temp, db0 = t.payload
+    return {
+        "motion": not db0 & 0x02,
+        "illuminance": round(ill * lux_max / 255),
+        "temperature": round(t_min + temp * (t_max - t_min) / 255, 1),
+        "voltage": round(supply * 5.1 / 255, 2),
+        "occupancy_button": not db0 & 0x01,
+    }
+
+
+def _a508(eep_code: str):
+    lux_max, t_min, t_max = _A508_RANGES[eep_code]
+    return lambda t: _decode_a508(t, lux_max, t_min, t_max)
+
+
+# --- A5-30-03 : entrées numériques, réveil et température ----------------------
+
+
+def decode_a53003(t: RadioTelegram) -> dict[str, Any] | None:
+    """DB2 température 255..0 = 0..40 °C, DB1 bit 4 = réveil (WA0), bits 3..0 = DI3..DI0."""
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    temp, inputs = t.payload[1], t.payload[2]
+    state: dict[str, Any] = {
+        "temperature": round((255 - temp) * 40 / 255, 1),
+        "wake": bool(inputs & 0x10),
+    }
+    for i in range(4):
+        state[f"input_{i}"] = bool(inputs & (1 << i))
+    return state
+
+
+# --- F6-01-01 : bouton-poussoir (1 contact) -------------------------------------
+
+
+def decode_f60101(t: RadioTelegram) -> dict[str, Any] | None:
+    """0x10 = appui, 0x00 = relâchement (Eltako FPE-1…)."""
+    if t.rorg != RORG_RPS or len(t.payload) != 1:
+        return None
+    return {"event": "press" if t.payload[0] & 0x10 else "release"}
+
+
+# --- D2-14-41 : multicapteur (STM 550) -----------------------------------------
+# Température 10 bits (0..1000 = -40..+60 °C), humidité 8 bits (0..200 = 0..100 %),
+# luminosité 17 bits (lx), état d'accélération 2 bits, accélération X/Y/Z 10 bits
+# (0..1000 = -2,5..+2,5 g), contact 1 bit (1 = fermé). 68 bits sur 9 octets.
+
+ACCELERATION_STATUS = ("periodic", "threshold_1", "threshold_2", "reserved")
+
+
+def decode_d21441(t: RadioTelegram) -> dict[str, Any] | None:
+    if t.rorg != RORG_VLD or len(t.payload) < 9:
+        return None
+    bits = int.from_bytes(t.payload[:9], "big")
+
+    def field(offset: int, size: int) -> int:
+        return (bits >> (72 - offset - size)) & ((1 << size) - 1)
+
+    state: dict[str, Any] = {}
+    if (tmp := field(0, 10)) <= 1000:
+        state["temperature"] = round(tmp / 10 - 40, 1)
+    if (hum := field(10, 8)) <= 200:
+        state["humidity"] = round(hum / 2, 1)
+    if (ill := field(18, 17)) <= 100000:
+        state["illuminance"] = ill
+    state["acceleration_status"] = ACCELERATION_STATUS[field(35, 2)]
+    for name, offset in (("x", 37), ("y", 47), ("z", 57)):
+        if (acc := field(offset, 10)) <= 1000:
+            state[f"acceleration_{name}"] = round(acc / 200 - 2.5, 2)
+    state["open"] = not field(67, 1)
+    return state
+
+
+# --- Eltako : luminosité A5-06-01 « exceptions by Eltako » (FAH60, FHD60SB…) ---
+
+
+def decode_eltako_brightness(t: RadioTelegram) -> dict[str, Any] | None:
+    """DB3 = 0..100 lx (si DB2 = 0), DB2 = 300..30 000 lx (0..255)."""
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    db3, db2 = t.payload[0], t.payload[1]
+    lux = min(db3, 100) if db2 == 0 else 300 + db2 * (30000 - 300) / 255
+    return {"illuminance": round(lux)}
+
+
 # --- Choix du décodeur ----------------------------------------------------------
 # Clé = EEP complet, préfixe « RR-FF » ou nom de décodeur particulier (champ
 # « decodeur » d'une fiche produit).
@@ -524,7 +637,14 @@ DECODERS = {
     "A5-04-01": decode_a50401,
     "A5-04-02": decode_a50402,
     "A5-06-01": decode_a50601,
+    "A5-07-01": decode_a50701,
     "A5-07-03": decode_a50703,
+    "A5-08-01": _a508("A5-08-01"),
+    "A5-08-02": _a508("A5-08-02"),
+    "A5-08-03": _a508("A5-08-03"),
+    "A5-30-03": decode_a53003,
+    "D2-14-41": decode_d21441,
+    "F6-01-01": decode_f60101,
     "A5-09-04": decode_a50904,
     "A5-09-05": decode_a50905,
     "F6-02-01": decode_f60201,
@@ -537,6 +657,7 @@ DECODERS = {
     "A5-20-01": decode_a52001,
     "soft_remote": lambda t: decode_f60201(t, SOFT_REMOTE_NAMES),
     "single_button": decode_single_button,
+    "eltako_brightness": decode_eltako_brightness,
 }
 
 

@@ -50,6 +50,7 @@ VOLTAGE = _sensor("voltage", "V", "voltage", category="diagnostic")
 POWER = _sensor("power", "W", "power")
 ENERGY = _sensor("energy", "kWh", "energy", "total_increasing")
 BATTERY = _sensor("battery", "%", "battery", category="diagnostic")
+MOTION = Expose("motion", "binary_sensor", device_class="motion")
 LINKQUALITY = _sensor("rssi", "dBm", "signal_strength", category="diagnostic")
 
 
@@ -75,10 +76,30 @@ def exposes(product: Product) -> list[Expose]:
         out.append(TEMPERATURE)
     if eep in ("A5-04-01", "A5-04-02"):
         out += [TEMPERATURE, HUMIDITY]
-    if eep == "A5-06-01":
+    if decoder == "eltako_brightness":
+        out.append(ILLUMINANCE)
+    elif eep == "A5-06-01":
         out += [ILLUMINANCE, VOLTAGE]
+    if eep == "A5-07-01":
+        out += [MOTION, VOLTAGE]
     if eep == "A5-07-03":
-        out += [Expose("motion", "binary_sensor", device_class="motion"), ILLUMINANCE, VOLTAGE]
+        out += [MOTION, ILLUMINANCE, VOLTAGE]
+    if eep in ("A5-08-01", "A5-08-02", "A5-08-03"):
+        out += [
+            MOTION, ILLUMINANCE, TEMPERATURE, VOLTAGE,
+            Expose("occupancy_button", "binary_sensor", device_class="occupancy"),
+        ]  # fmt: skip
+    if eep == "A5-30-03":
+        out += [TEMPERATURE, Expose("wake", "binary_sensor")]
+        out += [Expose(f"input_{i}", "binary_sensor") for i in range(4)]
+    if eep == "D2-14-41":
+        out += [
+            TEMPERATURE, HUMIDITY, ILLUMINANCE,
+            Expose("open", "binary_sensor", device_class="opening"),
+            Expose("acceleration_status", "enum", device_class="enum", category="diagnostic",
+                   options=("periodic", "threshold_1", "threshold_2", "reserved")),
+            *(_sensor(f"acceleration_{a}", "g", None, category="diagnostic") for a in "xyz"),
+        ]  # fmt: skip
     for code in (eep, *product.extra_eeps):
         if code == "A5-09-04":
             out += [_sensor("co2", "ppm", "carbon_dioxide"), HUMIDITY, TEMPERATURE]
@@ -92,7 +113,7 @@ def exposes(product: Product) -> list[Expose]:
             Expose("window_open", "binary_sensor", device_class="window"),
             Expose("battery_low", "binary_sensor", device_class="battery", category="diagnostic"),
         ]
-    if decoder == "single_button":
+    if decoder == "single_button" or eep == "F6-01-01":
         out.append(Expose("action", "event", options=SINGLE_BUTTON_EVENTS))
     elif eep == "F6-02-01":
         out.append(Expose("action", "event", options=WALL_SWITCH_EVENTS))

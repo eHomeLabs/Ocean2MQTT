@@ -44,9 +44,16 @@ def match_teach_in(product: Product, telegram: RadioTelegram) -> tuple[bool, Ute
         ute = parse_ute(telegram)
         if ute is None:
             return False, None
-        # Générique : le type exact (canaux…) est pris dans la demande UTE
-        expected = (ute.rorg, ute.func) if product.generic else (ute.rorg, ute.func, ute.type_)
-        if expected != ((rorg, func) if product.generic else (rorg, func, type_)):
+        # Générique : le type exact (canaux…) est pris dans la demande UTE. Fiche D2-01-00
+        # à plusieurs canaux : type exact non publié par le fabricant, on accepte tout
+        # D2-01 (le nombre de canaux vient de la fiche).
+        loose = product.generic or (
+            (rorg, func, type_) == (0xD2, 0x01, 0x00) and product.channels > 1
+        )
+        expected = (ute.rorg, ute.func) if loose else (ute.rorg, ute.func, ute.type_)
+        if loose and not product.generic and ute.type_ != type_:
+            _LOGGER.info("UTE %s accepté pour la fiche %s", ute.eep, product.eep)
+        if expected != ((rorg, func) if loose else (rorg, func, type_)):
             _LOGGER.debug("UTE ignoré (EEP %s attendu %s)", ute.eep, product.eep)
             return False, None
         if ute.request_type == 1:  # demande de suppression explicite
