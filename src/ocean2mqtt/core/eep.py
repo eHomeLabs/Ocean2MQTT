@@ -310,7 +310,7 @@ def decode_a50205(t: RadioTelegram) -> dict[str, Any] | None:
 # --- A5-04-01 : température 0..40 °C + humidité ---------------------------------
 
 
-def decode_a50401(t: RadioTelegram) -> dict[str, Any] | None:
+def _decode_a504(t: RadioTelegram, t_min: float, t_max: float) -> dict[str, Any] | None:
     if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
         return None
     hum_raw, temp_raw, db0 = t.payload[1], t.payload[2], t.payload[3]
@@ -318,8 +318,19 @@ def decode_a50401(t: RadioTelegram) -> dict[str, Any] | None:
     if hum_raw <= 250:
         state["humidity"] = round(hum_raw * 100 / 250, 1)
     if db0 & 0x02 and temp_raw <= 250:  # TSN : capteur de température présent
-        state["temperature"] = round(temp_raw * 40 / 250, 1)
+        state["temperature"] = round(t_min + temp_raw * (t_max - t_min) / 250, 1)
     return state or None
+
+
+def decode_a50401(t: RadioTelegram) -> dict[str, Any] | None:
+    return _decode_a504(t, 0, 40)
+
+
+# --- A5-04-02 : température -20..+60 °C + humidité (capteurs extérieurs) --------
+
+
+def decode_a50402(t: RadioTelegram) -> dict[str, Any] | None:
+    return _decode_a504(t, -20, 60)
 
 
 # --- F6-02-01 : interrupteur 2 rockers ------------------------------------------
@@ -511,6 +522,7 @@ DECODERS = {
     "D5-00-01": decode_d50001,
     "A5-02-05": decode_a50205,
     "A5-04-01": decode_a50401,
+    "A5-04-02": decode_a50402,
     "A5-06-01": decode_a50601,
     "A5-07-03": decode_a50703,
     "A5-09-04": decode_a50904,
