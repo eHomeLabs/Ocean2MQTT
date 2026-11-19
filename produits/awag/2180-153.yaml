@@ -1,0 +1,21 @@
+ref: 2180 153
+marque: AWAG
+nom:
+  fr: Capteur CO2
+  en: CO2 sensor
+type: capteur
+eep: A5-09-04
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - 'Appuyez sur le bouton LRN du produit : il envoie son télégramme d''apprentissage.'
+    en:
+    - 'Press the product''s LRN button: it sends its teach-in telegram.'
+notice: https://www.enocean-alliance.org/product/awag_omnio_co2-sensor/
+notes: Gamme Omnio. CO2 400-2550 ppm, alimentation filaire. Fiche créée d'après la fiche produit de l'EnOcean Alliance
+  ; à confirmer sur produit réel.
+reglages:
+- timeout
+support: communaute
+photo: 2180-153.png
