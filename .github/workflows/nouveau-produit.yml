@@ -33,6 +33,11 @@ jobs:
           set +e
           out=$(python tools/issue_to_product.py "$RUNNER_TEMP/issue.json")
           code=$?
+          if [ $code -eq 0 ]; then
+            check=$(python -m ocean2mqtt.library produits 2>&1)
+            code=$?
+            out="$out"$'\n'"$check"
+          fi
           set -e
           echo "$out"
           {
@@ -41,7 +46,6 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
           if [ $code -ne 0 ]; then exit 1; fi
-          python -m ocean2mqtt.library produits
       - name: Pull request
         id: pr
         uses: peter-evans/create-pull-request@v7
@@ -66,5 +70,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: ${{ steps.fiche.outputs.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "La fiche n'a pas pu être créée automatiquement : ${MESSAGE:-voir le journal de l'action}. Complétez l'issue puis retirez et remettez l'étiquette « accepté »."
+          {
+            echo "La fiche n'a pas pu être créée automatiquement. / The device sheet could not be created."
+            echo
+            echo '```'
+            printf '%s\n' "${MESSAGE:-(pas de message)}"
+            echo '```'
+            echo
+            echo "Journal / Log : $RUN_URL"
+            echo
+            echo "Complétez l'issue (ou corrigez Ocean2MQTT), puis retirez et remettez l'étiquette « accepté »."
+          } > "$RUNNER_TEMP/comment.md"
+          gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body-file "$RUNNER_TEMP/comment.md"
