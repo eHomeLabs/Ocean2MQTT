@@ -151,6 +151,18 @@ Le décodage d'un profil s'écrit à partir de la spécification EnOcean des EEP
 
 ---
 
+## 5. Confirmer qu'un produit « Communauté » fonctionne
+
+Les fiches ajoutées sans essai sur un vrai produit sont marquées **Communauté**. Si vous en utilisez un et qu'il fonctionne, aidez à le faire passer en **Validé** :
+
+1. Utilisez le produit (appui, mesure, commande…) pour qu'il envoie quelques télégrammes.
+2. Ouvrez sa fiche dans Ocean2MQTT → onglet **Informations** → **Confirmer que ce produit fonctionne**.
+3. Un [formulaire GitHub](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=retour-test.yml) s'ouvre, déjà rempli avec la fiche, la version, les dernières valeurs et les derniers télégrammes. Cochez ce que vous avez vérifié (appairage, mesures, commandes, réglages, Remote Commissioning), ajoutez vos remarques et envoyez.
+
+Après contrôle par le mainteneur, la fiche passe en « Validé » dans le catalogue et à la version suivante (compte GitHub gratuit nécessaire).
+
+---
+
 ## Pour le mainteneur : valider une proposition
 
 1. Ouvrez l'issue « [Produit] … » (étiquette `nouveau produit`) et vérifiez les informations et la photo.
@@ -158,3 +170,11 @@ Le décodage d'un profil s'écrit à partir de la spécification EnOcean des EEP
 3. Relisez la *pull request* (YAML, photo, procédure), corrigez si besoin, puis fusionnez : le catalogue en ligne est mis à jour automatiquement.
 
 Si le formulaire est incomplet, l'action l'indique en commentaire dans l'issue : complétez, retirez puis remettez l'étiquette.
+
+## Pour le mainteneur : valider un retour de test
+
+1. Ouvrez l'issue « [Retour de test] … » (étiquette `retour de test`) et vérifiez les cases cochées, les valeurs et les télégrammes.
+2. Ajoutez l'étiquette **`validé`** : l'action « Retour de test » passe la fiche en `support: valide`, retire les mentions « à confirmer sur produit réel », ajoute dans `notes` ce qui a été confirmé (fonctions, version, issue, auteur) et ouvre une *pull request* qui ferme l'issue une fois fusionnée. Seul le propriétaire du dépôt peut déclencher cette action.
+3. Relisez et fusionnez. En cas de problème (fiche introuvable, déjà validée, aucune case cochée), l'action l'indique en commentaire dans l'issue.
+
+Pour valider vous-même un produit testé, vous pouvez aussi modifier directement la fiche sur GitHub (`support: valide`).

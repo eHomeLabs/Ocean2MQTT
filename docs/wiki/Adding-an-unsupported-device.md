@@ -29,6 +29,10 @@ Easiest: check the **[online catalogue](https://ehomelabs.github.io/Ocean2MQTT/)
 
 Contributors: one YAML file `produits/<brand>/<reference>.yaml` + a square transparent PNG picture (400 × 400 px recommended). Keys are in French: see the example and field list on the [French page](Ajouter-un-produit-non-support%C3%A9#pour-les-contributeurs--la-fiche-yaml) and [`produits/schema.json`](https://github.com/eHomeLabs/Ocean2MQTT/blob/main/produits/schema.json). Check with `python -m ocean2mqtt.library` and `pytest`, then open a pull request. New sheets are **Community**; they become **Validated** after a real-device test report.
 
+## Confirm that a "Community" device works
+
+Sheets added without a real-device test are marked **Community**. If yours works: use it so it sends a few telegrams, then open its sheet in Ocean2MQTT → **Information** tab → **Confirm this device works**. A [prefilled GitHub form](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=retour-test.yml) opens (sheet, version, last values, telegrams): tick what you checked and submit. Once reviewed by the maintainer (label `validé`), the sheet becomes **Validated** in the catalogue and in the next version.
+
 ## 4. Request a new EEP profile
 
 [Open a "New device" issue](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) with the EEP profile, the **CSV export of telegrams** (noting what you did for each one) and the manufacturer datasheet if possible.
