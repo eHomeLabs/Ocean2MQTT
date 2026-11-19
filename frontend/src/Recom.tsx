@@ -3,7 +3,7 @@ import { useState } from "react";
 import { request, useNow, useStore } from "./api";
 import { useConfirm } from "./Confirm";
 import { formatValue, label, locale, option, t } from "./i18n";
-import type { Device, Recom } from "./types";
+import type { Device, Info, Recom } from "./types";
 
 export function RecomPage({ onOpen }: { onOpen: (device: Device) => void }) {
   const { devices, recomLog, info } = useStore();
@@ -119,7 +119,7 @@ function RecomLogTable({ entries }: { entries: { time: string; name: string; act
 }
 
 export function RecomPanel({ device, onError }: { device: Device; onError: (m: string) => void }) {
-  const { recomLog } = useStore();
+  const { recomLog, info } = useStore();
   const recom = device.recom!;
   const [busy, setBusy] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -149,6 +149,7 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
   };
   const isShutter = device.settings.some((s) => s.key === "rs_switch_type");
   const links = recom.links;
+  const isGatewayId = gatewayIdMatcher(info);
   return (
     <div className="stack">
       <section className="stack">
@@ -241,6 +242,11 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
                     <td className="muted">#{l.index}</td>
                     <td>
                       <code>{l.id}</code>
+                      {isGatewayId(l.id) && (
+                        <span className="badge valide gw-badge" title={t("recom.gatewayLinkHint")}>
+                          Gateway Control
+                        </span>
+                      )}
                     </td>
                     <td>
                       <code>{l.eep}</code>
@@ -250,7 +256,7 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
                         type="button"
                         className="link danger-link"
                         disabled={!!busy}
-                        onClick={() => window.confirm(t("recom.linkDeleteConfirm", { id: l.id })) && run("links/delete", { index: l.index })}
+                        onClick={() => window.confirm(t(isGatewayId(l.id) ? "recom.gatewayDeleteConfirm" : "recom.linkDeleteConfirm", { id: l.id })) && run("links/delete", { index: l.index })}
                       >
                         {t("recom.linkDelete")}
                       </button>
@@ -316,4 +322,19 @@ export function RecomPanel({ device, onError }: { device: Device; onError: (m: s
       {dialog}
     </div>
   );
+}
+
+/** Adresse d'émission de la clé : son Chip ID ou Base ID + 0…127 (clé actuelle ou clé reprise). */
+function gatewayIdMatcher(info: Info | null | undefined): (id: string) => boolean {
+  const ranges: number[] = [];
+  for (const base of [info?.gateway?.base_id, info?.migration?.previous_base_id]) {
+    if (base && /^[0-9A-F]{8}$/i.test(base)) ranges.push(parseInt(base, 16));
+  }
+  const chip = info?.gateway?.chip_id?.toUpperCase();
+  return (id: string) => {
+    const up = (id || "").toUpperCase();
+    if (chip && up === chip) return true;
+    const value = parseInt(up, 16);
+    return !Number.isNaN(value) && ranges.some((b) => value >= b && value < b + 128);
+  };
 }
