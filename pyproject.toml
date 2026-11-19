@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ocean2mqtt"
-version = "0.2.0b16"
+version = "0.2.0b17"
 description = "Passerelle EnOcean <-> MQTT multi-marques, façon Zigbee2MQTT"
 readme = "README.md"
 license = "MIT"
