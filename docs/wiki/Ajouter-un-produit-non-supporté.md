@@ -79,7 +79,7 @@ Ensuite :
 
 ### Pour les contributeurs : la fiche YAML
 
-Fichier `produits/<marque>/<référence>.yaml` (en minuscules), par exemple `produits/ubiwizz/ubild001.yaml` :
+Fichier `produits/<marque>/<référence>.yaml` (en minuscules), par exemple `produits/ubiwizz/ubild001.yaml`. Le chemin sert d'identifiant aux produits déjà appairés : une fois la fiche publiée, **ne la renommez pas et ne la déplacez pas**, même si vous corrigez `marque` ou `ref` dans le fichier.
 
 ```yaml
 ref: UBILD001                 # référence commerciale
