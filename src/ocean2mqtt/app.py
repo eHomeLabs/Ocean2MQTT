@@ -19,7 +19,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from . import __version__
-from .config import Config, DeviceStore
+from .config import Config, DeviceStore, StateStore
 from .core import recom
 from .core.convert import CommandError, apply_command, device_payload, text_command
 from .core.device import (
@@ -55,6 +55,7 @@ Listener = Callable[[str, Any, bool], None]  # topic, données, retenu
 PAIRING_TIMEOUT = 60
 RECONNECT_DELAY = 15
 REMOTE_PAIRING_TIMEOUT = 60  # s : demande d'appairage attendue après Remote Learn
+STATE_SAVE_INTERVAL = 60  # s : enregistrement des derniers états (si changement)
 POLL_INTERVAL = 60  # s, interrogation des actionneurs (état, puissance, énergie)
 UNKNOWN_MAX = 50  # émetteurs inconnus gardés en mémoire
 RECOM_LOG_MAX = 200
@@ -96,6 +97,10 @@ class Ocean2MQTT:
         self.mqtt_bridge: Any = None
         self.mqtt_restart: Callable[[], Any] | None = None
         self.recom_log: deque[dict[str, Any]] = deque(maxlen=RECOM_LOG_MAX)
+        # Dernier état connu des produits, rechargé au démarrage (mise à jour, redémarrage)
+        self.state_store = StateStore(config.data_dir)
+        self._saved_states = self.state_store.load()
+        self._states_dirty = False
 
     # -- Diffusion -----------------------------------------------------------
 
@@ -130,8 +135,10 @@ class Ocean2MQTT:
         await self._connect_gateway(wait=False)
         for entry in list(self.store.devices.values()):
             self._add_device(entry)
+        self._saved_states = {}
         self._task(self._availability_loop())
         self._task(self._poll_loop())
+        self._task(self._state_save_loop())
         self.emit("bridge/state", "online", True)
         self._publish_info()
         self._publish_devices()
@@ -144,6 +151,7 @@ class Ocean2MQTT:
             task.cancel()
         for device in self.devices.values():
             device.stop()
+        self.save_states()
         self.gateway.close()
         self.emit("bridge/state", "offline", True)
 
@@ -332,6 +340,52 @@ class Ocean2MQTT:
                     await device.refresh()
                     await asyncio.sleep(0.2)
 
+    # -- Derniers états (gardés entre deux démarrages) -------------------------
+
+    def save_states(self) -> None:
+        data: dict[str, dict[str, Any]] = {}
+        for device_id, device in self.devices.items():
+            state = {k: v for k, v in device.state.items() if k != "event"}
+            entry: dict[str, Any] = {"state": state}
+            if last := self.last_seen.get(device_id):
+                entry["last_seen"] = last
+            if device.last_dbm is not None:
+                entry["dbm"] = device.last_dbm
+            if device._energy_time is not None:
+                entry["energy_time"] = device._energy_time
+            data[device_id] = entry
+        try:
+            self.state_store.save(data)
+            self._states_dirty = False
+        except OSError as err:
+            _LOGGER.warning("Derniers états non enregistrés : %s", err)
+
+    def _restore_state(self, device: Device) -> None:
+        saved = self._saved_states.get(device.id_str)
+        if not isinstance(saved, dict):
+            return
+        state = dict(saved.get("state") or {})
+        energy = state.pop("energy", None)
+        state.pop("event", None)
+        device.state.update(state)
+        if energy is not None:
+            device.restore_energy(energy, saved.get("energy_time") or time.time())
+        if isinstance(saved.get("dbm"), int):
+            device.last_dbm = saved["dbm"]
+        if last := saved.get("last_seen"):
+            self.last_seen[device.id_str] = last
+            try:
+                age = (datetime.now(UTC) - datetime.fromisoformat(last)).total_seconds()
+                device.last_seen = time.monotonic() - max(0.0, age)
+            except (TypeError, ValueError):
+                pass
+
+    async def _state_save_loop(self) -> None:
+        while True:
+            await asyncio.sleep(STATE_SAVE_INTERVAL)
+            if self._states_dirty:
+                self.save_states()
+
     async def _availability_loop(self) -> None:
         while True:
             await asyncio.sleep(30)
@@ -366,6 +420,7 @@ class Ocean2MQTT:
         device.recom_mode = entry.get("recom_mode") or (
             "random" if device.recom_code is not None else None)
         device.on_code_change = self._save_code
+        self._restore_state(device)
         self.devices[entry["id"]] = device
         self._unsubs[entry["id"]] = device.add_listener(self._listener(device), first=True)
         device.start()
@@ -467,6 +522,7 @@ class Ocean2MQTT:
                 return
             if "rssi" in keys:
                 self.last_seen[device.id_str] = datetime.now(UTC).isoformat(timespec="seconds")
+            self._states_dirty = True
             if "setpoint" in keys:
                 self._save_settings(device)
             event = device.state.pop("event", None) if "event" in keys else None

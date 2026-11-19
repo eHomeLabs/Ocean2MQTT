@@ -155,6 +155,31 @@ class Config:
         return data
 
 
+class StateStore:
+    """Dernier état connu des produits (valeurs, dernier message), gardé entre deux démarrages."""
+
+    def __init__(self, data_dir: Path) -> None:
+        self.path = Path(data_dir) / "state.json"
+
+    def load(self) -> dict[str, dict[str, Any]]:
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {}
+        except (OSError, ValueError):
+            _LOGGER.warning("%s illisible : derniers états ignorés", self.path)
+            return {}
+        devices = data.get("devices") if isinstance(data, dict) else None
+        return devices if isinstance(devices, dict) else {}
+
+    def save(self, devices: dict[str, dict[str, Any]]) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"version": 1, "devices": devices}, ensure_ascii=False,
+                                  default=str), encoding="utf-8")
+        tmp.replace(self.path)
+
+
 class DeviceStore:
     """Produits appairés : identifiant EnOcean, fiche, nom, pièce, réglages, code ReCom."""
 
