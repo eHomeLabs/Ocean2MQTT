@@ -192,6 +192,14 @@ def test_a50401() -> None:
     assert eep.decode_a50401(t(0xA5, "00 96 7D 0A")) == {"humidity": 60.0, "temperature": 20.0}
 
 
+def test_a50402() -> None:
+    # -20..+60 °C sur 0..250 : 0x7D (125) -> 20 °C, 0x00 -> -20 °C, 0xFA -> 60 °C
+    assert eep.decode_a50402(t(0xA5, "00 96 7D 0A")) == {"humidity": 60.0, "temperature": 20.0}
+    assert eep.decode_a50402(t(0xA5, "00 00 00 0A")) == {"humidity": 0.0, "temperature": -20.0}
+    assert eep.decode_a50402(t(0xA5, "00 FA FA 0A")) == {"humidity": 100.0, "temperature": 60.0}
+    assert eep.decode_a50402(t(0xA5, "00 96 7D 08")) == {"humidity": 60.0}  # TSN absent
+
+
 def test_f60201() -> None:
     cases = {
         "30": "left_up",
