@@ -99,6 +99,20 @@ async def test_sensor_state_and_restart(app: Ocean2MQTT, tmp_path) -> None:
     # Redémarrage : le produit est rechargé depuis devices.json
     other = Ocean2MQTT(Config(tmp_path).load())
     assert "0181A2B3" in other.store.devices
+    # … avec ses dernières valeurs (mise à jour, redémarrage de l'add-on)
+    app.save_states()
+    other = Ocean2MQTT(Config(tmp_path).load())
+    dongle = FakeDongle()
+    dongle.attach(other.gateway)
+    other.gateway.connect = lambda: other.gateway.connect_transport(dongle)
+    await other.start()
+    try:
+        state = other.retained[topic]
+        assert state["temperature"] == 20.0 and state["humidity"] == 60.0
+        assert state["last_seen"] == app.last_seen["0181A2B3"]
+        assert other.devices["0181A2B3"].available
+    finally:
+        await other.stop()
 
 
 async def test_valve_pairing_and_setpoint(app: Ocean2MQTT) -> None:
