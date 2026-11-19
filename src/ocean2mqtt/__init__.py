@@ -1,3 +1,3 @@
 """Ocean2MQTT — passerelle EnOcean <-> MQTT multi-marques."""
 
-__version__ = "0.2.0b21"
+__version__ = "0.2.0b22"
