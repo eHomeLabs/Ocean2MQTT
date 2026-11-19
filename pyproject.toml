@@ -31,6 +31,7 @@ ocean2mqtt = "ocean2mqtt.__main__:main"
 dev = [
   "pytest>=8",
   "pytest-asyncio>=0.24",
+  "pytest-timeout>=2.3",
   "jsonschema>=4.22",
   "ruff>=0.6",
   "amqtt>=0.11",
@@ -54,6 +55,10 @@ packages = ["src/ocean2mqtt"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+# Un test bloqué (broker MQTT de test…) échoue avec la pile des threads au lieu de
+# bloquer la CI pendant des heures.
+timeout = 120
+faulthandler_timeout = 90
 
 [tool.ruff]
 line-length = 100
