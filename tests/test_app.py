@@ -116,7 +116,7 @@ async def test_sensor_state_and_restart(app: Ocean2MQTT, tmp_path) -> None:
 
 
 async def test_valve_pairing_and_setpoint(app: Ocean2MQTT) -> None:
-    data = await _pair(app, "ubiwizz/micitrv004", 0xA5, _4bs_teach(0x20, 0x01, 0x049), VALVE)
+    data = await _pair(app, "micropelt/micitrv004", 0xA5, _4bs_teach(0x20, 0x01, 0x049), VALVE)
     # Réponse au teach-in 4BS bidirectionnel
     reply = next(t for t in reversed(app.dongle.sent) if t.destination == VALVE)
     assert reply.payload[3] == 0xF0 and reply.sender == BASE_ID + 1
@@ -228,3 +228,12 @@ async def test_mqtt_bridge_end_to_end(app: Ocean2MQTT) -> None:
         client.disconnect()
         await bridge.stop()
         await broker.shutdown()
+
+
+def test_moved_sheet_ids_are_migrated(tmp_path) -> None:
+    (tmp_path / "devices.json").write_text(json.dumps({"version": 1, "meta": {}, "devices": [
+        {"id": "0181A2B3", "product": "ubiwizz/serfah60", "name": "Luminosité"}]}))
+    app = Ocean2MQTT(Config(tmp_path).load())
+    assert app.store.devices["0181A2B3"]["product"] == "eltako/fah60"
+    saved = json.loads((tmp_path / "devices.json").read_text())
+    assert saved["devices"][0]["product"] == "eltako/fah60"

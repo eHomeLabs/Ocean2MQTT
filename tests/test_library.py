@@ -77,3 +77,11 @@ def test_device_uses_sheet_decoders() -> None:
     air = Device.__new__(Device)
     air.product = lib.products["ubiwizz/ubild023"]
     assert air.decode(_t(0xA5, "00 2D 00 08")) == {"co2": 450}
+
+
+def test_moved_sheets_keep_old_ids() -> None:
+    lib = load_library()
+    assert lib.get("ubiwizz/serfah60").id == "eltako/fah60"
+    assert lib.get("ubiwizz/ubid1220211").id == "afriso/55080"
+    assert lib.get("ubiwizz/micitrv004").id == "micropelt/micitrv004"
+    assert [p.id for p in lib.search("SERFAH60")] == ["eltako/fah60"]
