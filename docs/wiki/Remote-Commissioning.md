@@ -47,7 +47,7 @@ Le protocole Remote Management n'est **pas chiffré** : le code passe en clair �
 
 - n'envoie le code que sur une action de votre part et **demande confirmation** avant chaque envoi ;
 - ne montre jamais le code et le masque dans les journaux ;
-- peut **désactiver complètement** le Remote Commissioning : option **Remote Commissioning** de l'add-on, ou `recom.enabled: false` dans `configuration.yaml`. Aucune commande Remote Management n'est alors envoyée.
+- peut **désactiver complètement** le Remote Commissioning, directement dans l'interface : **Réglages → onglet Remote Commissioning → Désactivé**. Ce choix est enregistré et l'emporte sur l'option de l'add-on et sur `recom.enabled` dans `configuration.yaml`. Aucune commande Remote Management n'est alors envoyée.
 
 La sauvegarde et le fichier `devices.json` contiennent les codes : gardez-les en lieu sûr.
 

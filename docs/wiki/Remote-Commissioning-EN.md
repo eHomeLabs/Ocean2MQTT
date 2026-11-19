@@ -22,4 +22,4 @@ Device already has a code? Enter it, or **Detect the code** (tries the stored, a
 
 ## Security
 
-Remote Management is **not encrypted**: the code is sent in clear over the air when unlocking. Ocean2MQTT only sends it on your action, **asks for confirmation** each time, never shows it, and can **disable Remote Commissioning entirely** (add-on option or `recom.enabled: false`). Backups and `devices.json` contain the codes: keep them safe.
+Remote Management is **not encrypted**: the code is sent in clear over the air when unlocking. Ocean2MQTT only sends it on your action, **asks for confirmation** each time, never shows it, and can **disable Remote Commissioning entirely** from the interface (**Settings → Remote Commissioning tab → Disabled**; this choice overrides the add-on option and `recom.enabled`). Backups and `devices.json` contain the codes: keep them safe.

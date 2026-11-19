@@ -19,7 +19,7 @@ Il faut :
 4. Onglet **Configuration** : choisissez la **clé EnOcean** dans la liste.
 5. Démarrez l'add-on et ouvrez **Ocean2MQTT** dans la barre latérale.
 
-Options de l'add-on : nom des topics (`name` ou `id`), niveau du journal, Remote Commissioning (activé / désactivé), serveur MQTT externe et mot de passe de l'accès direct (port 8080) facultatifs.
+Options de l'add-on : nom des topics (`name` ou `id`), niveau du journal, Remote Commissioning (activé / désactivé, réglable aussi dans **Réglages → Remote Commissioning**, qui l'emporte), serveur MQTT externe et mot de passe de l'accès direct (port 8080) facultatifs.
 
 Architectures : amd64 et aarch64 (Raspberry Pi 4 / 5 en 64 bits).
 
