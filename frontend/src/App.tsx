@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { AddProduct } from "./AddProduct";
-import { clearError, refresh, useStore } from "./api";
+import { clearError, refresh, request, useStore } from "./api";
 import { DeviceCard } from "./DeviceCard";
 import { DeviceDetail } from "./DeviceDetail";
 import { getLang, setLang, t, type Key, type Lang } from "./i18n";
@@ -172,68 +172,147 @@ export function App() {
   );
 }
 
+type SettingsTab = "language" | "gateway" | "mqtt" | "recom" | "migration" | "about";
+const SETTINGS_TABS: SettingsTab[] = ["language", "gateway", "mqtt", "recom", "migration", "about"];
+
 function AppSettings({ onStart, onError }: { onStart: (t: MigrationTarget) => void; onError: (m: string) => void }) {
   const { info } = useStore();
   const gw = info?.gateway;
+  const [tab, setTab] = useState<SettingsTab>(() => {
+    try {
+      const saved = sessionStorage.getItem("o2m-settings-tab") as SettingsTab | null;
+      return saved && SETTINGS_TABS.includes(saved) ? saved : "language";
+    } catch {
+      return "language";
+    }
+  });
+  const open = (key: SettingsTab) => {
+    setTab(key);
+    try {
+      sessionStorage.setItem("o2m-settings-tab", key);
+    } catch {
+      /* stockage indisponible : sans importance */
+    }
+  };
   return (
-    <div className="stack narrow">
-      <section className="card stack">
-        <h3>{t("app.language")}</h3>
-        <div className="segmented two" role="group" aria-label={t("app.language")}>
-          {(["fr", "en"] as Lang[]).map((l) => (
-            <button
-              key={l}
-              type="button"
-              aria-pressed={getLang() === l}
-              className={getLang() === l ? "active" : ""}
-              onClick={() => {
-                setLang(l);
-                refresh();
-              }}
-            >
-              {l === "fr" ? "Français" : "English"}
-            </button>
-          ))}
-        </div>
-      </section>
-      <section className="card stack">
-        <h3>{t("app.gateway")}</h3>
-        <dl className="facts">
-          <div>
-            <dt>{t("app.port")}</dt>
-            <dd><code>{gw?.port ?? "—"}</code></dd>
+    <div className="stack narrow settings-page">
+      <div className="tabs settings-tabs" role="tablist" aria-label={t("nav.settings")}>
+        {SETTINGS_TABS.map((key) => (
+          <button key={key} type="button" role="tab" aria-selected={tab === key} className={tab === key ? "active" : ""} onClick={() => open(key)}>
+            {t(`set.tab.${key}` as Key)}
+          </button>
+        ))}
+      </div>
+      {tab === "language" && (
+        <section className="card stack">
+          <h3>{t("app.language")}</h3>
+          <div className="segmented two" role="group" aria-label={t("app.language")}>
+            {(["fr", "en"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                aria-pressed={getLang() === l}
+                className={getLang() === l ? "active" : ""}
+                onClick={() => {
+                  setLang(l);
+                  refresh();
+                }}
+              >
+                {l === "fr" ? "Français" : "English"}
+              </button>
+            ))}
           </div>
-          <div>
-            <dt>{t("app.baseId")}</dt>
-            <dd><code>{gw?.base_id ?? "—"}</code></dd>
-          </div>
-          <div>
-            <dt>{t("app.chipId")}</dt>
-            <dd><code>{gw?.chip_id ?? "—"}</code></dd>
-          </div>
-          <div>
-            <dt>{t("app.firmware")}</dt>
-            <dd>{gw?.app_version ?? "—"}</dd>
-          </div>
-        </dl>
-        <BaseIdSection onError={onError} />
-      </section>
-      <section className="card stack">
-        <h3>{t("app.mqtt")}</h3>
-        <MqttSection onError={onError} />
-      </section>
-      <section className="card stack">
-        <h3>{t("app.recom")}</h3>
-        <p className="small">{info?.recom_enabled === false ? `${t("recom.disabled")}. ${t("recom.disabledHint")}` : t("app.recomOn")}</p>
-        {info?.recom_enabled !== false && <p className="small muted">{t("app.recomHow")}</p>}
-      </section>
-      <MigrationSettings onStart={onStart} onError={onError} />
-      <section className="card stack">
-        <h3>{t("app.about")}</h3>
-        <p className="small">
-          {t("app.aboutText")} <a href="https://github.com/eHomeLabs/Ocean2MQTT" target="_blank" rel="noreferrer">github.com/eHomeLabs/Ocean2MQTT</a>
-        </p>
-      </section>
+        </section>
+      )}
+      {tab === "gateway" && (
+        <section className="card stack">
+          <h3>{t("app.gateway")}</h3>
+          <dl className="facts">
+            <div>
+              <dt>{t("app.port")}</dt>
+              <dd><code>{gw?.port ?? "—"}</code></dd>
+            </div>
+            <div>
+              <dt>{t("app.baseId")}</dt>
+              <dd><code>{gw?.base_id ?? "—"}</code></dd>
+            </div>
+            <div>
+              <dt>{t("app.chipId")}</dt>
+              <dd><code>{gw?.chip_id ?? "—"}</code></dd>
+            </div>
+            <div>
+              <dt>{t("app.firmware")}</dt>
+              <dd>{gw?.app_version ?? "—"}</dd>
+            </div>
+          </dl>
+          <BaseIdSection onError={onError} />
+        </section>
+      )}
+      {tab === "mqtt" && (
+        <section className="card stack">
+          <h3>{t("app.mqtt")}</h3>
+          <MqttSection onError={onError} />
+        </section>
+      )}
+      {tab === "recom" && <RecomSettings onError={onError} />}
+      {tab === "migration" && <MigrationSettings onStart={onStart} onError={onError} />}
+      {tab === "about" && (
+        <section className="card stack">
+          <h3>{t("app.about")}</h3>
+          <dl className="facts">
+            <div>
+              <dt>{t("about.version")}</dt>
+              <dd>{info?.version ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>{t("about.licence")}</dt>
+              <dd>MIT · eHomeLabs</dd>
+            </div>
+          </dl>
+          <p className="small">{t("app.aboutText")}</p>
+          <ul className="links">
+            <li><a href="https://github.com/eHomeLabs/Ocean2MQTT" target="_blank" rel="noreferrer">{t("about.code")}</a></li>
+            <li><a href={t("about.wikiUrl")} target="_blank" rel="noreferrer">{t("about.wiki")}</a></li>
+            <li><a href="https://ehomelabs.github.io/Ocean2MQTT/" target="_blank" rel="noreferrer">{t("add.catalog")}</a></li>
+            <li><a href="https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml" target="_blank" rel="noreferrer">{t("add.propose")}</a></li>
+            <li><a href="https://github.com/eHomeLabs/Ocean2MQTT/releases" target="_blank" rel="noreferrer">{t("about.releases")}</a></li>
+            <li><a href="https://github.com/eHomeLabs/Ocean2MQTT/issues" target="_blank" rel="noreferrer">{t("about.issues")}</a></li>
+          </ul>
+          <p className="small muted">{t("about.independent")}</p>
+        </section>
+      )}
     </div>
+  );
+}
+
+function RecomSettings({ onError }: { onError: (m: string) => void }) {
+  const { info } = useStore();
+  const enabled = info?.recom_enabled !== false;
+  const [busy, setBusy] = useState(false);
+  const set = async (value: boolean) => {
+    if (value === enabled) return;
+    setBusy(true);
+    try {
+      await request("config/recom/set", { enabled: value });
+    } catch (e) {
+      onError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="card stack">
+      <h3>{t("app.recom")}</h3>
+      <div className="segmented two" role="group" aria-label={t("app.recom")}>
+        <button type="button" aria-pressed={enabled} className={enabled ? "active" : ""} disabled={busy} onClick={() => set(true)}>
+          {t("set.recomOn")}
+        </button>
+        <button type="button" aria-pressed={!enabled} className={!enabled ? "active" : ""} disabled={busy} onClick={() => set(false)}>
+          {t("set.recomOff")}
+        </button>
+      </div>
+      <p className="small">{enabled ? t("app.recomOn") : t("set.recomOffText")}</p>
+      <p className="small muted">{t("set.recomHint")}</p>
+    </section>
   );
 }

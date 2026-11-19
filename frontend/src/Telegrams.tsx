@@ -1,4 +1,4 @@
-// Journal radio en direct : filtres par émetteur et RORG, pause, export CSV
+// Journal radio en direct : filtres (recherche, produit, sens, RORG, signal…), pause, export CSV
 import { useState } from "react";
 import { clearTelegrams, pauseTelegrams, useStore } from "./api";
 import { locale, t } from "./i18n";
@@ -6,15 +6,49 @@ import type { Telegram } from "./types";
 
 const RORGS: Record<string, string> = { F6: "RPS", D5: "1BS", A5: "4BS", D2: "VLD", D4: "UTE", D1: "MSC", C5: "SYS_EX" };
 
+type Filters = { q: string; sender: string; rorg: string; dir: "" | "rx" | "tx"; kind: "" | "known" | "unknown"; dbm: string; dups: boolean };
+const EMPTY: Filters = { q: "", sender: "", rorg: "", dir: "", kind: "", dbm: "", dups: true };
+
+function loadFilters(): Filters {
+  try {
+    return { ...EMPTY, ...JSON.parse(sessionStorage.getItem("o2m-tg-filters") || "{}") };
+  } catch {
+    return EMPTY;
+  }
+}
+
 export function TelegramsPage() {
   const { telegrams, devices } = useStore();
-  const [sender, setSender] = useState("");
-  const [rorg, setRorg] = useState("");
+  const [f, setF] = useState<Filters>(loadFilters);
   const [paused, setPaused] = useState(false);
+  const set = (patch: Partial<Filters>) => {
+    const next = { ...f, ...patch };
+    setF(next);
+    try {
+      sessionStorage.setItem("o2m-tg-filters", JSON.stringify(next));
+    } catch {
+      /* stockage indisponible */
+    }
+  };
   const names = new Map(devices.map((d) => [d.id, d.name]));
-  const senders = Array.from(new Set(telegrams.map((x) => x.sender)));
+  const peer = (x: Telegram) => (x.dir === "tx" ? x.destination : x.sender);
+  const senders = Array.from(new Set(telegrams.map(peer))).sort((a, b) => (names.get(a) ?? "~" + a).localeCompare(names.get(b) ?? "~" + b));
   const rorgs = Array.from(new Set(telegrams.map((x) => x.rorg))).sort();
-  const shown = telegrams.filter((x) => (!sender || x.sender === sender || x.destination === sender) && (!rorg || x.rorg === rorg));
+  const q = f.q.trim().toLowerCase();
+  const minDbm = f.dbm ? Number(f.dbm) : null;
+  const shown = telegrams.filter((x) => {
+    const id = peer(x);
+    if (f.sender && x.sender !== f.sender && x.destination !== f.sender) return false;
+    if (f.rorg && x.rorg !== f.rorg) return false;
+    if (f.dir && x.dir !== f.dir) return false;
+    if (f.kind === "known" && !names.has(id)) return false;
+    if (f.kind === "unknown" && names.has(id)) return false;
+    if (minDbm != null && (x.dbm == null || -Math.abs(x.dbm) < minDbm)) return false;
+    if (!f.dups && x.duplicate) return false;
+    if (q && ![x.sender, x.destination, names.get(id) ?? "", x.name ?? "", x.data, x.rorg, RORGS[x.rorg] ?? ""].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const active = JSON.stringify(f) !== JSON.stringify(EMPTY);
   const exportCsv = () => {
     const head = "time;dir;sender;name;destination;rorg;data;status;dbm;duplicate";
     const rows = shown.map((x) =>
@@ -50,23 +84,44 @@ export function TelegramsPage() {
           </button>
         </div>
       </div>
-      <div className="card filters-row">
-        <label className="inline">
-          {t("tg.sender")}
-          <select value={sender} onChange={(e) => setSender(e.target.value)}>
+      <div className="card tg-filters">
+        <label className="field tg-search">
+          {t("tg.search")}
+          <input type="search" value={f.q} onChange={(e) => set({ q: e.target.value })} placeholder={t("tg.searchHint")} />
+        </label>
+        <label className="field">
+          {t("tg.product")}
+          <select value={f.sender} onChange={(e) => set({ sender: e.target.value })}>
             <option value="">{t("tg.allSenders")}</option>
+            {f.sender && !senders.includes(f.sender) && <option value={f.sender}>{f.sender}</option>}
             {senders.map((s) => (
               <option key={s} value={s}>
-                {s}
-                {names.get(s) ? ` · ${names.get(s)}` : ""}
+                {names.get(s) ? `${names.get(s)} · ${s}` : s}
               </option>
             ))}
           </select>
         </label>
-        <label className="inline">
-          {t("tg.rorg")}
-          <select value={rorg} onChange={(e) => setRorg(e.target.value)}>
+        <label className="field">
+          {t("tg.kind")}
+          <select value={f.kind} onChange={(e) => set({ kind: e.target.value as Filters["kind"] })}>
             <option value="">{t("tg.all")}</option>
+            <option value="known">{t("tg.known")}</option>
+            <option value="unknown">{t("tg.unknown")}</option>
+          </select>
+        </label>
+        <label className="field">
+          {t("tg.dir")}
+          <select value={f.dir} onChange={(e) => set({ dir: e.target.value as Filters["dir"] })}>
+            <option value="">{t("tg.all")}</option>
+            <option value="rx">← {t("tg.rxMany")}</option>
+            <option value="tx">→ {t("tg.txMany")}</option>
+          </select>
+        </label>
+        <label className="field">
+          {t("tg.rorg")}
+          <select value={f.rorg} onChange={(e) => set({ rorg: e.target.value })}>
+            <option value="">{t("tg.all")}</option>
+            {f.rorg && !rorgs.includes(f.rorg) && <option value={f.rorg}>{f.rorg}</option>}
             {rorgs.map((r) => (
               <option key={r} value={r}>
                 {r} {RORGS[r] ? `(${RORGS[r]})` : ""}
@@ -74,6 +129,28 @@ export function TelegramsPage() {
             ))}
           </select>
         </label>
+        <label className="field">
+          {t("tg.signal")}
+          <select value={f.dbm} onChange={(e) => set({ dbm: e.target.value })}>
+            <option value="">{t("tg.all")}</option>
+            {["-60", "-70", "-80", "-90"].map((v) => (
+              <option key={v} value={v}>
+                ≥ {v} dBm
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="check tg-dups">
+          <input type="checkbox" checked={f.dups} onChange={(e) => set({ dups: e.target.checked })} /> {t("tg.showDups")}
+        </label>
+        <div className="tg-count">
+          <span className="small muted">{t("tg.count", { n: shown.length, total: telegrams.length })}</span>
+          {active && (
+            <button type="button" className="link small" onClick={() => set(EMPTY)}>
+              {t("tg.reset")}
+            </button>
+          )}
+        </div>
       </div>
       <TelegramTable telegrams={shown} names={names} />
     </div>
