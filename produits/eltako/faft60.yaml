@@ -1,0 +1,20 @@
+ref: FAFT60
+marque: Eltako
+nom:
+  fr: Capteur de température et d'humidité Extérieur EnOcean
+  en: EnOcean Outdoor Temperature and Humidity Sensor
+type: capteur
+eep: A5-04-02
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Passer un aimant sur le haut du boitier (repère carré noir)
+    en:
+    - Run a magnet over the top of the casing (black square mark)
+reglages:
+- timeout
+support: communaute
+notice: https://www.eltako.com/fileadmin/downloads/fr/_bedienung/FAFT60_30000458-1_frz.pdf
+notes: 'À confirmer sur produit réel. Proposé dans l''issue #1.'
+photo: faft60.png
