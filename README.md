@@ -2,18 +2,52 @@
   <img src="docs/logo/ocean2mqtt-logo.svg" alt="Ocean2MQTT" width="420">
 </p>
 
-<p align="center"><strong>Passerelle EnOcean ↔ MQTT multi-marques</strong> · <em>Multi-brand EnOcean ↔ MQTT gateway</em></p>
+<p align="center"><strong>Multi-brand EnOcean ↔ MQTT gateway</strong> · <em>Passerelle EnOcean ↔ MQTT multi-marques</em></p>
 
-<p align="center"><a href="#français">Français</a> · <a href="#english">English</a></p>
+<p align="center"><a href="#english">English</a> · <a href="#français">Français</a></p>
 
 ---
 
-> 🧪 **Version bêta (0.2.0b26)** — à tester, pas encore pour une installation en production.
-> **Beta release** — for testing, not yet for production use.
+> 🧪 **Beta release (0.2.0b26)** — for testing.
+> **Version bêta** — pour les tests.
 
 <p align="center">
   <img src="docs/captures/mes-produits.png" alt="Ocean2MQTT : écran Mes produits" width="860">
 </p>
+
+## English
+
+Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a web interface, and all your EnOcean devices published to MQTT, whatever their brand. It works with Home Assistant (automatic discovery), Jeedom, Node-RED, openHAB and anything that speaks MQTT.
+
+### Features
+
+- **Device library**: search by reference, name or EEP, filter by brand and type; each sheet shows the picture, EEP profile, features and step-by-step pairing procedure.
+- **Guided pairing**: 60 s listening window with a countdown; Ocean2MQTT answers automatically (bidirectional UTE, 4BS, bidirectional 4BS, 1BS, RPS first press), then you name the device and pick its room.
+- **Generic mode** for devices not yet in the library (pick the EEP profile).
+- **Automatic suggestion** when an unknown device sends its pairing request; sensors and switches already heard can be added in one click.
+- **My devices**: controls (on/off, channels, pilot wire mode, roller shutter, valve setpoint) and measurements (temperature, humidity, power, energy, light, CO2, VOC, contact, water leak, window handle…), last button action, availability and signal quality.
+- **Power and energy**: automatic measurement reporting is configured on metering devices, and actuators are polled every 60 s.
+- **Device settings**: LED, local button, power-on state, auto off / delay off per channel, wired switch type, shutter travel time and calibration, repeater, energy reset, measurement offsets, unavailability timeout.
+- **Remote Commissioning** (ReMan / ReCom): security code chosen at pairing — *automatic* (derived from the device ID and an installation secret: always the same, impossible to guess, recoverable from the backup), *entered* (QR code 11Z… or your own) or *none*; code detection for devices that already have one; ping, read / add / delete paired remotes, read shutter parameters, operation log. The protocol is not encrypted (the code is sent in clear when unlocking): Ocean2MQTT asks for confirmation before each send, and Remote Commissioning can be disabled completely (`recom.enabled: false`).
+- **Live telegram log** with filters and CSV export; list of heard but unpaired devices.
+- **Broken or replaced stick**: write the old **Base ID** into the new stick so actuators recognise it without re-pairing. **MQTT server and topics editable in the interface**, with a connection test.
+- **Migration from NodOcean for HA without re-pairing** (same stick), NodOcean export file import, sensors-only import or fresh install with another stick, stick change detection with one-click re-pairing, backup and restore.
+- **MQTT bridge** with Zigbee2MQTT-like topics and **Home Assistant discovery** (settings become configuration entities).
+- **[Online catalogue of compatible devices](https://ehomelabs.github.io/Ocean2MQTT/)** and a **[Suggest a new EnOcean device](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml)** form (sheet created automatically once approved), also from the **Add a device** page.
+- **Web interface** in **French and English**, mobile-friendly, live updates over WebSocket.
+- **Home Assistant add-on** (sidebar access), **Docker image** (amd64 / arm64) or **Python** package.
+- **Open contributions**: one device = one YAML file + one picture, no code needed.
+
+<p align="center">
+  <img src="docs/captures/my-devices-en.png" alt="Ocean2MQTT: My devices" width="420">
+  <img src="docs/captures/generic-device-en.png" alt="Ocean2MQTT: generic device" width="420">
+</p>
+
+**Home Assistant OS / Supervised**: [![Add the repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FeHomeLabs%2Fhassio-ocean2mqtt) then install **Ocean2MQTT** from the store. Documentation: [wiki](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Home-EN).
+
+**Quick start**: see the [English installation guide](docs/wiki/Installation-EN.md) (Docker, Python, or `python tools/demo.py` for a demo without hardware). Configuration lives in `data/configuration.yaml`; every key can be overridden with `OCEAN2MQTT_<SECTION>_<KEY>` environment variables. MQTT topics and requests are listed in the [English MQTT and API guide](docs/wiki/MQTT-and-API.md).
+
+**Contributing**: [Contribution guide](CONTRIBUTING.md) · [Security policy](SECURITY.md).
 
 ## Français
 
@@ -177,41 +211,9 @@ La découverte automatique Home Assistant est activée par défaut (préfixe `ho
 | `produits/<marque>/` | Une fiche YAML + une photo par produit |
 | `tests/`, `tools/` | Tests, démo sans matériel, outils |
 
-## English
+## License / Licence
 
-Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a web interface, and all your EnOcean devices published to MQTT, whatever their brand. It works with Home Assistant (automatic discovery), Jeedom, Node-RED, openHAB and anything that speaks MQTT.
-
-### Features
-
-- **Device library**: search by reference, name or EEP, filter by brand and type; each sheet shows the picture, EEP profile, features and step-by-step pairing procedure.
-- **Guided pairing**: 60 s listening window with a countdown; Ocean2MQTT answers automatically (bidirectional UTE, 4BS, bidirectional 4BS, 1BS, RPS first press), then you name the device and pick its room.
-- **Generic mode** for devices not yet in the library (pick the EEP profile).
-- **Automatic suggestion** when an unknown device sends its pairing request; sensors and switches already heard can be added in one click.
-- **My devices**: controls (on/off, channels, pilot wire mode, roller shutter, valve setpoint) and measurements (temperature, humidity, power, energy, light, CO2, VOC, contact, water leak, window handle…), last button action, availability and signal quality.
-- **Power and energy**: automatic measurement reporting is configured on metering devices, and actuators are polled every 60 s.
-- **Device settings**: LED, local button, power-on state, auto off / delay off per channel, wired switch type, shutter travel time and calibration, repeater, energy reset, measurement offsets, unavailability timeout.
-- **Remote Commissioning** (ReMan / ReCom): security code chosen at pairing — *automatic* (derived from the device ID and an installation secret: always the same, impossible to guess, recoverable from the backup), *entered* (QR code 11Z… or your own) or *none*; code detection for devices that already have one; ping, read / add / delete paired remotes, read shutter parameters, operation log. The protocol is not encrypted (the code is sent in clear when unlocking): Ocean2MQTT asks for confirmation before each send, and Remote Commissioning can be disabled completely (`recom.enabled: false`).
-- **Live telegram log** with filters and CSV export; list of heard but unpaired devices.
-- **Broken or replaced stick**: write the old **Base ID** into the new stick so actuators recognise it without re-pairing. **MQTT server and topics editable in the interface**, with a connection test.
-- **Migration from NodOcean for HA without re-pairing** (same stick), NodOcean export file import, sensors-only import or fresh install with another stick, stick change detection with one-click re-pairing, backup and restore.
-- **MQTT bridge** with Zigbee2MQTT-like topics and **Home Assistant discovery** (settings become configuration entities).
-- **[Online catalogue of compatible devices](https://ehomelabs.github.io/Ocean2MQTT/)** and a **[Suggest a new EnOcean device](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml)** form (sheet created automatically once approved), also from the **Add a device** page.
-- **Web interface** in **French and English**, mobile-friendly, live updates over WebSocket.
-- **Home Assistant add-on** (sidebar access), **Docker image** (amd64 / arm64) or **Python** package.
-- **Open contributions**: one device = one YAML file + one picture, no code needed.
-
-<p align="center">
-  <img src="docs/captures/my-devices-en.png" alt="Ocean2MQTT: My devices" width="420">
-  <img src="docs/captures/generic-device-en.png" alt="Ocean2MQTT: generic device" width="420">
-</p>
-
-**Home Assistant OS / Supervised**: [![Add the repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FeHomeLabs%2Fhassio-ocean2mqtt) then install **Ocean2MQTT** from the store. Documentation: [wiki](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Home-EN).
-
-**Quick start**: see *Installation* above (Docker, Python, or `python tools/demo.py` for a demo without hardware). Configuration lives in `data/configuration.yaml`; every key can be overridden with `OCEAN2MQTT_<SECTION>_<KEY>` environment variables. MQTT topics and requests are listed in the *MQTT* section above.
-
-## Licence / License
-
-[GNU GPL v3 (`GPL-3.0-only`)](LICENSE) · [Mentions MIT / MIT notices](LICENSE-MIT.md) · Projet [eHomeLabs](https://github.com/eHomeLabs).
+[GNU GPL v3 (`GPL-3.0-only`)](LICENSE) · [MIT notices / Mentions MIT](LICENSE-MIT.md) · Projet [eHomeLabs](https://github.com/eHomeLabs).
 
 EnOcean® est une marque déposée d'EnOcean GmbH. Ocean2MQTT est un projet indépendant, compatible EnOcean, sans lien avec EnOcean GmbH ni l'EnOcean Alliance.
 EnOcean® is a registered trademark of EnOcean GmbH. Ocean2MQTT is an independent EnOcean-compatible project, not affiliated with EnOcean GmbH or the EnOcean Alliance.

@@ -99,3 +99,38 @@ def test_issue_body_to_sheet() -> None:
 def test_incomplete_issue() -> None:
     with pytest.raises(itp.IssueError, match="EEP"):
         itp.build(itp.parse_sections(BODY.replace("f6 05 02", "inconnu")))
+
+def test_english_first_issue_without_french_copy() -> None:
+    body = """### Brand / Marque
+
+Ubiwizz
+
+### Reference / Référence
+
+UBI-Test 42
+
+### English name / Nom en anglais
+
+Smoke detector
+
+### Type
+
+capteur (sensor)
+
+### EEP profile / Profil EEP
+
+F6-05-02
+
+### Pairing steps in English / Procédure d'appairage en anglais
+
+1. Insert the battery.
+2. Press Learn.
+"""
+    _, sheet = itp.build(itp.parse_sections(body))
+    assert sheet["nom"] == {"fr": "Smoke detector", "en": "Smoke detector"}
+    assert sheet["appairage"]["etapes"] == {
+        "fr": ["Insert the battery.", "Press Learn."],
+        "en": ["Insert the battery.", "Press Learn."],
+    }
+    root = Path(__file__).resolve().parent.parent / "produits"
+    jsonschema.Draft202012Validator(_schema(root)).validate(sheet)

@@ -1,6 +1,21 @@
-# Contribuer à Ocean2MQTT
+# Contributing to Ocean2MQTT
 
-[Français](#français) · [English](#english)
+[English](#english) · [Français](#français)
+
+## English
+
+English and French contributions are welcome.
+
+### Suggest or validate a device
+
+1. Search the [catalog](https://ehomelabs.github.io/Ocean2MQTT/) and try [generic mode](docs/wiki/Adding-an-unsupported-device.md) if your device is missing.
+2. Submit the [device form](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) with the exact model, EEP, pairing steps and tested features. Only attach photos you have permission to redistribute under MIT, as stated in the form. Remove credentials, Remote Commissioning codes and other secrets from diagnostic data.
+3. A maintainer applies the `accepté` label after review. The workflow opens a pull request for the YAML sheet and optional photo. Once merged, the device enters the catalog as **Community** and ships in the next release.
+4. After testing on real hardware, use **Information → Confirm this device works** or the [test report form](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=retour-test.yml). A maintainer reviews the tested features and applies `validé` to generate the PR that marks it **Validated**.
+
+### Contribute code
+
+Open a focused PR against `main`. Use the [setup and test commands](#contribuer-au-code). Follow the [catalog schema](produits/schema.json) and keep the path of published device sheets stable. Review generated PRs and select **Approve workflows to run** if GitHub prompts for approval. Merge after all three required checks pass.
 
 ## Français
 
@@ -30,16 +45,3 @@ Pour tester l’interface avec Node.js 22, lancez `npm ci` puis `npm run build` 
 ### Vérifier une PR générée automatiquement
 
 Le mainteneur contrôle que la fiche correspond à la référence et au profil, que les étapes d’appairage sont exploitables et que les droits de la photo sont établis. Sur la PR, cliquez sur **Approve workflows to run** si GitHub affiche ce bouton. Attendez les trois contrôles obligatoires de `main` (`tests (3.12)`, `tests (3.13)` et `frontend`). Pour la promotion en **Validé**, comparez la fiche au retour de test sur matériel.
-
-## English
-
-### Suggest or validate a device
-
-1. Search the [catalog](https://ehomelabs.github.io/Ocean2MQTT/) and try [generic mode](docs/wiki/Adding-an-unsupported-device.md) if your device is missing.
-2. Submit the [device form](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml) with the exact model, EEP, pairing steps and tested features. Only attach photos you have permission to redistribute under MIT, as stated in the form. Remove credentials, Remote Commissioning codes and other secrets from diagnostic data.
-3. A maintainer applies the `accepté` label after review. The workflow opens a pull request for the YAML sheet and optional photo. Once merged, the device enters the catalog as **Community** and ships in the next release.
-4. After testing on real hardware, use **Information → Confirm this device works** or the [test report form](https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=retour-test.yml). A maintainer reviews the tested features and applies `validé` to generate the PR that marks it **Validated**.
-
-### Contribute code
-
-Open a focused PR against `main`. Use the setup and test commands above. Follow the [catalog schema](produits/schema.json) and keep the path of published device sheets stable. Review generated PRs and select **Approve workflows to run** if GitHub prompts for approval. Merge after all three required checks pass.
