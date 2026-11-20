@@ -333,6 +333,17 @@ def decode_a50402(t: RadioTelegram) -> dict[str, Any] | None:
     return _decode_a504(t, -20, 60)
 
 
+def decode_a50403(t: RadioTelegram) -> dict[str, Any] | None:
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    db3, db2, db1, _ = t.payload
+    temperature_raw = ((db2 & 0x03) << 8) | db1
+    return {
+        "temperature": round(-20 + temperature_raw * 80 / 1023, 1),
+        "humidity": round(db3 * 100 / 255, 1),
+    }
+
+
 # --- F6-02-01 : interrupteur 2 rockers ------------------------------------------
 # R1 : 0 = AI (bas gauche), 1 = A0 (haut gauche), 2 = BI (bas droite), 3 = B0 (haut droite)
 
@@ -636,6 +647,7 @@ DECODERS = {
     "A5-02-05": decode_a50205,
     "A5-04-01": decode_a50401,
     "A5-04-02": decode_a50402,
+    "A5-04-03": decode_a50403,
     "A5-06-01": decode_a50601,
     "A5-07-01": decode_a50701,
     "A5-07-03": decode_a50703,
