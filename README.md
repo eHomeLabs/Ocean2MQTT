@@ -209,7 +209,7 @@ Ocean2MQTT does for EnOcean what Zigbee2MQTT does for Zigbee: one USB stick, a w
 
 ## Licence / License
 
-[MIT](LICENSE) · Projet [eHomeLabs](https://github.com/eHomeLabs).
+[GNU GPL v3 (`GPL-3.0-only`)](LICENSE) · [Mentions MIT / MIT notices](LICENSE-MIT.md) · Projet [eHomeLabs](https://github.com/eHomeLabs).
 
 EnOcean® est une marque déposée d'EnOcean GmbH. Ocean2MQTT est un projet indépendant, compatible EnOcean, sans lien avec EnOcean GmbH ni l'EnOcean Alliance.
 EnOcean® is a registered trademark of EnOcean GmbH. Ocean2MQTT is an independent EnOcean-compatible project, not affiliated with EnOcean GmbH or the EnOcean Alliance.

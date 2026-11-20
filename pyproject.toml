@@ -7,8 +7,8 @@ name = "ocean2mqtt"
 version = "0.2.0b26"
 description = "Passerelle EnOcean <-> MQTT multi-marques, façon Zigbee2MQTT"
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
+license = "GPL-3.0-only"
+license-files = ["LICENSE", "LICENSE-MIT.md"]
 requires-python = ">=3.12"
 authors = [{ name = "eHomeLabs" }]
 keywords = ["enocean", "mqtt", "home-assistant", "domotique", "gateway"]
