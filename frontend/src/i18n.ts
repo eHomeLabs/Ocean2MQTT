@@ -305,7 +305,7 @@ const FR = {
   "app.no": "non",
   "app.configHint": "Ces paramètres se changent dans configuration.yaml.",
   "app.about": "À propos",
-  "app.aboutText": "Ocean2MQTT est un projet open source eHomeLabs (licence MIT).",
+  "app.aboutText": "Ocean2MQTT est un projet open source eHomeLabs (licence GPL-3.0-only).",
   // Migration, sauvegarde, changement de clé
   "mig.bannerTitle": "NodOcean for HA détecté",
   "mig.bannerText": "{n} produit(s) appairé(s) avec la clé {base}. Reprenez-les sans réappairer, ou partez d'une installation vierge.",
@@ -694,7 +694,7 @@ const EN: Record<Key, string> = {
   "app.no": "no",
   "app.configHint": "These parameters are changed in configuration.yaml.",
   "app.about": "About",
-  "app.aboutText": "Ocean2MQTT is an open source eHomeLabs project (MIT licence).",
+  "app.aboutText": "Ocean2MQTT is an open source eHomeLabs project (GPL-3.0-only licence).",
   "mig.bannerTitle": "NodOcean for HA found",
   "mig.bannerText": "{n} device(s) paired with stick {base}. Bring them over without re-pairing, or start from a fresh install.",
   "mig.start": "Bring my devices over",
