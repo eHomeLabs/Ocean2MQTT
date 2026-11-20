@@ -21,3 +21,8 @@ workflow **CI** (Python 3.12, Python 3.13 et `frontend`). Sélectionnez les
 noms affichés dans GitHub après un passage de la CI sur une PR. Bloquez les
 force-push et la suppression de la branche. Tant qu'un seul mainteneur peut
 fusionner, laissez le nombre d'approbations exigées à zéro.
+
+## Stable 0.2.0
+
+See [release preparation and upgrade notes](release-0.2.0.md) for the publication
+order across the service and Home Assistant add-on repositories.
