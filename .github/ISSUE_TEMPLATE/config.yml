@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: Wiki
     url: https://github.com/eHomeLabs/Ocean2MQTT/wiki
-    about: Installation, produits non supportés, dépannage / Installation, unsupported devices, troubleshooting
+    about: Installation, unsupported devices, troubleshooting / Installation, produits non supportés, dépannage

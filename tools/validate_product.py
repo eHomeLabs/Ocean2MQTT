@@ -33,7 +33,8 @@ def sections(body: str) -> dict[str, str]:
     for block in re.split(r"^### ", body or "", flags=re.MULTILINE)[1:]:
         label, _, value = block.partition("\n")
         value = value.strip()
-        out[label.split("/")[0].strip()] = "" if value in EMPTY else value
+        for heading in label.split(" / "):
+            out[heading.strip()] = "" if value in EMPTY else value
     return out
 
 

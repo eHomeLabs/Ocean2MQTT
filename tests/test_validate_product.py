@@ -80,3 +80,18 @@ def test_old_sheet_id_and_errors(root) -> None:
     unchecked["body"] = unchecked["body"].replace("- [x]", "- [ ]")
     with pytest.raises(vp.ValidationError, match="Aucune fonction"):
         vp.validate(unchecked)
+
+def test_english_first_report(root) -> None:
+    report = issue("eltako/faft60")
+    report["body"] = (
+        report["body"]
+        .replace("Fiche / Device sheet", "Device sheet / Fiche")
+        .replace("Ce qui fonctionne / What works", "What works / Ce qui fonctionne")
+        .replace(
+            "Version d'Ocean2MQTT / Ocean2MQTT version",
+            "Ocean2MQTT version / Version d'Ocean2MQTT",
+        )
+    )
+    data = yaml.safe_load(vp.validate(report).read_text(encoding="utf-8"))
+    assert data["support"] == "valide"
+    assert "Ocean2MQTT 0.2.0b23" in data["notes"]

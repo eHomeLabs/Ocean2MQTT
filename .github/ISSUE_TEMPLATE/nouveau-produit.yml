@@ -1,41 +1,39 @@
-name: Proposer un nouveau produit EnOcean / Suggest a new EnOcean device
-description: Fiche complète d'un produit à ajouter à la bibliothèque d'Ocean2MQTT / Full sheet of a device to add to the Ocean2MQTT library
-title: "[Produit] <marque> <référence>"
+name: Suggest a new EnOcean device / Proposer un produit EnOcean
+description: Add a device to the Ocean2MQTT library / Ajouter un appareil au catalogue
+title: "[Device] <brand> <model>"
 labels: ["nouveau produit"]
 body:
   - type: markdown
     attributes:
       value: |
-        Merci ! Remplissez ce que vous savez : les champs facultatifs peuvent rester vides. Après validation par le mainteneur, la fiche est créée automatiquement et le produit apparaît dans la bibliothèque à la version suivante.
         Thanks! Fill in what you know; optional fields may stay empty. Once approved by the maintainer, the sheet is created automatically.
+        Merci ! Remplissez ce que vous savez : les champs facultatifs peuvent rester vides. Après validation par le mainteneur, la fiche est créée automatiquement et le produit apparaît dans la bibliothèque à la version suivante.
 
         Produits déjà disponibles / devices already supported : [catalogue](https://ehomelabs.github.io/Ocean2MQTT/). Aide / help : [Ajouter un produit non supporté](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Ajouter-un-produit-non-support%C3%A9).
   - type: input
     id: marque
     attributes:
-      label: Marque / Brand
+      label: Brand / Marque
       placeholder: "Ubiwizz"
     validations:
       required: true
   - type: input
     id: reference
     attributes:
-      label: Référence / Reference
-      description: Référence commerciale principale (autres références dans « Notes »). / Main commercial reference.
+      label: Reference / Référence
+      description: Main commercial reference. / Référence commerciale principale (autres références dans « Notes »).
       placeholder: "UBILD001"
     validations:
       required: true
   - type: input
     id: nom_fr
     attributes:
-      label: Nom en français / French name
+      label: French name / Nom en français
       placeholder: "Détecteur de fumée"
-    validations:
-      required: true
   - type: input
     id: nom_en
     attributes:
-      label: Nom en anglais / English name
+      label: English name / Nom en anglais
       placeholder: "Smoke detector"
   - type: dropdown
     id: type
@@ -52,27 +50,27 @@ body:
   - type: input
     id: eep
     attributes:
-      label: Profil EEP / EEP profile
-      description: Format RORG-FUNC-TYPE, ex. A5-02-05. Indiqué dans la notice ou la fiche technique, ou affiché par Ocean2MQTT (émetteurs entendus). / Shown in the manual, datasheet or by Ocean2MQTT (heard transmitters).
+      label: EEP profile / Profil EEP
+      description: Shown in the manual, datasheet or by Ocean2MQTT (heard transmitters). / Format RORG-FUNC-TYPE, ex. A5-02-05. Indiqué dans la notice ou la fiche technique, ou affiché par Ocean2MQTT (émetteurs entendus).
       placeholder: "F6-05-02"
     validations:
       required: true
   - type: input
     id: eep_supplementaires
     attributes:
-      label: Autres profils émis / Other profiles sent (facultatif / optional)
+      label: Other profiles sent / Autres profils émis
       placeholder: "A5-09-05"
   - type: input
     id: fabricant_id
     attributes:
-      label: Code fabricant EnOcean / EnOcean manufacturer ID (facultatif / optional)
-      description: Affiché par Ocean2MQTT pour les émetteurs entendus (ex. 0x046 = NodOn). / Shown by Ocean2MQTT for heard transmitters.
+      label: EnOcean manufacturer ID / Code fabricant EnOcean
+      description: Shown by Ocean2MQTT for heard transmitters. / Affiché par Ocean2MQTT pour les émetteurs entendus (ex. 0x046 = NodOn).
       placeholder: "0x046"
   - type: dropdown
     id: appairage
     attributes:
-      label: Mode d'appairage / Pairing mode
-      description: En cas de doute, laissez « je ne sais pas ». / If unsure, choose "I don't know".
+      label: Pairing mode / Mode d'appairage
+      description: If unsure, choose "I don't know". / En cas de doute, laissez « je ne sais pas ».
       options:
         - je ne sais pas / I don't know
         - rps (appui sur une touche / button press)
@@ -86,54 +84,52 @@ body:
   - type: textarea
     id: etapes_fr
     attributes:
-      label: Procédure d'appairage en français / Pairing steps in French
-      description: Une étape par ligne. / One step per line.
+      label: Pairing steps in French / Procédure d'appairage en français
+      description: Une étape par ligne, en anglais ou en français. / One step per line. Fill in the English or French pairing steps.
       placeholder: |
         Installez la pile 9 V fournie.
         Appuyez 2 secondes sur le bouton « Learn » jusqu'au bip.
-    validations:
-      required: true
   - type: textarea
     id: etapes_en
     attributes:
-      label: Procédure d'appairage en anglais / Pairing steps in English (facultatif / optional)
-      description: Une étape par ligne. / One step per line.
+      label: Pairing steps in English / Procédure d'appairage en anglais
+      description: One step per line. Fill in the English or French pairing steps. / Une étape par ligne, en anglais ou en français.
   - type: input
     id: canaux
     attributes:
-      label: Nombre de canaux (actionneurs) / Number of channels (actuators) (facultatif / optional)
+      label: Number of channels (actuators) / Nombre de canaux (actionneurs)
       placeholder: "1"
   - type: checkboxes
     id: options
     attributes:
-      label: Fonctions / Features
+      label: Features / Fonctions
       options:
         - label: Mesure de puissance / énergie (power / energy metering)
         - label: Remote Commissioning (ReMan / ReCom)
   - type: input
     id: notice
     attributes:
-      label: Lien vers la notice ou la fiche technique / Manual or datasheet link
+      label: Manual or datasheet link / Lien vers la notice ou la fiche technique
       placeholder: "https://…"
   - type: textarea
     id: photo
     attributes:
-      label: Photo du produit / Device picture
-      description: Glissez une image ici (fond blanc ou transparent de préférence). Joignez uniquement une photo que vous êtes autorisé à faire redistribuer sous licence MIT. / Drop an image here (white or transparent background preferred). Only attach a picture you are authorized to have redistributed under the MIT license.
+      label: Device picture / Photo du produit
+      description: Drop an image here (white or transparent background preferred). Only attach a picture you are authorized to have redistributed under the MIT license. / Glissez une image ici (fond blanc ou transparent de préférence). Joignez uniquement une photo que vous êtes autorisé à faire redistribuer sous licence MIT.
   - type: textarea
     id: description
     attributes:
-      label: Ce qui fonctionne déjà, remarques / What already works, notes
-      description: Mode générique, autres références, valeurs particulières… / Generic mode, other references, special values…
+      label: What already works, notes / Ce qui fonctionne déjà, remarques
+      description: Generic mode, other references, special values… / Mode générique, autres références, valeurs particulières…
   - type: textarea
     id: telegrammes
     attributes:
-      label: Télégrammes / Telegrams (facultatif / optional)
-      description: Export CSV filtré sur le produit, avec l’action associée. Retirez les codes Remote Commissioning et autres secrets. / Filter the CSV export to the device and include the corresponding actions. Remove Remote Commissioning codes and other secrets.
+      label: Telegrams / Télégrammes
+      description: Filter the CSV export to the device and include the corresponding actions. Remove Remote Commissioning codes and other secrets. / Export CSV filtré sur le produit, avec l’action associée. Retirez les codes Remote Commissioning et autres secrets.
   - type: checkboxes
     id: accord
     attributes:
-      label: Licence
+      label: License / Licence
       options:
         - label: J'accepte que ces informations et la photo soient publiées sous licence MIT dans Ocean2MQTT. / I agree that this information and picture are published under the MIT licence in Ocean2MQTT.
           required: true

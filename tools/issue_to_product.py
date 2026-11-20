@@ -58,7 +58,7 @@ def parse_sections(body: str) -> dict[str, str]:
         label, _, value = block.partition("\n")
         value = value.strip()
         for prefix, key in LABELS.items():
-            if label.strip().startswith(prefix):
+            if any(part.strip().startswith(prefix) for part in label.split(" / ")):
                 out[key] = "" if value in EMPTY else value
                 break
     return out
@@ -103,14 +103,17 @@ def build(fields: dict[str, str]) -> tuple[str, dict]:
     mode = next((m for m in MODES if fields.get("appairage", "").startswith(m)), None)
     mode = mode or DEFAULT_MODE.get(eep[:2], "rps")
     steps_fr = lines(fields.get("etapes_fr", ""))
-    if not steps_fr:
-        raise IssueError("Procédure d'appairage en français manquante")
-    names = {"fr": fields.get("nom_fr", "").strip() or ref}
-    if fields.get("nom_en", "").strip():
-        names["en"] = fields["nom_en"].strip()
-    steps = {"fr": steps_fr}
-    if lines(fields.get("etapes_en", "")):
-        steps["en"] = lines(fields["etapes_en"])
+    steps_en = lines(fields.get("etapes_en", ""))
+    if not (steps_fr or steps_en):
+        raise IssueError("Pairing steps are required in English or French (anglais ou français)")
+    name_en = fields.get("nom_en", "").strip()
+    # The catalog schema requires a French fallback even for English-only submissions.
+    names = {"fr": fields.get("nom_fr", "").strip() or name_en or ref}
+    if name_en:
+        names["en"] = name_en
+    steps = {"fr": steps_fr or steps_en}
+    if steps_en:
+        steps["en"] = steps_en
     sheet: dict = {"ref": ref, "marque": brand, "nom": names, "type": type_, "eep": eep}
     extra = [e for e in (eep_value(p) for p in re.split(r"[,;/ ]+", fields.get(
         "eep_supplementaires", ""))) if e and e != eep]
