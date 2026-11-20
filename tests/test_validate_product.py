@@ -69,7 +69,7 @@ def test_validate_community_sheet(root) -> None:
 
 
 def test_old_sheet_id_and_errors(root) -> None:
-    assert vp.validate(issue("ubiwizz/serfah60")).name == "fah60.yaml"
+    assert vp.sheet_path("ubiwizz/serfah60") == root / "eltako" / "fah60.yaml"
     with pytest.raises(vp.ValidationError, match="déjà"):
         vp.validate(issue("nodon/sin-2-1-01"))
     with pytest.raises(vp.ValidationError, match="introuvable"):
