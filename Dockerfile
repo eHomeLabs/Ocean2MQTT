@@ -11,9 +11,9 @@ RUN mkdir -p ../src/ocean2mqtt && npm run build
 FROM python:3.13-slim
 LABEL org.opencontainers.image.source="https://github.com/eHomeLabs/Ocean2MQTT" \
       org.opencontainers.image.description="Passerelle EnOcean <-> MQTT multi-marques" \
-      org.opencontainers.image.licenses="MIT"
+      org.opencontainers.image.licenses="GPL-3.0-only"
 WORKDIR /app
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml README.md LICENSE LICENSE-MIT.md ./
 COPY src ./src
 COPY produits ./produits
 COPY --from=frontend /build/src/ocean2mqtt/frontend ./src/ocean2mqtt/frontend
