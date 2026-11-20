@@ -22,7 +22,7 @@ support: valide
 photo: fah60.png
 notice: https://ubiwizz.com/l-offre-produits-ubiwizz/11598-sonde-de-luminosit%C3%A9-%C3%A0-usage-ext%C3%A9rieur.html
 notes: 'Alimentation solaire, IP54. Format A5-06-01 propre à Eltako : 0 à 100 lx (DB3, si DB2 = 0) et
-  300 à 30 000 lx (DB2). Confirmé sur produit réel (appairage, mesures et états (valeurs cohérentes)),
+  300 à 30 000 lx (DB2). Confirmé sur produit réel (appairage et mesure d''illuminance),
   Ocean2MQTT 0.2.0b26 : issue #7 (eHomeLabs).'
 variantes:
 - FAH60
