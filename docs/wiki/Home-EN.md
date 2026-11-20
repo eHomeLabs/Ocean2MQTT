@@ -4,7 +4,7 @@
 
 Ocean2MQTT is a multi-brand **EnOcean ↔ MQTT** gateway, Zigbee2MQTT style. It drives an EnOcean USB stick (USB 300, USB 500…), offers a device library with the pairing procedure of each device, and publishes devices to MQTT with Home Assistant discovery.
 
-> 🧪 Beta version: for testing, not yet for production. Feedback welcome in the [issues](https://github.com/eHomeLabs/Ocean2MQTT/issues).
+> Stable release: 0.2.0. Check each device sheet for its support level: Validated, Community or Generic.
 
 ## Getting started
 
@@ -21,4 +21,4 @@ Ocean2MQTT is a multi-brand **EnOcean ↔ MQTT** gateway, Zigbee2MQTT style. It 
 - [[MQTT and API]]: topics, commands, requests.
 - [[Troubleshooting]].
 
-eHomeLabs project, MIT licence. Ocean2MQTT is an independent project.
+eHomeLabs project, GPL v3 licence (GPL-3.0-only). Ocean2MQTT is an independent project.

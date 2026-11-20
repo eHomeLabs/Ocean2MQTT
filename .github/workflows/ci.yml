@@ -23,16 +23,18 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Installation
         run: pip install -e ".[dev]"
-      - name: Upgrade from published 0.2.0b27
+      - name: Upgrade from published betas
         if: matrix.python == '3.13'
         run: |
-          python -m venv "$RUNNER_TEMP/ocean2mqtt-b27"
-          old="$RUNNER_TEMP/ocean2mqtt-b27/bin/python"
-          "$old" -m pip install pytest \
-            https://github.com/eHomeLabs/Ocean2MQTT/releases/download/v0.2.0b27/ocean2mqtt-0.2.0b27-py3-none-any.whl
-          data="$(mktemp -d)"
-          "$old" tests/check_upgrade.py "$data" before
-          python tests/check_upgrade.py "$data" after
+          for version in 0.2.0b27 0.2.0b28; do
+            python -m venv "$RUNNER_TEMP/ocean2mqtt-$version"
+            old="$RUNNER_TEMP/ocean2mqtt-$version/bin/python"
+            "$old" -m pip install pytest \
+              "https://github.com/eHomeLabs/Ocean2MQTT/releases/download/v$version/ocean2mqtt-$version-py3-none-any.whl"
+            data="$(mktemp -d)"
+            "$old" tests/check_upgrade.py "$data" before "$version"
+            python tests/check_upgrade.py "$data" after
+          done
       - name: Fiches produits
         run: python -m ocean2mqtt.library
       - name: Lint

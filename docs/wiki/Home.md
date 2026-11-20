@@ -4,7 +4,7 @@
 
 Ocean2MQTT est une passerelle **EnOcean ↔ MQTT** multimarque, façon Zigbee2MQTT. Elle pilote une clé USB EnOcean (USB 300, USB 500…), propose une bibliothèque de produits avec la procédure d'appairage de chacun et publie les produits dans MQTT, avec la découverte automatique de Home Assistant.
 
-> 🧪 Version bêta : à tester, pas encore pour une installation en production. Vos retours sont les bienvenus dans les [issues](https://github.com/eHomeLabs/Ocean2MQTT/issues).
+> Version stable : 0.2.0. Consultez le niveau de support de chaque fiche produit : Validé, Communauté ou Générique.
 
 ## Par où commencer
 
@@ -25,4 +25,4 @@ Ocean2MQTT est une passerelle **EnOcean ↔ MQTT** multimarque, façon Zigbee2MQ
 
 La bibliothèque compte les produits NodOn (validés sur produit réel) et des produits Ubiwizz, ainsi qu'un **mode générique** par profil EEP pour tout produit EnOcean standard. Liste à jour : [README](https://github.com/eHomeLabs/Ocean2MQTT#produits) ou dossier [`produits/`](https://github.com/eHomeLabs/Ocean2MQTT/tree/main/produits).
 
-Projet eHomeLabs, licence MIT. Ocean2MQTT est un projet indépendant.
+Projet eHomeLabs, licence GPL v3 (GPL-3.0-only). Ocean2MQTT est un projet indépendant.

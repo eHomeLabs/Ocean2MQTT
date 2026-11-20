@@ -8,8 +8,9 @@
 
 ---
 
-> 🧪 **Beta release (0.2.0b28)** — for testing.
-> **Version bêta** — pour les tests.
+> **Stable release: 0.2.0** · **Version stable : 0.2.0**
+> Device support levels remain specific to each catalog entry: Validated, Community or Generic.
+> Les niveaux Validé, Communauté et Générique restent propres à chaque fiche produit.
 
 <p align="center">
   <img src="docs/captures/mes-produits.png" alt="Ocean2MQTT : écran Mes produits" width="860">
@@ -144,7 +145,7 @@ docker run -d --name ocean2mqtt --restart unless-stopped \
   -v $(pwd)/data:/app/data -p 8080:8080 \
   --device /dev/ttyUSB0:/dev/ttyUSB0 \
   -e OCEAN2MQTT_MQTT_HOST=192.168.1.10 \
-  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0b28
+  ghcr.io/ehomelabs/ocean2mqtt:v0.2.0
 ```
 
 Exemple avec Mosquitto : `docker-compose.example.yml`. Ouvrez ensuite `http://<machine>:8080`.

@@ -16,8 +16,8 @@ from ocean2mqtt.mqtt import discovery_configs
 DEVICE = "0181A2B3"
 
 
-async def check(directory: Path, phase: str) -> None:
-    assert phase != "before" or __version__ == "0.2.0b27"
+async def check(directory: Path, phase: str, source_version: str = "0.2.0b27") -> None:
+    assert phase != "before" or __version__ == source_version
     config = Config(directory).load()
     config.data["mqtt"]["enabled"] = False
     service = Ocean2MQTT(config)
@@ -62,4 +62,4 @@ async def check(directory: Path, phase: str) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(check(Path(sys.argv[1]), sys.argv[2]))
+    asyncio.run(check(Path(sys.argv[1]), sys.argv[2], *sys.argv[3:]))
