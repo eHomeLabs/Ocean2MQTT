@@ -292,7 +292,7 @@ function AppSettings({ onStart, onError }: { onStart: (t: MigrationTarget) => vo
             </div>
             <div>
               <dt>{t("about.licence")}</dt>
-              <dd>MIT · eHomeLabs</dd>
+              <dd>GPL-3.0-only · eHomeLabs</dd>
             </div>
           </dl>
           <p className="small">{t("app.aboutText")}</p>
