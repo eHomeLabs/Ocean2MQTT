@@ -51,7 +51,7 @@ body:
     id: eep
     attributes:
       label: EEP profile / Profil EEP
-      description: Shown in the manual, datasheet or by Ocean2MQTT (heard transmitters). / Format RORG-FUNC-TYPE, ex. A5-02-05. Indiqué dans la notice ou la fiche technique, ou affiché par Ocean2MQTT (émetteurs entendus).
+      description: Use RORG-FUNC-TYPE format, for example A5-02-05. Shown in the manual, datasheet or by Ocean2MQTT (heard transmitters). / Format RORG-FUNC-TYPE, ex. A5-02-05. Indiqué dans la notice ou la fiche technique, ou affiché par Ocean2MQTT (émetteurs entendus).
       placeholder: "F6-05-02"
     validations:
       required: true
@@ -85,7 +85,7 @@ body:
     id: etapes_fr
     attributes:
       label: Pairing steps in French / Procédure d'appairage en français
-      description: Une étape par ligne, en anglais ou en français. / One step per line. Fill in the English or French pairing steps.
+      description: One step per line. Fill in the English or French pairing steps. / Une étape par ligne, en anglais ou en français.
       placeholder: |
         Installez la pile 9 V fournie.
         Appuyez 2 secondes sur le bouton « Learn » jusqu'au bip.
