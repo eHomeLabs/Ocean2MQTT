@@ -134,3 +134,16 @@ F6-05-02
     }
     root = Path(__file__).resolve().parent.parent / "produits"
     jsonschema.Draft202012Validator(_schema(root)).validate(sheet)
+
+
+def test_all_missing_fields_are_reported_at_once() -> None:
+    with pytest.raises(itp.IssueError) as error:
+        itp.build({})
+
+    assert str(error.value).splitlines()[1:] == [
+        "- Brand / Marque",
+        "- Reference / Référence",
+        "- EEP profile / Profil EEP (format A5-02-05)",
+        "- Type",
+        "- Pairing steps in English or French / Procédure d'appairage en anglais ou français",
+    ]
