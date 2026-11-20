@@ -75,3 +75,12 @@ def test_a52001_valve() -> None:
     assert eep.a52001_setpoint(20, room_temperature=20)[1:3] == bytes([127, 0x05])
     teach = t(0xA5, "80 08 49 80")
     assert eep.teach_in_4bs_response(teach) == bytes([0x80, 0x08, 0x49, 0xF0])
+
+
+def test_a50403_temperature_and_humidity() -> None:
+    decode = eep.find_decoder("A5-04-03")
+    assert decode(t(0xA5, "00 00 00 08")) == {"temperature": -20.0, "humidity": 0.0}
+    assert decode(t(0xA5, "FF 03 FF 09")) == {"temperature": 60.0, "humidity": 100.0}
+    assert decode(t(0xA5, "80 02 00 08")) == {"temperature": 20.0, "humidity": 50.2}
+    assert decode(t(0xA5, "80 02 00 00")) is None
+    assert decode(t(0xA5, "80 02 08")) is None
