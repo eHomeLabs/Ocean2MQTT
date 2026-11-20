@@ -119,7 +119,7 @@ body:
     id: photo
     attributes:
       label: Photo du produit / Device picture
-      description: Glissez une image ici (fond blanc ou transparent de préférence). Uniquement une photo que vous avez le droit de partager. / Drop an image here (white or transparent background preferred). Only a picture you are allowed to share.
+      description: Glissez une image ici (fond blanc ou transparent de préférence). Joignez uniquement une photo que vous êtes autorisé à faire redistribuer sous licence MIT. / Drop an image here (white or transparent background preferred). Only attach a picture you are authorized to have redistributed under the MIT license.
   - type: textarea
     id: description
     attributes:
@@ -129,7 +129,7 @@ body:
     id: telegrammes
     attributes:
       label: Télégrammes / Telegrams (facultatif / optional)
-      description: Export CSV de la page Télégrammes, avec ce que vous faisiez à chaque télégramme. / CSV export of the Telegrams page, with what you did for each one.
+      description: Export CSV filtré sur le produit, avec l’action associée. Retirez les codes Remote Commissioning et autres secrets. / Filter the CSV export to the device and include the corresponding actions. Remove Remote Commissioning codes and other secrets.
   - type: checkboxes
     id: accord
     attributes:

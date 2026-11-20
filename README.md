@@ -162,6 +162,8 @@ La découverte automatique Home Assistant est activée par défaut (préfixe `ho
 
 ### Contribuer
 
+[Guide de contribution](CONTRIBUTING.md) · [Contribution guide](CONTRIBUTING.md#english)
+
 - **Ajouter un produit** : une fiche `produits/<marque>/<référence>.yaml` (format décrit dans `produits/schema.json`) et une photo PNG 400 × 400 px sur fond transparent. Contrôle : `python -m ocean2mqtt.library`.
 - **Faire passer une fiche en Validé** : un rapport de test sur produit réel (appairage, commandes, mesures).
 - **Code** : `pytest` pour les tests (clé USB300 simulée), `ruff check` pour le style ; interface : `cd frontend && npm ci && npm run build`.
