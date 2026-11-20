@@ -47,7 +47,7 @@ body:
     id: telegrammes
     attributes:
       label: Télégrammes / Telegrams
-      description: Quelques télégrammes du produit (page Télégrammes). / A few telegrams of the device.
+      description: Quelques télégrammes du produit, sans codes Remote Commissioning ni autres secrets. / A few device telegrams with Remote Commissioning codes and other secrets removed.
       render: text
   - type: textarea
     id: remarques
