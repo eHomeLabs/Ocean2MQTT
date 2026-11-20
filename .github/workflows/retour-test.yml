@@ -14,7 +14,11 @@ permissions:
 
 jobs:
   valider:
-    if: github.event.label.name == 'validé' && github.event.sender.login == github.repository_owner
+    if: >-
+      github.event.label.name == 'validé' &&
+      github.event.sender.login == github.repository_owner &&
+      contains(github.event.issue.labels.*.name, 'retour de test') &&
+      !contains(github.event.issue.labels.*.name, 'nouveau produit')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
