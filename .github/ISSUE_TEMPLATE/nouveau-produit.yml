@@ -115,7 +115,7 @@ body:
     id: photo
     attributes:
       label: Device picture / Photo du produit
-      description: Drop an image here (white or transparent background preferred). Only attach a picture you are authorized to have redistributed under the MIT license. / Glissez une image ici (fond blanc ou transparent de préférence). Joignez uniquement une photo que vous êtes autorisé à faire redistribuer sous licence MIT.
+      description: Optional. Only attach a photo whose license permits publication and redistribution with Ocean2MQTT, or for which the manufacturer or rights holder has granted that permission. / Facultatif. Joignez une photo dont la licence permet la publication et la redistribution avec Ocean2MQTT, ou pour laquelle le fabricant ou l’ayant droit a donné son accord pour ces usages.
   - type: textarea
     id: description
     attributes:
@@ -131,5 +131,12 @@ body:
     attributes:
       label: License / Licence
       options:
-        - label: J'accepte que ces informations et la photo soient publiées sous licence MIT dans Ocean2MQTT. / I agree that this information and picture are published under the MIT licence in Ocean2MQTT.
+        - label: I agree that the information in this submission may be published under MIT in Ocean2MQTT. / J’accepte que les informations de cette fiche soient publiées sous MIT dans Ocean2MQTT.
+          required: true
+  - type: checkboxes
+    id: photo_permission
+    attributes:
+      label: Photo rights / Droits de la photo
+      options:
+        - label: If I attach a product photo, I confirm that its license permits publication and redistribution with Ocean2MQTT, or that I have permission from the manufacturer or rights holder for these uses. / Si je joins une photo produit, je confirme que sa licence permet sa publication et sa redistribution avec Ocean2MQTT, ou que j’ai l’accord du fabricant ou de l’ayant droit pour ces usages.
           required: true
