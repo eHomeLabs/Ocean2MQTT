@@ -14,7 +14,11 @@ permissions:
 
 jobs:
   fiche:
-    if: github.event.label.name == 'accepté' && github.event.sender.login == github.repository_owner
+    if: >-
+      github.event.label.name == 'accepté' &&
+      github.event.sender.login == github.repository_owner &&
+      contains(github.event.issue.labels.*.name, 'nouveau produit') &&
+      !contains(github.event.issue.labels.*.name, 'retour de test')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

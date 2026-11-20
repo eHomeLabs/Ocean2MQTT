@@ -92,20 +92,27 @@ def build(fields: dict[str, str]) -> tuple[str, dict]:
     """Champs du formulaire -> (identifiant « marque/référence », contenu de la fiche)."""
     brand = fields.get("marque", "").strip()
     ref = fields.get("reference", "").strip()
-    if not brand or not ref:
-        raise IssueError("Marque et référence obligatoires")
     eep = eep_value(fields.get("eep", ""))
-    if not eep:
-        raise IssueError("Profil EEP manquant ou invalide (format A5-02-05)")
     type_ = next((t for t in TYPES if fields.get("type", "").startswith(t)), None)
-    if not type_:
-        raise IssueError("Type de produit manquant")
-    mode = next((m for m in MODES if fields.get("appairage", "").startswith(m)), None)
-    mode = mode or DEFAULT_MODE.get(eep[:2], "rps")
     steps_fr = lines(fields.get("etapes_fr", ""))
     steps_en = lines(fields.get("etapes_en", ""))
+    errors = []
+    if not brand:
+        errors.append("Brand / Marque")
+    if not ref:
+        errors.append("Reference / Référence")
+    if not eep:
+        errors.append("EEP profile / Profil EEP (format A5-02-05)")
+    if not type_:
+        errors.append("Type")
     if not (steps_fr or steps_en):
-        raise IssueError("Pairing steps are required in English or French (anglais ou français)")
+        errors.append("Pairing steps in English or French / Procédure d'appairage en anglais ou français")
+    if errors:
+        raise IssueError("Missing or invalid fields / Champs manquants ou invalides :\n- "
+                         + "\n- ".join(errors))
+
+    mode = next((m for m in MODES if fields.get("appairage", "").startswith(m)), None)
+    mode = mode or DEFAULT_MODE.get(eep[:2], "rps")
     name_en = fields.get("nom_en", "").strip()
     # The catalog schema requires a French fallback even for English-only submissions.
     names = {"fr": fields.get("nom_fr", "").strip() or name_en or ref}

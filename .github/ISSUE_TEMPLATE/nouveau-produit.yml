@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks! Fill in what you know; optional fields may stay empty. Once approved by the maintainer, the sheet is created automatically.
-        Merci ! Remplissez ce que vous savez : les champs facultatifs peuvent rester vides. Après validation par le mainteneur, la fiche est créée automatiquement et le produit apparaît dans la bibliothèque à la version suivante.
+        Thanks! Fill in what you know; optional fields may stay empty. Provide pairing steps in at least one language. The maintainer uses the `accepté` label to approve new devices. Once approved by the maintainer, the sheet is created automatically.
+        Merci ! Remplissez ce que vous savez : les champs facultatifs peuvent rester vides. Indiquez la procédure d’appairage dans au moins une langue. Le mainteneur utilise l’étiquette `accepté` pour approuver les nouveaux produits. Après validation par le mainteneur, la fiche est créée automatiquement et le produit apparaît dans la bibliothèque à la version suivante.
 
         Produits déjà disponibles / devices already supported : [catalogue](https://ehomelabs.github.io/Ocean2MQTT/). Aide / help : [Ajouter un produit non supporté](https://github.com/eHomeLabs/Ocean2MQTT/wiki/Ajouter-un-produit-non-support%C3%A9).
   - type: input
