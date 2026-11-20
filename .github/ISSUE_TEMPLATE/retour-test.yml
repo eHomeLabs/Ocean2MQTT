@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks! This form is prefilled when opened from Ocean2MQTT. Once checked by the maintainer, the device sheet moves from "Community" to "Validated".
-        Merci ! Ce formulaire est prérempli quand il est ouvert depuis Ocean2MQTT (fiche du produit → Informations → « Confirmer que ce produit fonctionne »). Après vérification par le mainteneur, la fiche passe de « Communauté » à « Validé ».
+        Thanks! This form is prefilled when opened from Ocean2MQTT. Once checked by the maintainer, the device sheet moves from "Community" to "Validated" using the `validé` label.
+        Merci ! Ce formulaire est prérempli quand il est ouvert depuis Ocean2MQTT (fiche du produit → Informations → « Confirmer que ce produit fonctionne »). Après vérification par le mainteneur, la fiche passe de « Communauté » à « Validé » avec l’étiquette `validé`.
   - type: input
     id: fiche
     attributes:
