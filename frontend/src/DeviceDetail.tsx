@@ -1,3 +1,4 @@
+import { ProductImage } from "./ProductImage";
 // Fiche d'un produit appairé : Contrôle, Réglages, Remote Commissioning, Télégrammes, Informations
 import { useEffect, useState } from "react";
 import { request, useStore } from "./api";
@@ -31,7 +32,7 @@ export function DeviceDetail({ device, initialTab = "control", onClose, onError 
     <div className="dialog-backdrop" role="presentation" onClick={onClose}>
       <div className="dialog wide" role="dialog" aria-modal="true" aria-labelledby={`dd-${device.id}`} onClick={(e) => e.stopPropagation()}>
         <header className="detail-head">
-          {device.product.image ? <img src={device.product.image} alt="" className="thumb" /> : <div className="thumb placeholder" aria-hidden="true" />}
+          <ProductImage product={device.product} />
           <div className="device-title">
             <h2 id={`dd-${device.id}`}>{device.name}</h2>
             <span className="muted small">

@@ -1,3 +1,4 @@
+import { ProductImage } from "./ProductImage";
 // Carte d'un produit appairé : contrôles et mesures construits à partir des « exposes »
 import { sendCommand, useNow } from "./api";
 import { binaryText, formatValue, label, locale, option, signal, since, t } from "./i18n";
@@ -16,13 +17,12 @@ type Props = {
 export function DeviceCard({ device, state, available, action, onError, onOpen, onRepair }: Props) {
   const now = useNow(10000);
   const lastSeen = (state.last_seen as string | undefined) ?? device.last_seen;
-  const image = device.product.image;
   const event = device.product.exposes.find((e) => e.kind === "event");
 
   return (
     <article className="card device">
       <header className="device-head">
-        {image ? <img src={image} alt="" className="thumb" /> : <div className="thumb placeholder" aria-hidden="true" />}
+        <ProductImage product={device.product} />
         <div className="device-title">
           <h2>
             <button type="button" className="title-link" onClick={onOpen}>
