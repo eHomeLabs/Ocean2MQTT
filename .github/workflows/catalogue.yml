@@ -19,11 +19,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publier:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploiement.outputs.page_url }}
+    outputs:
+      artifact: ${{ steps.artifact.outputs.name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,8 +31,21 @@ jobs:
       - run: pip install -e .
       - run: python tools/build_catalog.py site
       - uses: actions/configure-pages@v5
+      - id: artifact
+        run: echo "name=github-pages-${{ github.run_id }}-${{ github.run_attempt }}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+          name: ${{ steps.artifact.outputs.name }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
       - id: deploiement
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: ${{ needs.build.outputs.artifact }}
