@@ -72,6 +72,7 @@ export type Telegram = {
   dbm?: number | null;
   duplicate?: boolean;
   name?: string | null;
+  eep?: string | null;
 };
 
 export type Unknown = {

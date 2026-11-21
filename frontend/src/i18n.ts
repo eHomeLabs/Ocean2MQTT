@@ -173,7 +173,7 @@ const FR = {
   "app.recomOn": "Activé : le code de sécurité est demandé à chaque déverrouillage et passe en clair à la radio.",
   // Télégrammes
   "tg.search": "Rechercher",
-  "tg.searchHint": "Identifiant, nom, données…",
+  "tg.searchHint": "Identifiant, nom, EEP, données…",
   "tg.product": "Produit",
   "tg.kind": "Appairage",
   "tg.known": "Appairés",
@@ -565,7 +565,7 @@ const EN: Record<Key, string> = {
   "app.recomHow": "To disable it completely: recom.enabled: false in configuration.yaml, or the add-on's “Remote Commissioning” option.",
   "app.recomOn": "Enabled: you are asked before each unlock, and the security code is sent in clear over the air.",
   "tg.search": "Search",
-  "tg.searchHint": "ID, name, data…",
+  "tg.searchHint": "ID, name, EEP, data…",
   "tg.product": "Device",
   "tg.kind": "Pairing",
   "tg.known": "Paired",

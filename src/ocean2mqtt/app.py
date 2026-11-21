@@ -552,9 +552,17 @@ class Ocean2MQTT:
 
     # -- Journal radio, émetteurs inconnus -----------------------------------
 
+    def _telegram_dict(self, record: dict[str, Any]) -> dict[str, Any]:
+        peer = record["destination"] if record["dir"] == "tx" else record["sender"]
+        known = self.devices.get(peer)
+        return {
+            **record,
+            "name": known.title if known else None,
+            "eep": known.eep_code if known else None,
+        }
+
     def _on_record(self, record: dict[str, Any]) -> None:
-        known = self.devices.get(record["sender"])
-        self.emit("bridge/telegrams", {**record, "name": known.title if known else None})
+        self.emit("bridge/telegrams", self._telegram_dict(record))
 
     def _on_any_telegram(self, telegram: RadioTelegram) -> None:
         sender = telegram.sender_str
@@ -768,9 +776,7 @@ class Ocean2MQTT:
             self.emit("bridge/unknown", [])
             return []
         if command == "telegrams":
-            return [{**r, "name": self.devices[r["sender"]].title
-                     if r["sender"] in self.devices else None}
-                    for r in self.gateway.history]
+            return [self._telegram_dict(r) for r in self.gateway.history]
         if command == "device/add":
             return self._add_known(data)
         if command == "migration/sources":
