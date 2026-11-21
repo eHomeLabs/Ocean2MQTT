@@ -219,7 +219,7 @@ export function DeviceList({ devices, states, availability, onOpen, onError }: P
                 <tr key={d.id} className={r.available ? "" : "off"}>
                   <td>
                     <div className="list-name">
-                      <ProductImage product={p} className="list-thumb" />
+                      <ProductImage product={{ ...p, image: d.identity?.photo || p.image }} className="list-thumb" />
                       <div>
                         <button type="button" className="title-link" onClick={() => onOpen(d)}>
                           {d.name}

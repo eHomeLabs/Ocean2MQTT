@@ -1,3 +1,5 @@
+> Superseded by 0.2.3: the 0.2.2 multi-architecture Docker build stalled under QEMU before distribution completed.
+
 # Ocean2MQTT 0.2.2
 
 - Public FR/EN catalog, generated from actual library sheets and generic EEPs.
