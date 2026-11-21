@@ -1,3 +1,5 @@
+import { Diagnostics } from "./Diagnostics";
+import { GenericIdentity } from "./GenericIdentity";
 import { ProductImage } from "./ProductImage";
 // Fiche d'un produit appairé : Contrôle, Réglages, Remote Commissioning, Télégrammes, Informations
 import { useEffect, useState } from "react";
@@ -9,7 +11,7 @@ import { label, option, productText, supportName, t } from "./i18n";
 import { TelegramTable } from "./Telegrams";
 import type { Device, Product, Setting } from "./types";
 
-type Tab = "control" | "settings" | "recom" | "telegrams" | "info";
+type Tab = "control" | "settings" | "recom" | "telegrams" | "diagnostics" | "info";
 
 export function DeviceDetail({ device, initialTab = "control", onClose, onError }: { device: Device; initialTab?: Tab; onClose: () => void; onError: (m: string) => void }) {
   const [tab, setTab] = useState<Tab>(initialTab);
@@ -20,6 +22,7 @@ export function DeviceDetail({ device, initialTab = "control", onClose, onError 
     ...(device.settings.length ? [["settings", t("detail.settings")] as [Tab, string]] : []),
     ...(device.recom ? [["recom", t("detail.recom")] as [Tab, string]] : []),
     ["telegrams", t("detail.telegrams")],
+    ["diagnostics", t("diag.title")],
     ["info", t("detail.info")],
   ];
   useEffect(() => {
@@ -32,7 +35,7 @@ export function DeviceDetail({ device, initialTab = "control", onClose, onError 
     <div className="dialog-backdrop" role="presentation" onClick={onClose}>
       <div className="dialog wide" role="dialog" aria-modal="true" aria-labelledby={`dd-${device.id}`} onClick={(e) => e.stopPropagation()}>
         <header className="detail-head">
-          <ProductImage product={device.product} />
+          <ProductImage product={{ ...device.product, image: device.identity?.photo || device.product.image }} />
           <div className="device-title">
             <h2 id={`dd-${device.id}`}>{device.name}</h2>
             <span className="muted small">
@@ -55,6 +58,7 @@ export function DeviceDetail({ device, initialTab = "control", onClose, onError 
           {tab === "settings" && <SettingsForm device={device} onError={onError} />}
           {tab === "recom" && <RecomPanel device={device} onError={onError} />}
           {tab === "telegrams" && <TelegramTable telegrams={telegrams.filter((x) => x.sender === device.id || x.destination === device.id)} />}
+          {tab === "diagnostics" && <Diagnostics device={device} />}
           {tab === "info" && <Info device={device} onClose={onClose} onError={onError} />}
         </div>
       </div>
@@ -216,7 +220,7 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
         </div>
         <div>
           <dt>{t("detail.product")}</dt>
-          <dd>{p.brand} {p.model}</dd>
+          <dd>{device.identity?.brand || p.brand} {device.identity?.model || p.model}</dd>
         </div>
         <div>
           <dt>{t("detail.eep")}</dt>
@@ -259,6 +263,7 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
           </div>
         </>
       )}
+      {p.generic && <GenericIdentity key={device.id} device={device} />}
       {(p.support === "communaute" || p.generic) && <ConfirmWorks device={device} />}
       <h3>{t("detail.rename")}</h3>
       <label className="field">
@@ -296,7 +301,12 @@ function ConfirmWorks({ device }: { device: Device }) {
     .join("\n");
   const params = new URLSearchParams({
     template: "retour-test.yml",
-    title: `[Retour de test] ${p.brand} ${p.model}`,
+    title: `[Retour de test] ${device.identity?.brand || p.brand} ${device.identity?.model || p.model}`,
+    marque: device.identity?.brand ?? "",
+    reference: device.identity?.model ?? "",
+    photo: device.identity?.photo ?? "",
+    notice: device.identity?.manual ?? "",
+    appairage: device.identity?.pairing ?? "",
     fiche: p.id,
     version: info?.version ?? "",
     eep: [p.eep, ...p.extra_eeps].join(" + "),

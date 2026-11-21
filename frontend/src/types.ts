@@ -71,6 +71,7 @@ export type Telegram = {
   status: string;
   dbm?: number | null;
   duplicate?: boolean;
+  decoded?: Record<string, unknown> | null;
   name?: string | null;
   eep?: string | null;
 };
@@ -92,7 +93,10 @@ export type RecomLog = { time: string; id: string; name: string; action: string;
 
 export type DeviceState = Record<string, unknown>;
 
+export type Identity = { brand?: string; model?: string; photo?: string; manual?: string; pairing?: string };
+
 export type Device = {
+  identity?: Identity;
   id: string;
   name: string;
   room?: string | null;

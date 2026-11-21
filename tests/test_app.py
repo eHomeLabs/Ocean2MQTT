@@ -267,3 +267,53 @@ async def test_telegram_eep_rx_tx_and_history(app: Ocean2MQTT) -> None:
         assert all("eep" not in record for record in records)
     finally:
         app.devices.pop("050E1FEC")
+
+
+async def test_generic_identity_and_decoded_telegram(app: Ocean2MQTT) -> None:
+    added = await app.request("device/add", {
+        "id": "0199AABB", "product": "generique/a5-04-03", "name": "Sensor",
+    })
+    before = app.devices["0199AABB"].product
+    identity = {"brand": "Ubiwizz", "model": "TH-test", "photo": "https://example.com/photo.png",
+                "pairing": "Appuyer sur LRN."}
+    result = await app.request("device/identify", {"id": added["id"], **identity})
+    assert result["identity"]["model"] == "TH-test"
+    assert result["product"]["generic"]
+    assert app.devices["0199AABB"].product is before
+    other = Ocean2MQTT(app.config)
+    other._add_device(other.store.devices[added["id"]])
+    assert other.device_dict(other.devices[added["id"]])["identity"]["brand"] == "Ubiwizz"
+    for photo in ("javascript:alert(1)", "http://example.com/x", "https://user:secret@example.com"):
+        with pytest.raises(RequestError):
+            await app.request("device/identify", {"id": added["id"], **identity, "photo": photo})
+    record = {"dir": "rx", "sender": added["id"], "destination": "FFFFFFFF", "rorg": "A5",
+              "data": "80 02 00 08", "status": "00", "dbm": -65}
+    decoded = app._telegram_dict(record)["decoded"]
+    assert decoded == {"temperature": 20.0, "humidity": 50.2}
+    assert app._telegram_dict({**record, "dir": "tx", "destination": added["id"]})["decoded"] is None
+    assert app._telegram_dict({**record, "rorg": "C5"})["decoded"] is None
+    assert app._telegram_dict({**record, "data": "invalid"})["decoded"] is None
+
+
+async def test_ui_entry_points_disable_cache(app: Ocean2MQTT, tmp_path, monkeypatch) -> None:
+    from aiohttp import ClientSession
+
+    import ocean2mqtt.web as web_module
+    from ocean2mqtt import __version__
+
+    (tmp_path / "index.html").write_text("<html>current build</html>")
+    monkeypatch.setattr(web_module, "STATIC", tmp_path)
+    port = _free_port()
+    app.config.data["frontend"].update({"host": "127.0.0.1", "port": port})
+    server = web_module.WebServer(app)
+    await server.start()
+    try:
+        async with ClientSession() as session:
+            for path in ("/", "/index.html", "/?ui=next", "/api/version"):
+                async with session.get(f"http://127.0.0.1:{port}{path}") as response:
+                    assert response.status == 200
+                    assert "no-store" in response.headers["Cache-Control"]
+                    if path == "/api/version":
+                        assert await response.json() == {"version": __version__}
+    finally:
+        await server.stop()

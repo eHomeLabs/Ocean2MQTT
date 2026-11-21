@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING, Any
 
 from aiohttp import WSMsgType, web
 
+from . import __version__
+
 if TYPE_CHECKING:
     from .app import Ocean2MQTT
 
@@ -54,6 +56,8 @@ class WebServer:
     def build(self) -> web.Application:
         server = web.Application(middlewares=[self._guard])
         server.router.add_get("/api", self._websocket)
+        server.router.add_get("/api/version", self._version)
+        server.router.add_get("/index.html", self._index)
         server.router.add_get("/produits/{brand}/{name}", self._product_image)
         server.router.add_get("/", self._index)
         if STATIC.is_dir():
@@ -99,11 +103,15 @@ class WebServer:
 
     # -- Pages ---------------------------------------------------------------
 
+    async def _version(self, _request: web.Request) -> web.Response:
+        return web.json_response({"version": __version__}, headers={"Cache-Control": "no-store"})
+
     async def _index(self, _request: web.Request) -> web.StreamResponse:
         index = STATIC / "index.html"
         if index.is_file():
-            return web.FileResponse(index)
-        return web.Response(text=PLACEHOLDER, content_type="text/html")
+            return web.FileResponse(index, headers={"Cache-Control": "no-store, max-age=0"})
+        return web.Response(text=PLACEHOLDER, content_type="text/html",
+                            headers={"Cache-Control": "no-store"})
 
     async def _product_image(self, request: web.Request) -> web.StreamResponse:
         root = self.app.library.root

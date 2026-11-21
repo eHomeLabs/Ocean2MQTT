@@ -494,6 +494,7 @@ class Ocean2MQTT:
             "room": entry.get("room"),
             "topic": self.topic_name(device.id_str),
             "product": self.product_dict(product),
+            "identity": entry.get("identity", {}),
             "state": device_payload(device),
             "available": device.available,
             "last_seen": self.last_seen.get(device.id_str),
@@ -555,8 +556,26 @@ class Ocean2MQTT:
     def _telegram_dict(self, record: dict[str, Any]) -> dict[str, Any]:
         peer = record["destination"] if record["dir"] == "tx" else record["sender"]
         known = self.devices.get(peer)
+        decoded = None
+        # Only decode received application data. Never expose ReMan/security payloads.
+        if known and record["dir"] == "rx" and record.get("rorg") in {"F6", "D5", "A5", "D2"}:
+            try:
+                telegram = RadioTelegram(
+                    rorg=int(record["rorg"], 16),
+                    payload=bytes.fromhex(record.get("data", "")),
+                    sender=int(record["sender"], 16),
+                    status=int(record.get("status", "00"), 16),
+                    destination=int(record["destination"], 16),
+                    dbm=record.get("dbm"),
+                )
+                values = known.decode(telegram)
+                allowed = {e.key for e in exposes(known.product)}
+                decoded = {k: v for k, v in (values or {}).items() if k in allowed} or None
+            except (ValueError, IndexError, KeyError, TypeError):
+                pass
         return {
             **record,
+            "decoded": decoded,
             "name": known.title if known else None,
             "eep": known.eep_code if known else None,
         }
@@ -798,6 +817,29 @@ class Ocean2MQTT:
             return make_backup(self.store.devices, base or self.store.meta.get("base_id"),
                                __version__, self.config.public(),
                                self.store.meta.get("recom_secret"))
+        if command == "device/identify":
+            device = self._device(data)
+            if not device.product.generic:
+                raise RequestError("Identification réservée aux produits génériques")
+            identity = {}
+            for key in ("brand", "model", "photo", "manual", "pairing"):
+                value = str(data.get(key) or "").strip()
+                if len(value) > (2000 if key == "pairing" else 500):
+                    raise RequestError(f"Champ trop long : {key}")
+                identity[key] = value
+            if len(identity["brand"]) < 2 or len(identity["model"]) < 2:
+                raise RequestError("Marque et référence obligatoires")
+            from urllib.parse import urlsplit
+
+            for key in ("photo", "manual"):
+                if identity[key]:
+                    url = urlsplit(identity[key])
+                    if url.scheme != "https" or not url.hostname or url.username or url.password:
+                        raise RequestError("Les liens photo et notice doivent être des URL HTTPS")
+            entry = {**self.store.devices[device.id_str], "identity": identity}
+            self.store.put(entry)
+            self._publish_devices()
+            return self.device_dict(device)
         if command == "device/compatible":
             device = self._device(data)
             return [self.product_dict(p) for p in self.library.compatible(device.product)]

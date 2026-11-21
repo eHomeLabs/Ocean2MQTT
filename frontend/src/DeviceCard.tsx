@@ -22,7 +22,7 @@ export function DeviceCard({ device, state, available, action, onError, onOpen, 
   return (
     <article className="card device">
       <header className="device-head">
-        <ProductImage product={device.product} />
+        <ProductImage product={{ ...device.product, image: device.identity?.photo || device.product.image }} />
         <div className="device-title">
           <h2>
             <button type="button" className="title-link" onClick={onOpen}>

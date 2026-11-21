@@ -1,7 +1,8 @@
+import { decodedValue } from "./decodedValue";
 // Journal radio en direct : filtres (recherche, produit, sens, RORG, signal…), pause, export CSV
 import { useState } from "react";
 import { clearTelegrams, pauseTelegrams, useStore } from "./api";
-import { locale, t } from "./i18n";
+import { label, locale, t } from "./i18n";
 import type { Telegram } from "./types";
 
 const RORGS: Record<string, string> = { F6: "RPS", D5: "1BS", A5: "4BS", D2: "VLD", D4: "UTE", D1: "MSC", C5: "SYS_EX" };
@@ -50,9 +51,9 @@ export function TelegramsPage() {
   });
   const active = JSON.stringify(f) !== JSON.stringify(EMPTY);
   const exportCsv = () => {
-    const head = "time;dir;sender;name;destination;rorg;eep;data;status;dbm;duplicate";
+    const head = "time;dir;sender;name;destination;rorg;eep;data;status;dbm;duplicate;decoded";
     const rows = shown.map((x) =>
-      [new Date(x.time * 1000).toISOString(), x.dir, x.sender, names.get(peer(x)) ?? x.name ?? "", x.destination, x.rorg, x.eep ?? "", x.data, x.status, x.dbm ?? "", x.duplicate ? 1 : 0].join(";"),
+      [new Date(x.time * 1000).toISOString(), x.dir, x.sender, names.get(peer(x)) ?? x.name ?? "", x.destination, x.rorg, x.eep ?? "", x.data, x.status, x.dbm ?? "", x.duplicate ? 1 : 0, x.decoded ? JSON.stringify(x.decoded) : ""].map((v) => `"${String(v).replaceAll('"', '""')}"`).join(";"),
     );
     const blob = new Blob([[head, ...rows].join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
@@ -170,6 +171,7 @@ export function TelegramTable({ telegrams, names }: { telegrams: Telegram[]; nam
             <th>{t("tg.rorg")}</th>
             <th>EEP</th>
             <th>{t("tg.data")}</th>
+            <th>{t("tg.decoded")}</th>
             <th>{t("tg.dbm")}</th>
           </tr>
         </thead>
@@ -190,6 +192,8 @@ export function TelegramTable({ telegrams, names }: { telegrams: Telegram[]; nam
                 {x.data}
                 {x.duplicate && <span className="sans muted"> ({t("tg.dup")})</span>}
               </td>
+              <td className="sans small">{x.decoded ? Object.entries(x.decoded).map(([key, value]) =>
+                <div key={key}>{label(key)} : {decodedValue(key, value)}</div>) : "—"}</td>
               <td>{x.dbm != null ? -Math.abs(x.dbm) : ""}</td>
             </tr>
           ))}

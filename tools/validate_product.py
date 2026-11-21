@@ -107,6 +107,23 @@ def validate(issue: dict) -> Path:
     if who:
         confirmed += f" ({who})"
     data["notes"] = f"{notes} {confirmed}.".strip()
+    if sheet.strip().lower().startswith("generique/"):
+        from urllib.parse import urlsplit
+
+        for field, output in (("Lien notice", "notice"),):
+            value = fields.get(field, "").strip()
+            if value:
+                parsed = urlsplit(value)
+                if parsed.scheme != "https" or not parsed.hostname:
+                    raise ValidationError("La notice doit être un lien HTTPS")
+                data[output] = value
+        photo = fields.get("Lien photo du produit", "").strip()
+        if photo:
+            parsed = urlsplit(photo)
+            if parsed.scheme != "https" or not parsed.hostname:
+                raise ValidationError("La photo doit être un lien HTTPS")
+            data["notes"] += f" Photo proposée (droits à vérifier avant publication) : {photo}"
+
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=100), encoding="utf-8"
