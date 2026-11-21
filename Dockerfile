@@ -1,6 +1,7 @@
 # Ocean2MQTT : image ghcr.io/ehomelabs/ocean2mqtt
 # 1. Interface web (TypeScript / React)
-FROM node:22-alpine AS frontend
+# Build static assets natively once; they are shared by every target architecture.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS frontend
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
