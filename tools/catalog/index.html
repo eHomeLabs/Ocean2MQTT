@@ -7,61 +7,23 @@
 <meta name="description" content="Produits EnOcean compatibles avec Ocean2MQTT, la passerelle EnOcean ↔ MQTT multimarque.">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
-  :root { --navy:#0b2e4a; --teal:#14b8a6; --action:#0f766e; --action-soft:#ccf0ea; --bg:#f5f7fa; --card:#fff; --ink:#0f1c2b; --muted:#5b6b7c; --line:#e3e8ee; --warn:#fff4e0; --warn-ink:#8a5a00; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#0b1724; --card:#11202f; --ink:#e7eef5; --muted:#9aabbc; --line:#1f3245; --action-soft:#134e4a; --warn:#3a2c10; --warn-ink:#f2c46d; } }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
-  header { background: var(--navy); color: #fff; }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
-  .top { display: flex; align-items: center; gap: 14px; padding: 18px 0; flex-wrap: wrap; }
-  .top img { width: 40px; height: 40px; background: #fff; border-radius: 10px; padding: 4px; }
-  .brandname { font-family: "Space Grotesk", Inter, sans-serif; font-size: 22px; font-weight: 700; }
-  .brandname b { color: var(--teal); }
-  .top nav { margin-left: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-  .top nav a { color: #cfe3f2; text-decoration: none; font-size: 14px; }
-  .top nav a:hover { color: #fff; }
-  .lang button { background: transparent; color: #cfe3f2; border: 1px solid #2c4d69; border-radius: 8px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
-  .lang button.on { background: #fff; color: var(--navy); border-color: #fff; }
-  .hero { padding: 26px 0 30px; }
-  .hero h1 { font-family: "Space Grotesk", Inter, sans-serif; font-size: 30px; margin: 0 0 8px; }
-  .hero p { margin: 0; color: #cfe3f2; max-width: 760px; line-height: 1.5; }
-  .cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; background: var(--teal); color: #05242a; font-weight: 700; text-decoration: none; padding: 12px 18px; border-radius: 12px; }
-  .cta:hover { filter: brightness(1.06); }
-  .tools { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 16px; align-items: center; }
-  .tools input, .tools select { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); min-height: 42px; }
-  .tools input { flex: 1 1 260px; }
-  .count { color: var(--muted); font-size: 14px; margin-left: auto; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; text-align: left; font: inherit; color: inherit; }
-  .card:hover, .card:focus-visible { border-color: var(--teal); outline: none; }
-  .ph { aspect-ratio: 1; border-radius: 12px; background: #f1f4f7; display: grid; place-items: center; overflow: hidden; }
-  @media (prefers-color-scheme: dark) { .ph { background: #e9eef3; } }
-  .ph img { width: 82%; height: 82%; object-fit: contain; }
-  .ph span { font-weight: 700; color: #7b8a99; font-size: 18px; }
-  .meta { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .name { font-weight: 700; line-height: 1.3; }
-  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .badge { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--action-soft); color: var(--action); font-weight: 600; }
-  .badge.comm { background: var(--warn); color: var(--warn-ink); }
-  .badge.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
-  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
-  .generic { background: var(--card); border: 1px dashed var(--teal); border-radius: 16px; padding: 18px; margin: 22px 0; line-height: 1.5; }
-  .generic h2, .propose h2 { margin: 0 0 6px; font-size: 18px; }
-  .propose { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin: 26px 0 40px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
-  .propose p { margin: 0; color: var(--muted); max-width: 680px; line-height: 1.5; }
-  .propose .cta { margin: 0 0 0 auto; background: var(--action); color: #fff; }
-  dialog { border: none; border-radius: 18px; padding: 0; max-width: 640px; width: calc(100% - 32px); background: var(--card); color: var(--ink); }
-  dialog::backdrop { background: rgba(5, 20, 33, .55); }
-  .dlg { padding: 22px; display: grid; gap: 12px; }
-  .dlg .head { display: flex; gap: 14px; align-items: center; }
-  .dlg .head .ph { width: 110px; flex: none; }
-  .dlg h2 { margin: 0; font-size: 20px; }
-  .dlg ol { margin: 0; padding-left: 20px; line-height: 1.5; }
-  .dlg .close { justify-self: end; font: inherit; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
-  .dlg a { color: var(--action); }
-  footer { color: var(--muted); font-size: 13px; padding: 10px 0 40px; }
-  footer a { color: var(--action); }
-  .empty { color: var(--muted); padding: 30px 0; }
+:root{color-scheme:dark;--bg:#0b1828;--card:#132b43;--ink:#f2f6fb;--muted:#a8bfd2;--line:#29485e;--teal:#19b9ae;--action:#6ee0d6;--action-soft:#17473f;--warn:#513e15;--warn-ink:#ffdc82}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--action)}button,input,select{font:inherit}button,a,input,select{touch-action:manipulation}:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
+.wrap{max-width:1400px;margin:auto;padding:0 28px}header{border-bottom:1px solid var(--line)}.top{display:flex;align-items:center;gap:12px;min-height:82px;flex-wrap:wrap}.top img{width:42px;height:42px}.brandname{font-size:25px;font-weight:750}.brandname b{color:var(--teal)}nav{display:flex;gap:26px;align-items:center;margin-left:auto}.top nav a{text-decoration:none;font-weight:600;color:var(--ink)}
+.lang button{border:0;background:none;color:var(--muted);cursor:pointer;padding:10px 5px}.lang .on{color:var(--teal);font-weight:700}
+.hero{padding:40px 0 12px}.hero h1{font-size:clamp(30px,3.8vw,48px);line-height:1.15;letter-spacing:-.03em;margin:0 0 15px}.hero p{font-size:19px;color:var(--muted);max-width:840px;margin:0}.hero>.cta{display:none}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:26px 0 18px}.tools input,.tools select{min-width:0;min-height:48px;background:var(--card);color:var(--ink);border:1px solid #53748b;border-radius:10px;padding:12px 16px}.tools input{grid-column:1/-1;font-size:18px}.tools select{cursor:pointer}.count{grid-column:1/-1;font-size:14px;color:var(--muted)}
+.legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 24px}.legend small{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:20px;border:1px solid var(--line);border-radius:15px;background:var(--card);color:inherit;cursor:pointer;min-width:0;gap:10px;transition:border-color .15s,transform .15s}.card:hover{border-color:var(--teal);transform:translateY(-2px)}
+.ph{width:128px;height:128px;flex-shrink:0;border-radius:12px;overflow:hidden;background:#10243a;display:flex;align-items:center;justify-content:center}.ph img{width:100%;height:100%;object-fit:contain;background:white}.ph.artwork{background-image:url("generic-devices.png");background-size:400% 300%}.card .ph{align-self:center;width:158px;height:158px;margin:8px 0 6px}.meta{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}.model{font-size:23px;font-weight:750;line-height:1.25}.name{line-height:1.4;color:#dce9f3;font-size:16px}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.badge{display:inline-block;font-size:14px;line-height:1.3;background:#126842;color:#edfff5;padding:5px 10px;border-radius:8px;font-weight:650}.badge.comm{background:var(--warn);color:var(--warn-ink)}.badge.gen{background:#34566d;color:#f0f5ff}.badge.plain{background:#203e54;color:#d2e5f2;border:1px solid var(--line);font-weight:450}.card>.support-badge{position:absolute;right:12px;top:12px}code{font-size:14px;font-family:ui-monospace,monospace}.card .features{margin-top:auto}
+.generic{margin:30px 0 0;padding:20px;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}.generic h2{font-size:18px;color:var(--ink);margin:0 0 8px}.generic .row{margin-top:12px}
+.propose{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:28px 0;padding:26px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.propose h2{font-size:23px;margin:0 0 8px}.propose p{margin:0;color:var(--muted);max-width:780px}.cta{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;min-height:46px;border-radius:9px;background:var(--teal);color:#062a30;font-weight:750;text-decoration:none}.propose .cta{margin-left:auto}
+dialog{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;width:calc(100% - 28px);max-width:780px;max-height:88vh;padding:0}dialog::backdrop{background:#000a}.dlg{padding:28px;display:grid;gap:20px}.dlg .head{display:flex;align-items:center;gap:20px}.dlg h2{font-size:25px;line-height:1.25;margin:0 0 12px}.dlg ol{padding-left:22px}.close{justify-self:end;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:10px 20px;cursor:pointer}.empty{padding:40px 0;color:var(--muted)}footer{font-size:14px;color:var(--muted);padding:10px 0 40px}
+@media(min-width:1200px){.card{padding-left:170px;min-height:226px}.card .ph{position:absolute;left:12px;top:42px;width:145px;height:145px}.card .meta{padding-top:28px}.card>.support-badge{top:12px}.card .name{font-size:15px}}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}nav{gap:15px}.top{padding:12px 0}.top nav{width:100%;margin-left:0;justify-content:space-between}.tools{gap:10px}.wrap{padding:0 20px}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.card{padding-left:150px;min-height:220px}.card .ph{position:absolute;left:12px;top:55px;width:125px;height:125px}.card .meta{padding-top:28px}.tools{grid-template-columns:1fr}.tools input,.count{grid-column:1}.hero{padding-top:28px}.hero p{font-size:17px}.wrap{padding:0 16px}.top nav a{font-size:14px}.brandname{font-size:23px}.dlg{padding:20px}.dlg .head{align-items:flex-start}.dlg .head .ph{width:90px;height:90px}.dlg h2{font-size:21px}.propose{padding:20px}.propose .cta{margin-left:0;width:100%}}
 </style>
 </head>
 <body>
@@ -77,7 +39,7 @@
       </nav>
     </div>
     <div class="hero">
-      <h1 data-i18n="title">Produits EnOcean compatibles</h1>
+      <h1 data-i18n="title">Vos équipements EnOcean, simplement.</h1>
       <p data-i18n="intro">Tous les produits de la bibliothèque d'Ocean2MQTT, avec leur procédure d'appairage. Votre produit n'y est pas ? Il fonctionne peut-être déjà en mode générique, ou proposez-le : il sera ajouté après validation.</p>
       <a class="cta" data-propose href="#">＋ <span data-i18n="propose">Proposer un nouveau produit EnOcean</span></a>
     </div>
@@ -85,16 +47,17 @@
 </header>
 <main class="wrap">
   <div class="tools">
-    <input id="q" type="search" data-i18n-ph="search" placeholder="Marque, référence, profil EEP…">
-    <select id="brand"><option value="" data-i18n="allBrands">Toutes les marques</option></select>
-    <select id="type"><option value="" data-i18n="allTypes">Tous les types</option></select>
-    <select id="support"><option value="" data-i18n="allSupport">Tous les niveaux</option><option value="valide" data-i18n="valide">Validé</option><option value="communaute" data-i18n="communaute">Communauté</option></select>
+    <input id="q" type="search" aria-label="Recherche / Search" data-i18n-ph="search" placeholder="Marque, référence, profil EEP…">
+    <select id="brand" aria-label="Marque / Brand"><option value="" data-i18n="allBrands">Toutes les marques</option></select>
+    <select id="family" aria-label="Famille / Family"><option value="" data-i18n="allFamilies">Toutes les familles</option></select>
+    <select id="support" aria-label="Support"><option value="" data-i18n="allSupport">Tous les niveaux</option><option value="valide" data-i18n="valide">Validé</option><option value="communaute" data-i18n="communaute">Communauté</option><option value="generique" data-i18n="generique">Générique</option></select>
     <span class="count" id="count"></span>
   </div>
-  <div class="grid" id="grid"></div>
+  <div class="legend"><span class="badge" data-i18n="valide">Validé</span><span class="badge comm" data-i18n="communaute">Communauté</span><span class="badge gen" data-i18n="generique">Générique</span><small data-i18n="legend">Le niveau de support est indiqué sur chaque fiche.</small></div>
+  <div class="grid" id="grid" aria-live="polite"></div>
   <section class="generic">
-    <h2 data-i18n="genericTitle">Et tous les produits EnOcean standard</h2>
-    <div data-i18n="genericText">Le mode générique d'Ocean2MQTT reconnaît tout produit qui respecte l'un de ces profils EEP, quelle que soit sa marque :</div>
+    <h2 data-i18n="genericTitle">Profils EEP pris en charge</h2>
+    <div data-i18n="genericText">Ces profils sont décodés en mode générique. Les tests matériels restent nécessaires pour confirmer les fonctions du modèle utilisé.</div>
     <div class="row" id="generic" style="margin-top:10px"></div>
   </section>
   <section class="propose">
@@ -104,35 +67,39 @@
     </div>
     <a class="cta" data-propose href="#">＋ <span data-i18n="propose">Proposer un nouveau produit EnOcean</span></a>
   </section>
-  <footer data-i18n-html="footer">Ocean2MQTT est un projet open source eHomeLabs (licence MIT), indépendant. Les noms de produits et de marques appartiennent à leurs propriétaires.</footer>
+  <footer data-i18n-html="footer">Ocean2MQTT est un projet open source eHomeLabs (licence GPL-3.0-only), indépendant. Les noms de produits et de marques appartiennent à leurs propriétaires.</footer>
 </main>
 <dialog id="dlg"><div class="dlg" id="dlgBody"></div></dialog>
 <script>
 const FORM = "https://github.com/eHomeLabs/Ocean2MQTT/issues/new?template=nouveau-produit.yml";
 const T = {
-  fr: { code: "Code source", doc: "Documentation", title: "Produits EnOcean compatibles",
+  fr: { code: "Code source", doc: "Documentation", title: "Vos équipements EnOcean, simplement.",
     intro: "Tous les produits de la bibliothèque d'Ocean2MQTT, avec leur procédure d'appairage. Votre produit n'y est pas ? Il fonctionne peut-être déjà en mode générique, ou proposez-le : il sera ajouté après validation.",
     propose: "Proposer un nouveau produit EnOcean", search: "Marque, référence, profil EEP…", allBrands: "Toutes les marques", allTypes: "Tous les types", allSupport: "Tous les niveaux",
     valide: "Validé", communaute: "Communauté", count: n => `${n} produit${n > 1 ? "s" : ""}`, empty: "Aucun produit ne correspond.",
-    genericTitle: "Et tous les produits EnOcean standard", genericText: "Le mode générique d'Ocean2MQTT reconnaît tout produit qui respecte l'un de ces profils EEP, quelle que soit sa marque :",
+    genericTitle: "Profils EEP pris en charge", genericText: "Ces profils sont décodés en mode générique. Leur présence ne garantit pas toutes les fonctions de chaque modèle : les tests matériels restent nécessaires.",
     proposeTitle: "Votre produit n'est pas dans la liste ?", proposeText: "Remplissez le formulaire (marque, référence, profil EEP, procédure d'appairage, photo). Après validation, la fiche est créée et le produit apparaît dans Ocean2MQTT à la version suivante. Un compte GitHub gratuit est nécessaire.",
-    footer: "Ocean2MQTT est un projet open source eHomeLabs (licence MIT), indépendant. Les noms de produits et de marques appartiennent à leurs propriétaires.",
+    footer: "Ocean2MQTT est un projet open source eHomeLabs (licence GPL-3.0-only), indépendant. Les noms de produits et de marques appartiennent à leurs propriétaires.",
     types: { actionneur: "Actionneur", prise: "Prise", interrupteur: "Interrupteur", capteur: "Capteur", chauffage: "Chauffage" },
     pairing: "Appairage", profile: "Profil", refs: "Références", manual: "Notice", sheet: "Fiche YAML", close: "Fermer", metering: "Mesure d'énergie", recom: "Remote Commissioning",
     supportHelp: { valide: "Testé sur produit réel.", communaute: "Fiche de la communauté, à confirmer sur produit réel." } },
-  en: { code: "Source code", doc: "Documentation", title: "Compatible EnOcean devices",
+  en: { code: "Source code", doc: "Documentation", title: "Your EnOcean devices, made simple.",
     intro: "All devices of the Ocean2MQTT library, with their pairing procedure. Your device isn't listed? It may already work in generic mode, or suggest it: it will be added once approved.",
     propose: "Suggest a new EnOcean device", search: "Brand, reference, EEP profile…", allBrands: "All brands", allTypes: "All types", allSupport: "All levels",
     valide: "Validated", communaute: "Community", count: n => `${n} device${n > 1 ? "s" : ""}`, empty: "No matching device.",
-    genericTitle: "And every standard EnOcean device", genericText: "Ocean2MQTT's generic mode handles any device following one of these EEP profiles, whatever its brand:",
+    genericTitle: "Supported EEP profiles", genericText: "These profiles can be decoded in generic mode. This does not guarantee every feature of every model: hardware testing is still needed.",
     proposeTitle: "Your device isn't listed?", proposeText: "Fill in the form (brand, reference, EEP profile, pairing procedure, picture). Once approved, the sheet is created and the device appears in Ocean2MQTT in the next version. A free GitHub account is required.",
-    footer: "Ocean2MQTT is an independent eHomeLabs open source project (MIT licence). Product and brand names belong to their owners.",
+    footer: "Ocean2MQTT is an independent eHomeLabs open source project (GPL-3.0-only licence). Product and brand names belong to their owners.",
     types: { actionneur: "Actuator", prise: "Plug", interrupteur: "Switch", capteur: "Sensor", chauffage: "Heating" },
     pairing: "Pairing", profile: "Profile", refs: "References", manual: "Manual", sheet: "YAML sheet", close: "Close", metering: "Energy metering", recom: "Remote Commissioning",
     supportHelp: { valide: "Tested on a real device.", communaute: "Community sheet, to be confirmed on a real device." } },
 };
 let lang = (localStorageGet("o2m-lang") || (navigator.language || "fr")).startsWith("fr") ? "fr" : "en";
 let data = { products: [], generic_eeps: [] };
+Object.assign(T.fr, { generique: "Générique", allFamilies: "Toutes les familles", families: { sensors: "Capteurs et sondes", actuators: "Actionneurs", controllers: "Contrôleurs" }, legend: "Le niveau de support est indiqué sur chaque fiche.", features: {temperature:"Température",humidity:"Humidité",power:"Puissance",energy:"Énergie",illuminance:"Luminosité",motion:"Présence",open:"Ouverture",co2:"CO₂",voc:"COV",state:"Marche / arrêt",mode:"Modes",position:"Position",setpoint:"Consigne"}, loadError:"Le catalogue n’a pas pu être chargé. Rechargez la page.", contribute:"Partager un retour de test" });
+Object.assign(T.en, { generique: "Generic", allFamilies: "All families", families: { sensors: "Sensors", actuators: "Actuators", controllers: "Controllers" }, legend: "Each device sheet shows its support level.", features: {temperature:"Temperature",humidity:"Humidity",power:"Power",energy:"Energy",illuminance:"Illuminance",motion:"Motion",open:"Opening",co2:"CO₂",voc:"VOC",state:"On / off",mode:"Modes",position:"Position",setpoint:"Setpoint"}, loadError:"Could not load the catalog. Please reload the page.", contribute:"Share a test report" });
+T.fr.supportHelp.generique = "Profil EEP générique : pas de validation matérielle d’un modèle précis.";
+T.en.supportHelp.generique = "Generic EEP profile: no hardware validation of a specific model.";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function localStorageGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
@@ -146,7 +113,7 @@ function applyLang() {
   document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   document.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
   document.querySelectorAll("[data-propose]").forEach(a => { a.href = FORM; a.target = "_blank"; a.rel = "noopener"; });
-  fillSelect($("#type"), [...new Set(data.products.map(p => p.type))], v => t("types")[v] || v);
+  fillSelect($("#family"), [...new Set(data.products.map(p => p.family))], v => t("families")[v] || v);
   render();
 }
 function fillSelect(sel, values, label) {
@@ -155,21 +122,39 @@ function fillSelect(sel, values, label) {
   values.sort((a, b) => String(label(a)).localeCompare(label(b))).forEach(v => { const o = document.createElement("option"); o.value = v; o.textContent = label(v); sel.append(o); });
   sel.value = cur;
 }
-function photo(p, big) {
-  return `<div class="ph">${p.photo ? `<img src="${esc(p.photo)}" alt="${esc(p.brand + " " + p.model)}" loading="lazy">` : `<span>${esc(p.eep)}</span>`}</div>`;
+function photo(p) {
+  const index = p.artwork ?? 6;
+  const fallback = `<div class="ph artwork" role="img" aria-label="${esc(t("generique"))}" style="background-position:${(index%4)*100/3}% ${Math.floor(index/4)*50}%"></div>`;
+  return p.photo ? `<div class="ph"><img src="${esc(p.photo)}" alt="${esc(p.brand+" "+p.model)}" loading="lazy" data-fallback="${index}"></div>` : fallback;
 }
+function handlePhotoErrors() {
+  document.querySelectorAll("img[data-fallback]").forEach(img => {
+    img.onerror = () => {
+      const index = Number(img.dataset.fallback), box = img.parentElement;
+      box.classList.add("artwork"); box.style.backgroundPosition = `${(index%4)*100/3}% ${Math.floor(index/4)*50}%`; img.remove();
+    };
+  });
+}
+function chips(p) {
+  return p.features.filter(k => t("features")[k]).slice(0, 3).map(k => `<span class="badge plain">${esc(t("features")[k])}</span>`).join("");
+}
+function badge(p) { return p.support === "communaute" ? "comm" : p.support === "generique" ? "gen" : ""; }
 function render() {
-  const q = $("#q").value.trim().toLowerCase(), brand = $("#brand").value, type = $("#type").value, support = $("#support").value;
-  const list = data.products.filter(p => (!brand || p.brand === brand) && (!type || p.type === type) && (!support || p.support === support) &&
+  const q = $("#q").value.trim().toLowerCase(), brand = $("#brand").value, family = $("#family").value, support = $("#support").value;
+  const list = data.products.filter(p => (!brand || p.brand === brand) && (!family || p.family === family) && (!support || p.support === support) &&
     (!q || [p.brand, p.model, ...p.references, p.names.fr, p.names.en, p.eep, ...p.extra_eeps].join(" ").toLowerCase().includes(q)));
   $("#count").textContent = t("count")(list.length);
   $("#grid").innerHTML = list.length ? list.map((p, i) => `
     <button type="button" class="card" data-id="${esc(p.id)}">
+      <span class="badge support-badge ${badge(p)}">${esc(t(p.support))}</span>
       ${photo(p)}
-      <span class="meta">${esc(p.brand)} · ${esc(p.references.join(" / "))}</span>
+      <span class="meta">${esc(p.generic ? t("generique") : p.brand)}</span>
+      <span class="model">${esc(p.model)}</span>
       <span class="name">${esc(p.names[lang] || p.names.fr)}</span>
-      <span class="row"><span class="badge ${p.support === "valide" ? "" : "comm"}">${esc(t(p.support))}</span><span class="badge plain"><code>${esc(p.eep)}</code></span><span class="badge plain">${esc(t("types")[p.type] || p.type)}</span></span>
+      <span class="row"><span class="badge plain"><code>${esc(p.eep)}</code></span><span class="badge plain">${esc(t("types")[p.type] || p.type)}</span></span>
+      <span class="row features">${chips(p)}</span>
     </button>`).join("") : `<p class="empty">${esc(t("empty"))}</p>`;
+  handlePhotoErrors();
 }
 function openProduct(id) {
   const p = data.products.find(x => x.id === id); if (!p) return;
@@ -178,26 +163,31 @@ function openProduct(id) {
   $("#dlgBody").innerHTML = `
     <div class="head">${photo(p, true)}<div>
       <div class="meta">${esc(p.brand)}</div><h2>${esc(p.names[lang] || p.names.fr)}</h2>
-      <div class="row" style="margin-top:6px"><span class="badge ${p.support === "valide" ? "" : "comm"}">${esc(t(p.support))}</span>${tags.map(x => `<span class="badge plain">${esc(x)}</span>`).join("")}</div>
+      <div class="row" style="margin-top:6px"><span class="badge ${badge(p)}">${esc(t(p.support))}</span>${tags.map(x => `<span class="badge plain">${esc(x)}</span>`).join("")}</div>
     </div></div>
     <div class="meta">${esc(t("supportHelp")[p.support])}</div>
     <div><b>${esc(t("refs"))}</b> : ${esc(p.references.join(" / "))} · <b>${esc(t("profile"))}</b> : <code>${esc([p.eep, ...p.extra_eeps].join(", "))}</code></div>
     <div><b>${esc(t("pairing"))}</b><ol>${steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol></div>
-    <div class="row">${p.manual ? `<a href="${esc(p.manual)}" target="_blank" rel="noopener">${esc(t("manual"))}</a> ·` : ""} <a href="${esc(p.sheet)}" target="_blank" rel="noopener">${esc(t("sheet"))}</a></div>
+    <div class="row">${p.manual ? `<a href="${esc(p.manual)}" target="_blank" rel="noopener">${esc(t("manual"))}</a> ·` : ""} ${p.sheet ? `<a href="${esc(p.sheet)}" target="_blank" rel="noopener">${esc(t("sheet"))}</a>` : ""}</div>
+    <div class="row">${chips(p)}</div>
+    <a class="cta" href="https://github.com/eHomeLabs/Ocean2MQTT/issues/new?${new URLSearchParams({template:"retour-test.yml",fiche:p.id,eep:p.eep,title:`[Test report] ${p.brand} ${p.model}`})}" target="_blank" rel="noopener">${esc(t("contribute"))}</a>
     <button type="button" class="close">${esc(t("close"))}</button>`;
-  $("#dlgBody .close").onclick = () => $("#dlg").close();
-  $("#dlg").showModal();
+  $("#dlgBody .close").onclick = () => { $("#dlg").close(); history.replaceState(null,"",location.pathname+location.search); };
+  handlePhotoErrors();
+  if (!$("#dlg").open) $("#dlg").showModal();
+  history.replaceState(null, "", "#"+encodeURIComponent(p.id));
 }
 $("#grid").addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openProduct(c.dataset.id); });
 $("#dlg").addEventListener("click", e => { if (e.target.id === "dlg") $("#dlg").close(); });
-["#q", "#brand", "#type", "#support"].forEach(s => $(s).addEventListener("input", render));
+["#q", "#brand", "#family", "#support"].forEach(s => $(s).addEventListener("input", render));
 document.querySelectorAll("[data-lang]").forEach(b => b.addEventListener("click", () => { lang = b.dataset.lang; localStorageSet("o2m-lang", lang); applyLang(); }));
-fetch("catalogue.json").then(r => r.json()).then(d => {
+fetch("catalogue.json").then(r => { if(!r.ok) throw Error("catalog"); return r.json(); }).then(d => {
   data = d;
   fillSelect($("#brand"), [...new Set(d.products.map(p => p.brand))], v => v);
   $("#generic").innerHTML = d.generic_eeps.map(e => `<span class="badge plain"><code>${esc(e)}</code></span>`).join("");
   applyLang();
-});
+  try { if(location.hash) openProduct(decodeURIComponent(location.hash.slice(1))); } catch {}
+}).catch(() => { $("#grid").innerHTML = `<p role="alert">${esc(t("loadError"))}</p>`; });
 applyLang();
 </script>
 </body>

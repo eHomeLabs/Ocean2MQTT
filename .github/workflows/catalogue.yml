@@ -5,7 +5,7 @@ name: Catalogue des produits
 on:
   push:
     branches: [main]
-    paths: ["produits/**", "tools/catalog/**", "tools/build_catalog.py", "docs/logo/**",
+    paths: ["produits/**", "tools/catalog/**", "tools/build_catalog.py", "docs/logo/**", "frontend/src/assets/**",
             ".github/workflows/catalogue.yml"]
   workflow_dispatch:
 

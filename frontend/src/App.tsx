@@ -1,3 +1,4 @@
+import { UpdateBanner } from "./UpdateBanner";
 import { useCallback, useState } from "react";
 import { AddProduct } from "./AddProduct";
 import { clearError, refresh, request, useStore } from "./api";
@@ -79,6 +80,7 @@ export function App() {
       </nav>
 
       <main className="main">
+        <UpdateBanner />
         <header className="topbar">
           <div>
             <h1>{t(PAGES.find(([k]) => k === page)![1])}</h1>

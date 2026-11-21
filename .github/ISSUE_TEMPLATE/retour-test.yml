@@ -31,6 +31,16 @@ body:
     attributes:
       label: Model reference / Référence
       description: Exact tested model, required for a generic profile. / Modèle exact testé, obligatoire pour un profil générique.
+  - type: input
+    id: photo
+    attributes:
+      label: Product photo link / Lien photo du produit
+      description: Optional. Only share a photo you may publish; the maintainer will review it. / Facultatif. Image publiable avec autorisation, contrôlée par le mainteneur.
+  - type: input
+    id: notice
+    attributes:
+      label: Manual link / Lien notice
+      description: Optional HTTPS manufacturer manual. / Notice fabricant HTTPS facultative.
   - type: textarea
     id: appairage
     attributes:

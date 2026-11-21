@@ -4,7 +4,7 @@
 
 Ocean2MQTT est une passerelle **EnOcean ↔ MQTT** multimarque, façon Zigbee2MQTT. Elle pilote une clé USB EnOcean (USB 300, USB 500…), propose une bibliothèque de produits avec la procédure d'appairage de chacun et publie les produits dans MQTT, avec la découverte automatique de Home Assistant.
 
-> Version stable : 0.2.1. Consultez le niveau de support de chaque fiche produit : Validé, Communauté ou Générique.
+> Version stable : 0.2.2. Consultez le niveau de support de chaque fiche produit : Validé, Communauté ou Générique.
 
 ## Par où commencer
 
