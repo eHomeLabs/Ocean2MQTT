@@ -1,3 +1,4 @@
+import { ProductImage } from "./ProductImage";
 // Vue « Liste » de Mes produits, façon Zigbee2MQTT : colonnes au choix, tri, recherche
 import { useMemo, useState } from "react";
 import { request, useNow } from "./api";
@@ -218,7 +219,7 @@ export function DeviceList({ devices, states, availability, onOpen, onError }: P
                 <tr key={d.id} className={r.available ? "" : "off"}>
                   <td>
                     <div className="list-name">
-                      {p.image ? <img src={p.image} alt="" className="list-thumb" /> : <span className="list-thumb placeholder" aria-hidden="true" />}
+                      <ProductImage product={p} className="list-thumb" />
                       <div>
                         <button type="button" className="title-link" onClick={() => onOpen(d)}>
                           {d.name}

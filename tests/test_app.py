@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import socket
+from types import SimpleNamespace
 
 import pytest
 from fake_dongle import BASE_ID, FakeDongle
@@ -245,3 +246,24 @@ def test_moved_sheet_ids_are_migrated(tmp_path) -> None:
     assert app.store.devices["0181A2B3"]["product"] == "eltako/fah60"
     saved = json.loads((tmp_path / "devices.json").read_text())
     assert saved["devices"][0]["product"] == "eltako/fah60"
+
+
+async def test_telegram_eep_rx_tx_and_history(app: Ocean2MQTT) -> None:
+    # Commands use the gateway as sender, so resolve their destination instead.
+    app.devices["050E1FEC"] = SimpleNamespace(title="Plug", eep_code="D2-01-0B")
+    records = [
+        {"dir": "rx", "sender": "050E1FEC", "destination": "FFFFFFFF"},
+        {"dir": "tx", "sender": "FFE7CA02", "destination": "050E1FEC"},
+        {"dir": "rx", "sender": "FFE7CA02", "destination": "FFFFFFFF"},
+    ]
+    try:
+        for record in records:
+            app._on_record(record)
+        live = [payload for topic, payload in app.events if topic == "bridge/telegrams"]
+        assert [r["eep"] for r in live] == ["D2-01-0B", "D2-01-0B", None]
+        assert [r["name"] for r in live] == ["Plug", "Plug", None]
+        app.gateway.history.extend(records)
+        assert await app.request("telegrams", {}) == live
+        assert all("eep" not in record for record in records)
+    finally:
+        app.devices.pop("050E1FEC")

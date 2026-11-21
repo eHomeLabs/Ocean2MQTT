@@ -45,14 +45,14 @@ export function TelegramsPage() {
     if (f.kind === "unknown" && names.has(id)) return false;
     if (minDbm != null && (x.dbm == null || -Math.abs(x.dbm) < minDbm)) return false;
     if (!f.dups && x.duplicate) return false;
-    if (q && ![x.sender, x.destination, names.get(id) ?? "", x.name ?? "", x.data, x.rorg, RORGS[x.rorg] ?? ""].join(" ").toLowerCase().includes(q)) return false;
+    if (q && ![x.sender, x.destination, names.get(id) ?? "", x.name ?? "", x.data, x.eep ?? "", x.rorg, RORGS[x.rorg] ?? ""].join(" ").toLowerCase().includes(q)) return false;
     return true;
   });
   const active = JSON.stringify(f) !== JSON.stringify(EMPTY);
   const exportCsv = () => {
-    const head = "time;dir;sender;name;destination;rorg;data;status;dbm;duplicate";
+    const head = "time;dir;sender;name;destination;rorg;eep;data;status;dbm;duplicate";
     const rows = shown.map((x) =>
-      [new Date(x.time * 1000).toISOString(), x.dir, x.sender, names.get(x.sender) ?? "", x.destination, x.rorg, x.data, x.status, x.dbm ?? "", x.duplicate ? 1 : 0].join(";"),
+      [new Date(x.time * 1000).toISOString(), x.dir, x.sender, names.get(peer(x)) ?? x.name ?? "", x.destination, x.rorg, x.eep ?? "", x.data, x.status, x.dbm ?? "", x.duplicate ? 1 : 0].join(";"),
     );
     const blob = new Blob([[head, ...rows].join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
@@ -168,6 +168,7 @@ export function TelegramTable({ telegrams, names }: { telegrams: Telegram[]; nam
             <th>{t("tg.dir")}</th>
             <th>{t("tg.sender")}</th>
             <th>{t("tg.rorg")}</th>
+            <th>EEP</th>
             <th>{t("tg.data")}</th>
             <th>{t("tg.dbm")}</th>
           </tr>
@@ -184,6 +185,7 @@ export function TelegramTable({ telegrams, names }: { telegrams: Telegram[]; nam
               <td>
                 {x.rorg} <span className="muted">{RORGS[x.rorg] ?? ""}</span>
               </td>
+              <td>{x.eep || "—"}</td>
               <td>
                 {x.data}
                 {x.duplicate && <span className="sans muted"> ({t("tg.dup")})</span>}

@@ -1,3 +1,4 @@
+import { ProductImage } from "./ProductImage";
 // Fiche d'un produit appairé : Contrôle, Réglages, Remote Commissioning, Télégrammes, Informations
 import { useEffect, useState } from "react";
 import { request, useStore } from "./api";
@@ -31,7 +32,7 @@ export function DeviceDetail({ device, initialTab = "control", onClose, onError 
     <div className="dialog-backdrop" role="presentation" onClick={onClose}>
       <div className="dialog wide" role="dialog" aria-modal="true" aria-labelledby={`dd-${device.id}`} onClick={(e) => e.stopPropagation()}>
         <header className="detail-head">
-          {device.product.image ? <img src={device.product.image} alt="" className="thumb" /> : <div className="thumb placeholder" aria-hidden="true" />}
+          <ProductImage product={device.product} />
           <div className="device-title">
             <h2 id={`dd-${device.id}`}>{device.name}</h2>
             <span className="muted small">
@@ -258,7 +259,7 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
           </div>
         </>
       )}
-      {p.support === "communaute" && <ConfirmWorks device={device} />}
+      {(p.support === "communaute" || p.generic) && <ConfirmWorks device={device} />}
       <h3>{t("detail.rename")}</h3>
       <label className="field">
         {t("detail.name")}
@@ -305,7 +306,7 @@ function ConfirmWorks({ device }: { device: Device }) {
   return (
     <div className="confirm-works">
       <h3>{t("confirm.title")}</h3>
-      <p className="small muted">{t("confirm.text")}</p>
+      <p className="small muted">{t(p.generic ? "confirm.genericText" : "confirm.text")}</p>
       <a className="button secondary" href={`${REPO}/issues/new?${params}`} target="_blank" rel="noreferrer">
         {t("confirm.button")}
       </a>

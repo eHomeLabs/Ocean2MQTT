@@ -318,3 +318,7 @@ a.button.secondary { display: inline-flex; align-items: center; align-self: flex
 .list-columns input[type="checkbox"] { width: 16px; height: 16px; min-height: 0; margin: 0; accent-color: var(--action); }
 .device-list td { padding-top: 7px; padding-bottom: 7px; }
 .link-name { margin-left: 8px; }
+
+/* Each fallback tile includes its own “générique” badge in the artwork. */
+.generic-product-image { display: inline-block; background-size: 400% 300%; background-repeat: no-repeat; padding: 0; aspect-ratio: 1; flex-shrink: 0; }
+.tile-product-image { width: 90px; height: 90px; align-self: center; border-radius: 12px; object-fit: contain; }

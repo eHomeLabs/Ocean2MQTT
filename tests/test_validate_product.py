@@ -95,3 +95,53 @@ def test_english_first_report(root) -> None:
     data = yaml.safe_load(vp.validate(report).read_text(encoding="utf-8"))
     assert data["support"] == "valide"
     assert "Ocean2MQTT 0.2.0b23" in data["notes"]
+
+
+def generic_issue() -> dict:
+    report = issue("generique/a5-04-03")
+    report["body"] += """
+### Brand / Marque
+
+Ubiwizz
+
+### Model reference / Référence
+
+TEST-TH
+
+### Tested pairing steps / Procédure d'appairage testée
+
+- Appuyer sur LRN.
+- Attendre la réception des mesures.
+"""
+    return report
+
+
+def test_validate_generic_creates_specific_sheet(root):
+    from ocean2mqtt.library import check_file, generic_product
+
+    path = vp.validate(generic_issue())
+    assert path == root / "ubiwizz/test-th.yaml"
+    data = yaml.safe_load(path.read_text())
+    assert data["support"] == "valide"
+    assert data["eep"] == "A5-04-03"
+    assert data["marque"] == "Ubiwizz"
+    assert data["appairage"]["etapes"]["fr"] == [
+        "Appuyer sur LRN.", "Attendre la réception des mesures.",
+    ]
+    assert check_file(path, root) == []
+    assert generic_product("A5-04-03").support == "generique"
+    with pytest.raises(vp.ValidationError, match="existe déjà"):
+        vp.validate(generic_issue())
+
+
+@pytest.mark.parametrize("removed, message", [
+    ("Ubiwizz", "Marque et Référence"),
+    ("TEST-TH", "Marque et Référence"),
+    ("- Appuyer sur LRN.\n- Attendre la réception des mesures.", "appairage"),
+])
+def test_generic_report_requires_identity_and_pairing(root, removed, message):
+    report = generic_issue()
+    report["body"] = report["body"].replace(removed, "")
+    with pytest.raises(vp.ValidationError, match=message):
+        vp.validate(report)
+    assert not (root / "ubiwizz/test-th.yaml").exists()

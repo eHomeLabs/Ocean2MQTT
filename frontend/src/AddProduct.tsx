@@ -1,3 +1,4 @@
+import { ProductImage } from "./ProductImage";
 // Ajouter un produit : bibliothèque filtrée, mode générique, suggestions, appairage, nommage
 import { useEffect, useMemo, useState } from "react";
 import { clearPairing, clearSuggestion, request, useNow, useStore } from "./api";
@@ -99,7 +100,7 @@ export function AddProduct({ onDone, onError, preset }: Props) {
         <div className="tiles">
           {items.map((p) => (
             <button key={p.id} type="button" className={`tile ${p.id === selected ? "selected" : ""}`} aria-pressed={p.id === selected} onClick={() => setSelected(p.id)}>
-              {p.image ? <img src={p.image} alt="" /> : <div className="tile-placeholder" aria-hidden="true" />}
+              <ProductImage product={p} className="tile-product-image" />
               <span className="brand">{p.brand.toUpperCase()}</span>
               <span className="model">{p.model}</span>
               <span className="name">{productText(p).name}</span>
@@ -186,7 +187,7 @@ function Suggestion({ entry, products, onPick, onAdd, onClose }: { entry: Unknow
       <div className="suggest-list">
         {matches.map((p) => (
           <div key={p.id} className="suggest-item">
-            {p.image ? <img src={p.image} alt="" className="thumb" /> : <div className="thumb placeholder" aria-hidden="true" />}
+            <ProductImage product={p} />
             <div className="device-title">
               <strong>
                 {p.brand} {p.model}
@@ -323,11 +324,7 @@ function Sheet({ product, onError, onBack, onAddById }: { product: Product; onEr
         </button>
       )}
       <div className="sheet-head">
-        {product.image ? (
-          <img src={product.image} alt={`${product.brand} ${product.model}`} className="photo" />
-        ) : (
-          <div className="photo placeholder">{product.generic ? "EEP" : t("add.photoMissing")}</div>
-        )}
+        <ProductImage product={product} className="photo" />
         <div>
           <span className="brand">{product.brand.toUpperCase()}</span>
           <h2>{productText(product).name}</h2>
@@ -536,7 +533,7 @@ function Name({ device, onDone, onError }: { device: Device; onDone: () => void;
   return (
     <div className="pairing">
       <div className="success-head">
-        {device.product?.image && <img src={device.product.image} alt="" className="photo small-photo" />}
+        {device.product && <ProductImage product={device.product} className="photo small-photo" />}
         <div>
           <h2>{t("add.paired")}</h2>
           <span className="muted">

@@ -58,7 +58,7 @@ jobs:
           commit-message: "Fiche validée : ${{ steps.fiche.outputs.fiche }} (#${{ github.event.issue.number }})"
           title: "Fiche validée : ${{ steps.fiche.outputs.fiche }}"
           body: |
-            Fiche passée de « Communauté » à « Validé » d'après le retour de test #${{ github.event.issue.number }}.
+            Fiche validée (fiche Communauté existante ou nouveau modèle testé avec un profil générique) d'après le retour de test #${{ github.event.issue.number }}.
             Vérifiez la note ajoutée, puis fusionnez : le produit sera « Validé » dans le catalogue et à la prochaine version.
 
             Closes #${{ github.event.issue.number }}

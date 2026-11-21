@@ -1,5 +1,5 @@
 name: Confirm a device works / Confirmer un produit
-description: Report a hardware test for a Community device / Partager un test matériel
+description: Report a hardware test for a Community or generic device / Partager un test matériel
 title: "[Test report] <brand> <model>"
 labels: ["retour de test"]
 body:
@@ -8,6 +8,11 @@ body:
       value: |
         Thanks! This form is prefilled when opened from Ocean2MQTT. Once checked by the maintainer, the device sheet moves from "Community" to "Validated" using the `validé` label.
         Merci ! Ce formulaire est prérempli quand il est ouvert depuis Ocean2MQTT (fiche du produit → Informations → « Confirmer que ce produit fonctionne »). Après vérification par le mainteneur, la fiche passe de « Communauté » à « Validé » avec l’étiquette `validé`.
+  - type: markdown
+    attributes:
+      value: |
+        For a generic profile, enter the brand, exact model and tested pairing steps. A separate validated sheet will be created after review; the generic profile stays generic.
+        Pour un profil générique, indiquez la marque, la référence exacte et les étapes d’appairage testées. Après contrôle, une fiche validée sera créée pour ce modèle ; le profil reste générique.
   - type: input
     id: fiche
     attributes:
@@ -16,6 +21,21 @@ body:
       placeholder: "eltako/faft60"
     validations:
       required: true
+  - type: input
+    id: marque
+    attributes:
+      label: Brand / Marque
+      description: Required for a generic profile. / Obligatoire pour un profil générique.
+  - type: input
+    id: reference
+    attributes:
+      label: Model reference / Référence
+      description: Exact tested model, required for a generic profile. / Modèle exact testé, obligatoire pour un profil générique.
+  - type: textarea
+    id: appairage
+    attributes:
+      label: Tested pairing steps / Procédure d'appairage testée
+      description: Required for a generic profile, in French or English. / Obligatoire pour un profil générique, en français ou anglais.
   - type: input
     id: version
     attributes:
