@@ -258,7 +258,7 @@ function Info({ device, onClose, onError }: { device: Device; onClose: () => voi
           </div>
         </>
       )}
-      {p.support === "communaute" && <ConfirmWorks device={device} />}
+      {(p.support === "communaute" || p.generic) && <ConfirmWorks device={device} />}
       <h3>{t("detail.rename")}</h3>
       <label className="field">
         {t("detail.name")}
@@ -305,7 +305,7 @@ function ConfirmWorks({ device }: { device: Device }) {
   return (
     <div className="confirm-works">
       <h3>{t("confirm.title")}</h3>
-      <p className="small muted">{t("confirm.text")}</p>
+      <p className="small muted">{t(p.generic ? "confirm.genericText" : "confirm.text")}</p>
       <a className="button secondary" href={`${REPO}/issues/new?${params}`} target="_blank" rel="noreferrer">
         {t("confirm.button")}
       </a>

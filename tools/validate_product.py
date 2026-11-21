@@ -62,8 +62,35 @@ def validate(issue: dict) -> Path:
     sheet = fields.get("Fiche", "")
     if not sheet:
         raise ValidationError("Champ « Fiche » vide")
-    path = sheet_path(sheet)
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if sheet.strip().lower().startswith("generique/"):
+        from issue_to_product import lines, slug
+
+        from ocean2mqtt.library import generic_product
+
+        product = generic_product(sheet.strip().split("/", 1)[1])
+        if product is None:
+            raise ValidationError("Profil générique inconnu")
+        brand = fields.get("Marque", "").strip()
+        model = fields.get("Référence", "").strip()
+        steps = lines(fields.get("Procédure d'appairage testée", ""))
+        if len(brand) < 2 or len(model) < 2 or not slug(brand) or not slug(model):
+            raise ValidationError("Marque et Référence obligatoires pour un produit générique")
+        if slug(brand) == "generique":
+            raise ValidationError("Indiquez la marque réelle du produit")
+        if not steps:
+            raise ValidationError("Procédure d'appairage testée obligatoire")
+        path = ROOT / slug(brand) / f"{slug(model)}.yaml"
+        if path.exists():
+            raise ValidationError("Une fiche existe déjà pour cette marque et référence")
+        data = {
+            "ref": model, "marque": brand, "nom": product.names,
+            "type": product.type, "eep": product.eep,
+            "appairage": {"mode": product.teach_in, "etapes": {"fr": steps}},
+            "canaux": product.channels, "reglages": sorted(product.settings),
+        }
+    else:
+        path = sheet_path(sheet)
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if data.get("support") == "valide":
         raise ValidationError(f"La fiche {path.relative_to(ROOT)} est déjà « valide »")
     works = checked(fields.get("Ce qui fonctionne", ""))
@@ -80,6 +107,7 @@ def validate(issue: dict) -> Path:
     if who:
         confirmed += f" ({who})"
     data["notes"] = f"{notes} {confirmed}.".strip()
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=100), encoding="utf-8"
     )
