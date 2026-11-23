@@ -92,6 +92,24 @@ def exposes(product: Product) -> list[Expose]:
     if eep == "A5-30-03":
         out += [TEMPERATURE, Expose("wake", "binary_sensor")]
         out += [Expose(f"input_{i}", "binary_sensor") for i in range(4)]
+    if eep == "D2-14-30":
+        out += [
+            TEMPERATURE, HUMIDITY,
+            Expose("smoke", "binary_sensor", device_class="smoke"),
+            Expose("battery_low", "binary_sensor", device_class="battery", category="diagnostic"),
+            *(Expose(key, "binary_sensor", device_class="problem", category="diagnostic")
+              for key in ("sensor_fault", "maintenance_required", "humidity_out_of_range",
+                          "temperature_out_of_range")),
+            Expose("battery_status", "enum", device_class="enum", category="diagnostic",
+                   options=("high", "medium", "low", "critical")),
+            Expose("hygrothermal_comfort", "enum", device_class="enum",
+                   options=("good", "medium", "bad")),
+            Expose("air_quality", "enum", device_class="enum",
+                   options=("optimal", "dry", "high_humidity", "high_temperature_and_humidity",
+                            "out_of_analysis_range")),
+            _sensor("weeks_since_maintenance", "wk", None, category="diagnostic"),
+            _sensor("remaining_lifetime", "months", None, category="diagnostic"),
+        ]
     if eep == "D2-14-41":
         out += [
             TEMPERATURE, HUMIDITY, ILLUMINANCE,

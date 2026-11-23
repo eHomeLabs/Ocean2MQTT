@@ -317,3 +317,44 @@ async def test_ui_entry_points_disable_cache(app: Ocean2MQTT, tmp_path, monkeypa
                         assert await response.json() == {"version": __version__}
     finally:
         await server.stop()
+
+
+async def test_insafe_manual_add_and_publish(app: Ocean2MQTT) -> None:
+    from ocean2mqtt.core.convert import device_payload
+    from ocean2mqtt.core.exposes import exposes
+
+    await app.request("device/add", {
+        "id": "81004CCD", "product": "nexelec/insafe-plus", "name": "Insafe",
+    })
+    app.dongle.inject(0xD2, bytes.fromhex("07 F8 7A C9 39 20"), 0x81004CCD)
+    await asyncio.sleep(0.05)
+    device = app.devices["81004CCD"]
+    payload = device_payload(device)
+    assert payload["temperature"] == 20.0
+    assert payload["humidity"] == 78.0
+    assert payload["smoke"] is False
+    assert payload["air_quality"] == "high_humidity"
+    assert payload["remaining_lifetime"] == 61
+    assert "weeks_since_maintenance" not in payload
+    exposed = {e.key for e in exposes(device.product)}
+    assert set(payload) - {"rssi", "timeout"} <= exposed
+    from ocean2mqtt.mqtt import discovery_configs
+
+    configs = discovery_configs(app, device, "homeassistant", "ocean2mqtt")
+    by_key = {topic.rsplit("/", 2)[1]: value for topic, value in configs.items()}
+    assert by_key["81004CCD_smoke"]["device_class"] == "smoke"
+    assert by_key["81004CCD_sensor_fault"]["device_class"] == "problem"
+    assert by_key["81004CCD_battery_status"]["options"] == ["high", "medium", "low", "critical"]
+    assert by_key["81004CCD_remaining_lifetime"]["unit_of_measurement"] == "months"
+
+
+async def test_unknown_senders_exclude_only_gateway_ids(app: Ocean2MQTT) -> None:
+    from ocean2mqtt.core.esp3 import RadioTelegram
+
+    info = app.gateway.info
+    for sender in (info.base_id, info.base_id + 1, info.base_id + 127, info.chip_id):
+        app._on_any_telegram(RadioTelegram(rorg=0xD2, payload=b"\x00", sender=sender))
+        assert f"{sender:08X}" not in app.unknown
+    for sender in (info.base_id - 1, info.base_id + 128, 0x81004CCD):
+        app._on_any_telegram(RadioTelegram(rorg=0xD2, payload=b"\x00", sender=sender, status=0x81))
+        assert f"{sender:08X}" in app.unknown

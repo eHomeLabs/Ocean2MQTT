@@ -593,6 +593,39 @@ def decode_f60101(t: RadioTelegram) -> dict[str, Any] | None:
     return {"event": "press" if t.payload[0] & 0x10 else "release"}
 
 
+# --- D2-14-30: smoke detector with temperature/humidity monitoring --------------
+
+
+def decode_d21430(t: RadioTelegram) -> dict[str, Any] | None:
+    """EEP 2.6.8, D2-14-30: 48 bits, MSB first; reserved values are unavailable."""
+    if t.rorg != RORG_VLD or len(t.payload) != 6:
+        return None
+    bits = int.from_bytes(t.payload, "big")
+
+    def field(offset: int, size: int) -> int:
+        return (bits >> (48 - offset - size)) & ((1 << size) - 1)
+
+    energy = field(13, 2)
+    comfort = field(39, 2)
+    air = field(41, 3)
+    return {
+        "smoke": bool(field(0, 1)),
+        "sensor_fault": bool(field(1, 1)),
+        "maintenance_required": bool(field(2, 1)),
+        "humidity_out_of_range": bool(field(3, 1)),
+        "temperature_out_of_range": bool(field(4, 1)),
+        "weeks_since_maintenance": value if (value := field(5, 8)) <= 250 else None,
+        "battery_status": ("high", "medium", "low", "critical")[energy],
+        "battery_low": energy >= 2,
+        "remaining_lifetime": value if (value := field(15, 8)) <= 120 else None,
+        "temperature": value / 5 if (value := field(23, 8)) <= 250 else None,
+        "humidity": value / 2 if (value := field(31, 8)) <= 200 else None,
+        "hygrothermal_comfort": ("good", "medium", "bad")[comfort] if comfort < 3 else None,
+        "air_quality": ("optimal", "dry", "high_humidity", "high_temperature_and_humidity",
+                        "out_of_analysis_range")[air] if air < 5 else None,
+    }
+
+
 # --- D2-14-41 : multicapteur (STM 550) -----------------------------------------
 # Température 10 bits (0..1000 = -40..+60 °C), humidité 8 bits (0..200 = 0..100 %),
 # luminosité 17 bits (lx), état d'accélération 2 bits, accélération X/Y/Z 10 bits
@@ -655,6 +688,7 @@ DECODERS = {
     "A5-08-02": _a508("A5-08-02"),
     "A5-08-03": _a508("A5-08-03"),
     "A5-30-03": decode_a53003,
+    "D2-14-30": decode_d21430,
     "D2-14-41": decode_d21441,
     "F6-01-01": decode_f60101,
     "A5-09-04": decode_a50904,
