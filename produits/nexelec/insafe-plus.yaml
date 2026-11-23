@@ -1,0 +1,26 @@
+ref: INSAFE+ Origin
+marque: Nexelec
+nom:
+  fr: Détecteur de fumée, température, humidité et confort
+  en: Smoke, temperature, humidity and comfort detector
+type: capteur
+eep: D2-14-30
+appairage:
+  mode: ute_uni
+  etapes:
+    fr:
+    - Attendez une émission périodique (environ 20 minutes observées), puis sélectionnez son identifiant dans les émetteurs inconnus et choisissez cette fiche.
+    - Vous pouvez aussi ajouter manuellement son identifiant EnOcean avec cette fiche, sans attendre un télégramme d’apprentissage.
+    - La procédure physique de déclenchement du teach-in reste à confirmer sur ce modèle.
+    en:
+    - Wait for a periodic transmission (approximately 20 minutes observed), then select its ID in unknown senders and choose this product.
+    - Alternatively, manually add its EnOcean ID with this product, without waiting for a teach-in telegram.
+    - The physical procedure for triggering teach-in remains to be confirmed for this model.
+variantes:
+- INSAFE+
+- I870EO
+notice: https://www.enocean-alliance.org/product/indoor-air-quality-monitor-and-smoke-detector-insafe-origin/
+notes: "Profil officiel D2-14-30. Qualité d’air calculée à partir de la température et de l’humidité ; pas de mesure CO2 ou COV. État de la pile sur quatre niveaux, sans pourcentage estimé. Décodage testé avec le télégramme fourni dans l’issue #24 ; validation matérielle, identifiant fabricant et photo autorisée à compléter. / Official D2-14-30 profile; air quality inferred from temperature and humidity, not CO2 or VOC. Hardware validation, manufacturer ID and an authorised photo remain pending."
+reglages:
+- timeout
+support: communaute

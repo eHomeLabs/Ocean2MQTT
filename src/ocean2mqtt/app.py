@@ -585,6 +585,11 @@ class Ocean2MQTT:
 
     def _on_any_telegram(self, telegram: RadioTelegram) -> None:
         sender = telegram.sender_str
+        info = self.gateway.info
+        if info and (telegram.sender == info.chip_id or (
+            info.base_id is not None and info.base_id <= telegram.sender < info.base_id + 128
+        )):
+            return
         if sender in self.devices or telegram.rorg not in (RORG_RPS, RORG_1BS, RORG_4BS,
                                                             RORG_VLD, 0xD4):
             return
