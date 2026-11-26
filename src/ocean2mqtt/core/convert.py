@@ -12,7 +12,7 @@ _OFF = {"OFF", "0", "FALSE"}
 _COPY = (
     "power", "energy", "illuminance", "voltage", "battery", "firmware", "motion", "card",
     "co2", "voc", "water_leak", "smoke", "handle", "valve_position", "window_open", "battery_low",
-    "setpoint", "sensor_fault", "maintenance_required", "humidity_out_of_range",
+    "setpoint", "setpoint_raw", "sensor_fault", "maintenance_required", "humidity_out_of_range",
     "temperature_out_of_range", "weeks_since_maintenance", "battery_status",
     "remaining_lifetime", "hygrothermal_comfort", "air_quality",
 )  # fmt: skip

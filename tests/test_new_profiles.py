@@ -84,3 +84,24 @@ def test_a50403_temperature_and_humidity() -> None:
     assert decode(t(0xA5, "80 02 00 08")) == {"temperature": 20.0, "humidity": 50.2}
     assert decode(t(0xA5, "80 02 00 00")) is None
     assert decode(t(0xA5, "80 02 08")) is None
+
+
+def test_a51012_temperature_humidity_local_setpoint():
+    assert eep.find_decoder("A5-10-12") is eep.decode_a51012
+    # DB0 contains only LRN: no A5-04 temperature-presence bit required.
+    assert eep.decode_a51012(t(0xA5, "80 7D 7D 08")) == {
+        "setpoint_raw": 128, "humidity": 50.0, "temperature": 20.0,
+    }
+    assert eep.decode_a51012(t(0xA5, "00 00 00 08")) == {
+        "setpoint_raw": 0, "humidity": 0.0, "temperature": 0.0,
+    }
+    assert eep.decode_a51012(t(0xA5, "FF FA FA 08")) == {
+        "setpoint_raw": 255, "humidity": 100.0, "temperature": 40.0,
+    }
+    for invalid in range(251, 256):
+        result = eep.decode_a51012(t(0xA5, f"01 {invalid:02X} {invalid:02X} 08"))
+        assert result == {"setpoint_raw": 1, "humidity": None, "temperature": None}
+    assert eep.decode_a51012(t(0xA5, "40 90 00 80")) is None
+    assert eep.decode_a51012(t(0xD2, "80 7D 7D 08")) is None
+    for frame in ("", "00 00 08", "00 00 00 08 00"):
+        assert eep.decode_a51012(t(0xA5, frame)) is None

@@ -843,6 +843,7 @@ const EN: Record<Key, string> = {
 // Mesures, contrôles et réglages
 const KEYS: Record<Lang, Record<string, string>> = {
   fr: {
+    setpoint_raw: "Consigne locale (brute 0–255)",
     temperature: "Température", humidity: "Humidité", power: "Puissance", energy: "Énergie",
     illuminance: "Luminosité", voltage: "Tension", battery: "Batterie", co2: "CO2", voc: "COV",
     valve_position: "Ouverture vanne", setpoint: "Consigne", rssi: "Signal", mode: "Mode fil pilote",
@@ -867,6 +868,7 @@ const KEYS: Record<Lang, Record<string, string>> = {
     acceleration_y: "Accélération Y", acceleration_z: "Accélération Z",
   },
   en: {
+    setpoint_raw: "Local set point (raw 0–255)",
     temperature: "Temperature", humidity: "Humidity", power: "Power", energy: "Energy",
     illuminance: "Illuminance", voltage: "Voltage", battery: "Battery", co2: "CO2", voc: "VOC",
     valve_position: "Valve opening", setpoint: "Setpoint", rssi: "Signal", mode: "Pilot wire mode",

@@ -358,3 +358,37 @@ async def test_unknown_senders_exclude_only_gateway_ids(app: Ocean2MQTT) -> None
     for sender in (info.base_id - 1, info.base_id + 128, 0x81004CCD):
         app._on_any_telegram(RadioTelegram(rorg=0xD2, payload=b"\x00", sender=sender, status=0x81))
         assert f"{sender:08X}" in app.unknown
+
+
+async def test_avidsen_sensor_received_setpoint_is_read_only(app: Ocean2MQTT) -> None:
+    from ocean2mqtt.core.convert import apply_command, device_payload
+    from ocean2mqtt.core.exposes import exposes
+    from ocean2mqtt.mqtt import discovery_configs
+
+    await app.request("device/add", {
+        "id": "0199AACC", "product": "avidsen/101012", "name": "Avidsen",
+    })
+    app.dongle.inject(0xA5, bytes.fromhex("80 7D 7D 08"), 0x0199AACC)
+    await asyncio.sleep(0.05)
+    device = app.devices["0199AACC"]
+    state = device_payload(device)
+    assert (state["temperature"], state["humidity"], state["setpoint_raw"]) == (20, 50, 128)
+    exposed = {e.key: e for e in exposes(device.product)}
+    assert exposed["setpoint_raw"].access == "r"
+    assert exposed["setpoint_raw"].unit is None
+    assert "battery_low" not in exposed
+    assert await apply_command(device, {"setpoint_raw": 100}) == ["setpoint_raw"]
+    configs = discovery_configs(app, device, "ocean2mqtt", "homeassistant")
+    sp = next(c for topic, c in configs.items() if "0199AACC_setpoint_raw/" in topic)
+    assert "command_topic" not in sp
+    assert sp["unit_of_measurement"] is None
+
+
+async def test_avidsen_4bs_teach_in(app: Ocean2MQTT) -> None:
+    await _pair(app, "avidsen/101012", 0xA5, _4bs_teach(0x10, 0x12), 0x0199AACD)
+    device = app.devices["0199AACD"]
+    assert device.product.eep == "A5-10-12"
+    assert "temperature" not in device.state
+    app.dongle.inject(0xA5, bytes.fromhex("22 96 7D 08"), 0x0199AACD)
+    assert device.state["temperature"] == 20.0
+    assert device.state["humidity"] == 60.0
