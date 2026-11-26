@@ -1,0 +1,30 @@
+ref: '600105'
+marque: Avidsen
+nom:
+  fr: Module chauffage On/Off avec mesure de consommation
+  en: On/off heating relay with power and energy metering
+type: chauffage
+eep: D2-01-08
+fabricant_id: 111
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Le module doit être installé et alimenté conformément à sa notice.
+    - Lancez l’appairage dans Ocean2MQTT et maintenez le bouton en façade pendant 3 secondes.
+    - Ocean2MQTT répond à la demande UTE ; la notice indique 10 clignotements rapides en cas de succès.
+    - Vérifiez la commande marche/arrêt et les mesures de puissance et d’énergie.
+    en:
+    - Install and power the module according to its manual.
+    - Start pairing in Ocean2MQTT and hold the front button for 3 seconds.
+    - Ocean2MQTT answers the UTE request; the manual specifies 10 quick flashes on success.
+    - Check on/off control and power/energy readings.
+mesure: true
+recom: false
+support: communaute
+notice: https://pim.avidsen.com/documentsproduits/fr/600105-notice.pdf
+notes: Chauffage On/Off, 1 sortie ; mesure puissance et énergie annoncée. Ne fournit pas les modes fil pilote. /
+  Single-output on/off heating relay with power/energy metering; no pilot-wire modes. Support matériel à confirmer.
+  Aucun réglage propriétaire NodOn ou ReCom supposé ; visuel générique en attendant une photo autorisée. / Hardware
+  validation pending; no assumed NodOn-specific settings or ReCom support; generic artwork until an authorised photo
+  is provided.

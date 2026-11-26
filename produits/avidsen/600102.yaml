@@ -1,0 +1,28 @@
+ref: '600102'
+marque: Avidsen
+nom:
+  fr: Détecteur solaire d’ouverture porte/fenêtre avec aimant
+  en: Solar door/window magnetic contact
+type: capteur
+eep: D5-00-01
+fabricant_id: 111
+appairage:
+  mode: 1bs
+  etapes:
+    fr:
+    - Chargez la réserve interne à la lumière.
+    - Lancez l’appairage dans Ocean2MQTT, puis appuyez sur la touche arrière du détecteur.
+    - Vérifiez les états ouvert et fermé en éloignant puis rapprochant l’aimant.
+    en:
+    - Charge the internal energy store in light.
+    - Start pairing in Ocean2MQTT, then press the rear button on the detector.
+    - Check open and closed states by moving the magnet away and back.
+reglages:
+- timeout
+recom: false
+support: communaute
+notice: https://pim.avidsen.com/documentsproduits/fr/600102-notice.pdf
+notes: Capteur magnétique et aimant distinct ; écart maximal annoncé 12 mm. / Separate magnetic sensor and magnet;
+  specified maximum gap 12 mm. Support matériel à confirmer. Aucun réglage propriétaire NodOn ou ReCom supposé ;
+  visuel générique en attendant une photo autorisée. / Hardware validation pending; no assumed NodOn-specific settings
+  or ReCom support; generic artwork until an authorised photo is provided.

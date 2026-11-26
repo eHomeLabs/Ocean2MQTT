@@ -1,0 +1,29 @@
+ref: '600104'
+marque: Avidsen
+nom:
+  fr: Sonde solaire de température et d’humidité
+  en: Solar temperature and humidity sensor
+type: capteur
+eep: A5-04-01
+fabricant_id: 111
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Exposez la cellule solaire à la lumière pour charger la réserve interne.
+    - Lancez l’appairage dans Ocean2MQTT, puis appuyez sur la touche à l’arrière de la sonde.
+    en:
+    - Expose the solar cell to light to charge the internal energy store.
+    - Start pairing in Ocean2MQTT, then press the button on the back of the sensor.
+reglages:
+- temperature_offset
+- humidity_offset
+- timeout
+recom: false
+support: communaute
+notice: https://pim.avidsen.com/documentsproduits/fr/600104-notice.pdf
+notes: 0–40 °C et 0–100 % HR. Mesure toutes les 2 minutes ; émission sur variation de température de 0,5 °C ou toutes
+  les 15 minutes à température stable. / Measures every 2 minutes; transmits on a 0.5 °C temperature change or every
+  15 minutes when stable. Support matériel à confirmer. Aucun réglage propriétaire NodOn ou ReCom supposé ; visuel
+  générique en attendant une photo autorisée. / Hardware validation pending; no assumed NodOn-specific settings
+  or ReCom support; generic artwork until an authorised photo is provided.

@@ -1,0 +1,30 @@
+ref: '600106'
+marque: Avidsen
+nom:
+  fr: Module chauffage fil pilote 6 ordres avec mesure
+  en: Six-mode pilot-wire heating module with metering
+type: chauffage
+eep: D2-01-0C
+fabricant_id: 111
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Le module doit être installé et alimenté conformément à sa notice.
+    - Lancez l’appairage dans Ocean2MQTT et maintenez le bouton en façade pendant 3 secondes.
+    - Ocean2MQTT répond à la demande UTE ; la notice indique 10 clignotements rapides en cas de succès.
+    - Vérifiez les modes fil pilote et les mesures disponibles sur votre module.
+    en:
+    - Install and power the module according to its manual.
+    - Start pairing in Ocean2MQTT and hold the front button for 3 seconds.
+    - Ocean2MQTT answers the UTE request; the manual specifies 10 quick flashes on success.
+    - Check pilot-wire modes and the measurements available on your module.
+mesure: true
+recom: false
+support: communaute
+notice: https://pim.avidsen.com/documentsproduits/fr/600106-notice.pdf
+notes: Arrêt, hors-gel, éco, confort, confort −1 °C et confort −2 °C. La notice annonce aussi une mesure de consommation
+  suivant le contrôleur. / Six pilot-wire modes; the manual also describes consumption readings depending on controller
+  support. Support matériel à confirmer. Aucun réglage propriétaire NodOn ou ReCom supposé ; visuel générique en
+  attendant une photo autorisée. / Hardware validation pending; no assumed NodOn-specific settings or ReCom support;
+  generic artwork until an authorised photo is provided.
