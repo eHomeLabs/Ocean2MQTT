@@ -76,6 +76,8 @@ def exposes(product: Product) -> list[Expose]:
         out.append(TEMPERATURE)
     if eep in ("A5-04-01", "A5-04-02", "A5-04-03"):
         out += [TEMPERATURE, HUMIDITY]
+    if eep == "A5-10-12":
+        out += [TEMPERATURE, HUMIDITY, _sensor("setpoint_raw", None, None)]
     if decoder == "eltako_brightness":
         out.append(ILLUMINANCE)
     elif eep == "A5-06-01":

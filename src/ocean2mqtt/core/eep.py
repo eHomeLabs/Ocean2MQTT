@@ -307,6 +307,21 @@ def decode_a50205(t: RadioTelegram) -> dict[str, Any] | None:
     return {"temperature": round(40 - raw * 40 / 255, 1)}
 
 
+# --- A5-10-12: temperature, humidity and raw local set point --------------------
+
+
+def decode_a51012(t: RadioTelegram) -> dict[str, Any] | None:
+    """EEP 2.6.8 p.56: DB3 set point has no standard Celsius conversion."""
+    if t.rorg != RORG_4BS or len(t.payload) != 4 or not t.payload[3] & 0x08:
+        return None
+    setpoint, humidity, temperature, _ = t.payload
+    return {
+        "setpoint_raw": setpoint,
+        "humidity": round(humidity * 100 / 250, 1) if humidity <= 250 else None,
+        "temperature": round(temperature * 40 / 250, 1) if temperature <= 250 else None,
+    }
+
+
 # --- A5-04-01 : température 0..40 °C + humidité ---------------------------------
 
 
@@ -678,6 +693,7 @@ DECODERS = {
     "D2-05-00": decode_d205,
     "D5-00-01": decode_d50001,
     "A5-02-05": decode_a50205,
+    "A5-10-12": decode_a51012,
     "A5-04-01": decode_a50401,
     "A5-04-02": decode_a50402,
     "A5-04-03": decode_a50403,

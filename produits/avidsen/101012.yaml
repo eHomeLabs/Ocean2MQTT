@@ -1,0 +1,28 @@
+ref: '101012'
+marque: Avidsen
+nom:
+  fr: Sonde de température et d’humidité avec affichage numérique et consigne locale
+  en: Temperature and humidity sensor with digital display and local set point
+type: capteur
+eep: A5-10-12
+appairage:
+  mode: 4bs
+  etapes:
+    fr:
+    - Alimentez la sonde avec une pile CR2450 ou en micro-USB 5 V.
+    - Lancez l’appairage dans Ocean2MQTT en choisissant Avidsen 101012.
+    - Maintenez le bouton d’association situé à l’arrière pendant plus de 3 secondes.
+    - Vérifiez ensuite les valeurs reçues ; les boutons +/− règlent la consigne locale émise par la sonde.
+    en:
+    - Power the sensor with a CR2450 battery or 5 V micro-USB.
+    - Start pairing in Ocean2MQTT and select Avidsen 101012.
+    - Hold the pairing button on the back for more than 3 seconds.
+    - Check the received values; the +/− buttons change the local set point transmitted by the sensor.
+notice: https://pim.avidsen.com/documentsproduits/fr/101012V1-fiche-produit.pdf
+photo: 101012.png
+reglages:
+- temperature_offset
+- humidity_offset
+- timeout
+support: communaute
+notes: "Sonde EnOcean 868,3 MHz. Plages annoncées : 0 à 38 °C et 20 à 90 % HR ; mesure chaque minute (sans garantie de transmission à chaque mesure). Profil standard A5-10-12 : température 0 à 40 °C, humidité 0 à 100 %, consigne brute 0 à 255 en lecture seule. La conversion de consigne en °C et le codage de pile faible annoncé par Avidsen ne sont pas documentés et restent à confirmer sur trame réelle. Aucun bit réservé n’est interprété comme pile faible. Photo fournie par le mainteneur ; support matériel à confirmer. / Set point Celsius conversion and the manufacturer battery-low encoding require real telegram validation; reserved bits are not interpreted as battery status."
