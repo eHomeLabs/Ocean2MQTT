@@ -8,9 +8,9 @@
 
 ---
 
-> **Stable release: 0.2.5** · **Version stable : 0.2.5**
-> New in 0.2.5: seven Avidsen devices and the A5-10-12 profile (temperature, humidity and raw local set point).
-> Nouveautés 0.2.5 : sept produits Avidsen et le profil A5-10-12 (température, humidité et consigne locale brute).
+> **Stable release: 0.2.6** · **Version stable : 0.2.6**
+> New in 0.2.6: Avidsen 101012 local set point in °C, rounded to the screen’s half-degree steps, with raw values retained.
+> Nouveauté 0.2.6 : consigne locale Avidsen 101012 en °C, arrondie au demi-degré comme sur son écran ; valeur brute conservée.
 > Also includes Nexelec INSAFE+ support and gateway echo filtering introduced in 0.2.4.
 > Device support levels remain specific to each catalog entry: Validated, Community or Generic.
 > Les niveaux Validé, Communauté et Générique restent propres à chaque fiche produit.
@@ -148,7 +148,7 @@ docker run -d --name ocean2mqtt --restart unless-stopped \
   -v $(pwd)/data:/app/data -p 8080:8080 \
   --device /dev/ttyUSB0:/dev/ttyUSB0 \
   -e OCEAN2MQTT_MQTT_HOST=192.168.1.10 \
-  ghcr.io/ehomelabs/ocean2mqtt:v0.2.5
+  ghcr.io/ehomelabs/ocean2mqtt:v0.2.6
 ```
 
 Exemple avec Mosquitto : `docker-compose.example.yml`. Ouvrez ensuite `http://<machine>:8080`.
