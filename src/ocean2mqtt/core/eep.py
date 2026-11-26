@@ -322,6 +322,15 @@ def decode_a51012(t: RadioTelegram) -> dict[str, Any] | None:
     }
 
 
+def decode_avidsen_101012(t: RadioTelegram) -> dict[str, Any] | None:
+    """101012 screen mapping, calibrated from four user-reported hardware readings."""
+    state = decode_a51012(t)
+    if state is not None:
+        # Celsius = raw * 0.16 + 0.12, rounded to the screen's half-degree steps.
+        state["setpoint"] = round((state["setpoint_raw"] * 32 + 24) / 100) / 2
+    return state
+
+
 # --- A5-04-01 : température 0..40 °C + humidité ---------------------------------
 
 
@@ -694,6 +703,7 @@ DECODERS = {
     "D5-00-01": decode_d50001,
     "A5-02-05": decode_a50205,
     "A5-10-12": decode_a51012,
+    "avidsen_101012": decode_avidsen_101012,
     "A5-04-01": decode_a50401,
     "A5-04-02": decode_a50402,
     "A5-04-03": decode_a50403,

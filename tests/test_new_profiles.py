@@ -105,3 +105,18 @@ def test_a51012_temperature_humidity_local_setpoint():
     assert eep.decode_a51012(t(0xD2, "80 7D 7D 08")) is None
     for frame in ("", "00 00 08", "00 00 00 08 00"):
         assert eep.decode_a51012(t(0xA5, frame)) is None
+
+
+def test_avidsen_101012_screen_setpoint_mapping_is_model_specific():
+    for raw, screen in ((68, 11.0), (125, 20.0), (209, 33.5), (218, 35.0)):
+        frame = t(0xA5, f"{raw:02X} 7D 7D 08")
+        decoded = eep.decode_avidsen_101012(frame)
+        assert decoded == {"setpoint_raw": raw, "setpoint": screen,
+                           "temperature": 20.0, "humidity": 50.0}
+        assert "setpoint" not in eep.decode_a51012(frame)
+    assert eep.decode_avidsen_101012(t(0xA5, "40 90 00 80")) is None
+    assert eep.decode_avidsen_101012(t(0xD2, "44 7D 7D 08")) is None
+    for raw in range(256):
+        value = eep.decode_avidsen_101012(t(0xA5, f"{raw:02X} 7D 7D 08"))["setpoint"]
+        assert value * 2 == int(value * 2)
+        assert abs(value - (raw * 0.16 + 0.12)) <= 0.25
