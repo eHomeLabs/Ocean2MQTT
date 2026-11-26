@@ -141,8 +141,8 @@ async def test_valve_pairing_and_setpoint(app: Ocean2MQTT) -> None:
 
 async def test_library_and_errors(app: Ocean2MQTT) -> None:
     products = await app.request("library", {"search": "fil pilote"})
-    assert [p["model"] for p in products] == ["SIN-2-FP-01", "UBICH009"]
-    assert products[0]["image"] == "produits/nodon/sin-2-fp-01.png"
+    assert [p["model"] for p in products] == ["600106", "SIN-2-FP-01", "UBICH009"]
+    assert next(p for p in products if p["model"] == "SIN-2-FP-01")["image"] == "produits/nodon/sin-2-fp-01.png"
     assert any(e["key"] == "mode" and e["access"] == "rw" for e in products[0]["exposes"])
     with pytest.raises(RequestError):
         await app.request("pairing/start", {"product": "acme/inconnu"})
@@ -392,3 +392,49 @@ async def test_avidsen_4bs_teach_in(app: Ocean2MQTT) -> None:
     app.dongle.inject(0xA5, bytes.fromhex("22 96 7D 08"), 0x0199AACD)
     assert device.state["temperature"] == 20.0
     assert device.state["humidity"] == 60.0
+
+
+@pytest.mark.parametrize("ref,rorg,teach,frame,expected", [
+    ("600104", 0xA5, _4bs_teach(0x04, 0x01, 0x06F), "00 96 7D 0A",
+     {"temperature": 20.0, "humidity": 60.0}),
+    ("600102", 0xD5, "00", "08", {"open": True}),
+    ("970221", 0xD5, "00", "09", {"open": False}),
+    ("600105", 0xD4, "A0 01 6F 00 08 01 D2", "04 00 64", {"state": "ON"}),
+    ("600106", 0xD4, "A0 01 6F 00 0C 01 D2", "0A 02", {"mode": "eco"}),
+    ("970292", 0xD4, "A0 02 6F 00 12 01 D2", "04 01 64", {"state_l2": "ON"}),
+])
+async def test_avidsen_range_pairing_and_state(app, ref, rorg, teach, frame, expected):
+    from ocean2mqtt.core.convert import device_payload
+    from ocean2mqtt.core.exposes import exposes
+
+    sender = 0x0199AADD
+    await _pair(app, f"avidsen/{ref}", rorg, teach, sender)
+    device = app.devices["0199AADD"]
+    assert device.product.support == "communaute"
+    assert not device.product.recom
+    assert not any(x.rorg == 0xD1 for x in app.dongle.sent)  # no NodOn MSC queries
+    app.dongle.inject(0xD2 if rorg == 0xD4 else rorg, bytes.fromhex(frame), sender)
+    state = device_payload(device)
+    for key, value in expected.items():
+        assert state[key] == value
+    if ref in ("600105", "600106"):
+        app.dongle.inject(0xD2, bytes.fromhex("07 60 00 00 04 D2"), sender)
+        app.dongle.inject(0xD2, bytes.fromhex("07 20 00 00 3C 8C"), sender)
+        state = device_payload(device)
+        assert state["power"] == 1234.0
+        assert state["energy"] == 15.5
+        assert {"power", "energy"} <= {x.key for x in exposes(device.product)}
+    if ref == "600105":
+        await app.request("device/set", {"id": device.id_str, "payload": {"state": "OFF"}})
+        assert app.dongle.sent[-1].payload == bytes.fromhex("01 00 00")
+    if ref == "600106":
+        for mode, code in (("off", 0), ("frost_protection", 3), ("eco", 2),
+                           ("comfort", 1), ("comfort_1", 4), ("comfort_2", 5)):
+            await app.request("device/set", {"id": device.id_str, "payload": {"mode": mode}})
+            assert app.dongle.sent[-1].payload == bytes([0x08, code])
+    if ref == "970292":
+        await app.request("device/set", {"id": device.id_str, "payload": {"state_l1": "ON"}})
+        assert app.dongle.sent[-1].payload == bytes.fromhex("01 00 64")
+        await app.request("device/set", {"id": device.id_str, "payload": {"state_l2": "OFF"}})
+        assert app.dongle.sent[-1].payload == bytes.fromhex("01 01 00")
+        assert not device.product.metering

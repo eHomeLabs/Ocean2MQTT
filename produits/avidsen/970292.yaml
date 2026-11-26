@@ -1,0 +1,32 @@
+ref: '970292'
+marque: Avidsen
+nom:
+  fr: Micromodule éclairage On/Off à deux voies
+  en: Two-channel on/off lighting micromodule
+type: actionneur
+eep: D2-01-12
+fabricant_id: 111
+appairage:
+  mode: ute_bidir
+  etapes:
+    fr:
+    - Vérifiez que le micromodule est équipé du module radio EnOcean 970200, puis alimentez-le conformément à sa
+      notice.
+    - Lancez l’appairage dans Ocean2MQTT et maintenez le bouton d’association au moins 3 secondes.
+    - Ocean2MQTT répond à la demande UTE ; vérifiez le clignotement rapide de confirmation.
+    - Vérifiez séparément les deux sorties d’éclairage.
+    en:
+    - Check that the micromodule contains the EnOcean 970200 radio module, then power it according to the manual.
+    - Start pairing in Ocean2MQTT and hold the pairing button for at least 3 seconds.
+    - Ocean2MQTT answers the UTE request; check for the rapid confirmation flashes.
+    - Check the two lighting outputs separately.
+canaux: 2
+recom: false
+support: communaute
+notice: https://pim.avidsen.com/documentsproduits/fr/970292-notice-v8.pdf
+notes: 'Version EnOcean uniquement. La notice V8 couvre aussi des variantes radio Lora/Wifi, non prises en charge
+  ici. Pas de mesure de consommation annoncée. Les puissances maximales diffèrent entre fiche commerciale et notice
+  V8 : se référer à la notice et à l’étiquette de votre exemplaire. / EnOcean version only; no assumed metering
+  or cross-radio compatibility. Support matériel à confirmer. Aucun réglage propriétaire NodOn ou ReCom supposé
+  ; visuel générique en attendant une photo autorisée. / Hardware validation pending; no assumed NodOn-specific
+  settings or ReCom support; generic artwork until an authorised photo is provided.'

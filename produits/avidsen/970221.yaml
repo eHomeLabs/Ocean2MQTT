@@ -1,0 +1,35 @@
+ref: '970221'
+marque: Avidsen
+nom:
+  fr: Détecteur solaire d’ouverture à battant ou coulissante
+  en: Solar hinged or sliding door/window contact
+type: capteur
+eep: D5-00-01
+fabricant_id: 111
+appairage:
+  mode: 1bs
+  etapes:
+    fr:
+    - Retirez la languette de protection de la pile CR2450 et laissez la cellule solaire éclairée.
+    - Lancez l’appairage dans Ocean2MQTT, puis maintenez le bouton de droite pendant 3 secondes.
+    - 'Pour une ouverture à battant : fermez la porte/fenêtre puis faites un appui de moins d’une seconde pour calibrer
+      le détecteur.'
+    - 'Pour une ouverture coulissante : utilisez l’aimant et suivez le positionnement indiqué dans la notice ; vérifiez
+      ouverture et fermeture.'
+    en:
+    - Remove the CR2450 battery isolation tab and expose the solar cell to light.
+    - Start pairing in Ocean2MQTT, then hold the right-hand button for 3 seconds.
+    - 'For a hinged door/window: close it, then press for less than one second to calibrate the detector.'
+    - 'For a sliding door/window: use the magnet and follow the positioning in the manual; check open and closed
+      states.'
+reglages:
+- timeout
+recom: false
+support: communaute
+notice: https://pim.avidsen.com/documentsproduits/fr/970221-notice.pdf
+notes: Détection géomagnétique à battant sans aimant après calibration, ou coulissante avec aimant. Pile CR2450
+  de secours. Seul l’état ouvert/fermé standard D5-00-01 est exposé ; sabotage et niveau de pile non documentés
+  dans ce profil. / Only the standard D5-00-01 contact state is exposed; tamper and battery encoding remain undocumented.
+  Support matériel à confirmer. Aucun réglage propriétaire NodOn ou ReCom supposé ; visuel générique en attendant
+  une photo autorisée. / Hardware validation pending; no assumed NodOn-specific settings or ReCom support; generic
+  artwork until an authorised photo is provided.
