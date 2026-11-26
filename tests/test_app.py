@@ -374,6 +374,9 @@ async def test_avidsen_sensor_received_setpoint_is_read_only(app: Ocean2MQTT) ->
     state = device_payload(device)
     assert (state["temperature"], state["humidity"], state["setpoint_raw"]) == (20, 50, 128)
     exposed = {e.key: e for e in exposes(device.product)}
+    assert state["setpoint"] == 20.5
+    assert exposed["setpoint"].access == "r"
+    assert exposed["setpoint"].unit == "°C"
     assert exposed["setpoint_raw"].access == "r"
     assert exposed["setpoint_raw"].unit is None
     assert "battery_low" not in exposed
@@ -382,6 +385,15 @@ async def test_avidsen_sensor_received_setpoint_is_read_only(app: Ocean2MQTT) ->
     sp = next(c for topic, c in configs.items() if "0199AACC_setpoint_raw/" in topic)
     assert "command_topic" not in sp
     assert sp["unit_of_measurement"] is None
+    converted = next(c for topic, c in configs.items() if "0199AACC_setpoint/" in topic)
+    assert converted["unit_of_measurement"] == "°C"
+    assert converted["device_class"] == "temperature"
+    assert "command_topic" not in converted
+    assert await apply_command(device, {"setpoint": 22}) == ["setpoint"]
+    device.settings["temperature_offset"] = 3
+    app.dongle.inject(0xA5, bytes.fromhex("7D 7D 7D 08"), 0x0199AACC)
+    assert device_payload(device)["setpoint"] == 20.0
+    assert device_payload(device)["temperature"] == 23.0
 
 
 async def test_avidsen_4bs_teach_in(app: Ocean2MQTT) -> None:

@@ -15,8 +15,19 @@ Selon la [spécification officielle EEP 2.6.8](https://www.enocean-alliance.org/
 
 Les valeurs température/humidité 251–255 sont indisponibles. Contrairement à A5-04-01, le bit DB0.1 n’indique pas ici la présence de température. Aucun bit réservé n’est décodé.
 
-La consigne est une **mesure reçue**, sans commande MQTT vers la sonde. Le standard ne définit pas sa correspondance en degrés. Aucune conversion arbitraire ni pilotage de chauffage n’est ajouté.
+La consigne est une **mesure reçue**, sans commande MQTT vers la sonde. Le standard ne définit pas sa correspondance en degrés. Le profil générique conserve donc uniquement la valeur brute. Aucun pilotage de chauffage n’est ajouté.
+
+Pour la **101012 uniquement**, le décodeur `avidsen_101012` ajoute le capteur `setpoint` en °C, en conservant `setpoint_raw`. Conversion issue de relevés utilisateur sur matériel : `round(brut × 0,32 + 0,24) / 2`. Elle reproduit les demi-degrés de l’écran ; ce n’est pas une échelle universelle A5-10-12.
+
+| Brut | Écran / capteur en °C |
+| --- | --- |
+| 68 | 11,0 |
+| 125 | 20,0 |
+| 209 | 33,5 |
+| 218 | 35,0 |
+
+L’appairage par appui long dans le trou au dos, la température et l’humidité ont été confirmés sur matériel. Un appui court bascule °C/°F. La consigne convertie reste toujours publiée en °C et en lecture seule ; les corrections de température ambiante ne lui sont pas appliquées.
 
 La fiche annonce la remontée radio de pile faible, mais A5-10-12 ne réserve aucun champ à cette fonction. Il faut des trames réelles et/ou une documentation Avidsen pour compléter cette extension. L’état de pile reste donc non exposé plutôt que supposé.
 
-Support **Communauté** : à confirmer sur produit réel (teach-in, mesures, boutons +/−, pile faible). La photo est celle fournie pour l’ajout par le mainteneur. Aucune équivalence avec une autre référence Avidsen n’est supposée.
+Support **Communauté** : conversion de consigne à vérifier après mise à jour et pile faible à documenter. La photo est celle fournie pour l’ajout par le mainteneur. Aucune équivalence avec une autre référence Avidsen n’est supposée.
